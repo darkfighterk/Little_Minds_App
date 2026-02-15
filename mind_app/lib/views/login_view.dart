@@ -3,6 +3,8 @@ import '../controllers/login_controller.dart';
 import '../helpers/validators.dart';
 import '../widgets/custom_button.dart';
 import 'home_view.dart';
+import 'sign_up_view.dart';
+
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -81,6 +83,19 @@ class _LoginViewState extends State<LoginView> {
               _loading
                   ? const CircularProgressIndicator()
                   : CustomButton(text: "Login", onPressed: _login),
+                  const SizedBox(height: 15),
+
+TextButton(
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SignUpView(),
+      ),
+    );
+  },
+  child: const Text("Don't have an account? Sign Up"),
+  ),
             ],
           ),
         ),
