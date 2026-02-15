@@ -38,7 +38,7 @@ class MockLessonRepository implements LessonRepository {
       const Lesson(
         id: 'animals',
         title: 'Lesson in Animals',
-        subtitle: 'Animals are living beings that help\nnature and humans',
+        subtitle: 'Animals are living beings that help nature and humans',
         imageAsset: 'assets/lesson_animals.png',
         completed: 0,
         total: 15,
@@ -46,7 +46,7 @@ class MockLessonRepository implements LessonRepository {
       const Lesson(
         id: 'planets',
         title: 'Lesson in Planets',
-        subtitle: 'Planets orbit the sun and form our\nsolar system',
+        subtitle: 'Planets orbit the sun and form our solar system',
         imageAsset: 'assets/lesson_planets.png',
         completed: 0,
         total: 9,
@@ -54,7 +54,7 @@ class MockLessonRepository implements LessonRepository {
       const Lesson(
         id: 'human_body',
         title: 'Lesson in Human Body',
-        subtitle: 'My body helps me run, play, and\nlearn every day.',
+        subtitle: 'My body helps me run, play, and learn every day.',
         imageAsset: 'assets/lesson_body.png',
         completed: 0,
         total: 7,
@@ -433,7 +433,7 @@ class LessonCard extends StatelessWidget {
     const startPink = Color(0xFFF2B0E6);
 
     return Container(
-      height: 118,
+      height: 132, // FIX: taller to avoid overflow
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
@@ -447,7 +447,6 @@ class LessonCard extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Image background on right (like design)
           ClipRRect(
             borderRadius: BorderRadius.circular(26),
             child: Align(
@@ -455,18 +454,17 @@ class LessonCard extends StatelessWidget {
               child: Image.asset(
                 lesson.imageAsset,
                 width: 240,
-                height: 118,
+                height: 132,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
                   width: 240,
-                  height: 118,
+                  height: 132,
                   color: const Color(0xFFEFEAF8),
                 ),
               ),
             ),
           ),
 
-          // White fade overlay for readability
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(26),
@@ -510,17 +508,21 @@ class LessonCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  lesson.subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.black54,
-                    fontWeight: FontWeight.w600,
-                    height: 1.2,
+
+                // FIX: flexible subtitle area prevents RenderFlex overflow
+                Expanded(
+                  child: Text(
+                    lesson.subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.black54,
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                    ),
                   ),
                 ),
-                const Spacer(),
+
                 Align(
                   alignment: Alignment.bottomRight,
                   child: _StartPill(
@@ -589,9 +591,9 @@ class _StartPill extends StatelessWidget {
             borderRadius: BorderRadius.circular(999),
             border: Border.all(color: border, width: 1.2),
           ),
-          child: const Text(
-            'Start',
-            style: TextStyle(
+          child: Text(
+            label,
+            style: const TextStyle(
               fontWeight: FontWeight.w700,
               color: Colors.black87,
             ),
@@ -601,3 +603,4 @@ class _StartPill extends StatelessWidget {
     );
   }
 }
+
