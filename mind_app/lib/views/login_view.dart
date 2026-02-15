@@ -22,6 +22,7 @@ class _LoginViewState extends State<LoginView> {
 
   void _login() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _loading = true;
       _errorMessage = '';
@@ -44,47 +45,80 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
+  void _openLessonDirectly() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const LearningLessonScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Login")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/logo.png',
-                width: 500, // adjust size
-                height: 500,
-              ),
-              const SizedBox(height: 00),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
 
-              TextFormField(
-                controller: _usernameController,
-                decoration: const InputDecoration(labelText: "Username"),
-                validator: Validators.validateUsername,
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: "Password"),
-                validator: Validators.validatePassword,
-              ),
-              const SizedBox(height: 20),
-              if (_errorMessage.isNotEmpty)
-                Text(_errorMessage, style: const TextStyle(color: Colors.red)),
-              const SizedBox(height: 20),
-              _loading
-                  ? const CircularProgressIndicator()
-                  : CustomButton(text: "Login", onPressed: _login),
-            ],
+                /// Logo
+                Image.asset(
+                  'assets/logo.png',
+                  width: 220,
+                ),
+
+                const SizedBox(height: 30),
+
+                /// Username
+                TextFormField(
+                  controller: _usernameController,
+                  decoration: const InputDecoration(labelText: "Username"),
+                  validator: Validators.validateUsername,
+                ),
+
+                const SizedBox(height: 15),
+
+                /// Password
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: "Password"),
+                  validator: Validators.validatePassword,
+                ),
+
+                const SizedBox(height: 20),
+
+                if (_errorMessage.isNotEmpty)
+                  Text(_errorMessage,
+                      style: const TextStyle(color: Colors.red)),
+
+                const SizedBox(height: 20),
+
+                /// Login Button
+                _loading
+                    ? const CircularProgressIndicator()
+                    : CustomButton(text: "Login", onPressed: _login),
+
+                const SizedBox(height: 15),
+
+                /// TEST BUTTON (Option C)
+                TextButton(
+                  onPressed: _openLessonDirectly,
+                  child: const Text(
+                    "Skip Login & Open Lessons UI",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 }
+
