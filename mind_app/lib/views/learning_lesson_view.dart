@@ -143,16 +143,19 @@ class _LearningLessonScreenState extends State<LearningLessonScreen> {
                     _FilterChipPill(
                       label: 'Beginners',
                       selected: _filter == LessonFilter.beginners,
+                      filledPurpleWhenSelected: true,
                       onTap: () => _setFilter(LessonFilter.beginners),
                     ),
                     _FilterChipPill(
                       label: 'Intermediate',
                       selected: _filter == LessonFilter.intermediate,
+                      filledPurpleWhenSelected: true,
                       onTap: () => _setFilter(LessonFilter.intermediate),
                     ),
                     _FilterChipPill(
                       label: 'Advance',
                       selected: _filter == LessonFilter.advance,
+                      filledPurpleWhenSelected: true,
                       onTap: () => _setFilter(LessonFilter.advance),
                     ),
                   ],
@@ -403,7 +406,7 @@ class _FilterChipPill extends StatelessWidget {
       child: Material(
         color: bg,
         borderRadius: BorderRadius.circular(999),
-        elevation: selected ? (filledPurpleWhenSelected ? 0 : 6) : 6,
+        elevation: 6,
         shadowColor: Colors.black.withOpacity(0.18),
         child: InkWell(
           borderRadius: BorderRadius.circular(999),
@@ -433,7 +436,7 @@ class LessonCard extends StatelessWidget {
     const startPink = Color(0xFFF2B0E6);
 
     return Container(
-      height: 132, // FIX: taller to avoid overflow
+      height: 132,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
@@ -465,11 +468,11 @@ class LessonCard extends StatelessWidget {
             ),
           ),
 
-// LEFT readable panel (NOT a blanket overlay)
+          // LEFT readable panel (fade)
           Align(
             alignment: Alignment.centerLeft,
             child: Container(
-              width: 220, // controls readable area
+              width: 220,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(26),
                 gradient: LinearGradient(
@@ -477,66 +480,73 @@ class LessonCard extends StatelessWidget {
                   end: Alignment.centerRight,
                   colors: [
                     Colors.white,
-                    Colors.white.withValues(alpha: 0.95),
-                    Colors.white.withValues(alpha: 0.0),
+                    Colors.white.withOpacity(0.95),
+                    Colors.white.withOpacity(0.0),
                   ],
                 ),
               ),
             ),
           ),
 
-
-
+          // ✅ FIX: Subtitle text now shows properly
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Stack(
               children: [
-                Row(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        lesson.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          height: 1.05,
-                          fontWeight: FontWeight.w500,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            lesson.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              height: 1.05,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 10),
+                        const _ProgressBubble(
+                          text: '',
+                          color: purple,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 10),
-                    _ProgressBubble(
-                      text: '${lesson.completed}/${lesson.total}',
-                      color: purple,
+                    const SizedBox(height: 8),
+                    Text(
+                      lesson.subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontWeight: FontWeight.w600,
+                        height: 1.2,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
-
-                // FIX: flexible subtitle area prevents RenderFlex overflow
-                Expanded(
-                  child: Text(
-                    lesson.subtitle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.black54,
-                      fontWeight: FontWeight.w600,
-                      height: 1.2,
-                    ),
-                  ),
-                ),
-
-                Align(
-                  alignment: Alignment.bottomRight,
+                Positioned(
+                  right: 0,
+                  bottom: 0,
                   child: _StartPill(
                     label: 'Start',
                     background: startPink,
                     border: purple.withOpacity(0.45),
                     onTap: onStart,
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: _ProgressBubble(
+                    text: '${lesson.completed}/${lesson.total}',
+                    color: purple,
                   ),
                 ),
               ],
@@ -610,4 +620,3 @@ class _StartPill extends StatelessWidget {
     );
   }
 }
-
