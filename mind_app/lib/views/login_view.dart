@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../controllers/login_controller.dart';
 import '../helpers/validators.dart';
 import '../widgets/custom_button.dart';
-import 'home_view.dart';
+import 'learning_lesson_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -37,7 +37,7 @@ class _LoginViewState extends State<LoginView> {
     if (user != null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => HomeView(user: user)),
+        MaterialPageRoute(builder: (_) => const LearningLessonScreen()),
       );
     } else {
       setState(() => _errorMessage = "Invalid username or password");
