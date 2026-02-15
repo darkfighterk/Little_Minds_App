@@ -465,20 +465,27 @@ class LessonCard extends StatelessWidget {
             ),
           ),
 
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(26),
-              gradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [
-                  Colors.white.withOpacity(0.98),
-                  Colors.white.withOpacity(0.86),
-                  Colors.white.withOpacity(0.10),
-                ],
+// LEFT readable panel (NOT a blanket overlay)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              width: 220, // controls readable area
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(26),
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Colors.white,
+                    Colors.white.withValues(alpha: 0.95),
+                    Colors.white.withValues(alpha: 0.0),
+                  ],
+                ),
               ),
             ),
           ),
+
+
 
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
