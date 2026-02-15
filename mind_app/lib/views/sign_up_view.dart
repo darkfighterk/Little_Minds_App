@@ -79,7 +79,9 @@ class SignUpView extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 60), // extra space so title doesn't overlap circles too much
+                  const SizedBox(
+                    height: 60,
+                  ), // extra space so title doesn't overlap circles too much
 
                   const Center(
                     child: Text(
@@ -130,10 +132,7 @@ class SignUpView extends StatelessWidget {
                       child: Ink(
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF8E2DE2),
-                              Color(0xFFDA22FF),
-                            ],
+                            colors: [Color(0xFF8E2DE2), Color(0xFFDA22FF)],
                             begin: Alignment.centerLeft,
                             end: Alignment.centerRight,
                           ),
@@ -170,7 +169,10 @@ class SignUpView extends StatelessWidget {
                       _SocialIcon(Icons.g_mobiledata, Colors.red),
                       _SocialIcon(Icons.facebook, Colors.blue),
                       _SocialIcon(Icons.apple, Colors.black),
-                      _SocialIcon(Icons.business, Colors.blueAccent), // can change to X or another icon
+                      _SocialIcon(
+                        Icons.business,
+                        Colors.blueAccent,
+                      ), // can change to X or another icon
                     ],
                   ),
 
@@ -188,7 +190,7 @@ class SignUpView extends StatelessWidget {
                               color: Color(0xFF8E2DE2),
                               fontWeight: FontWeight.bold,
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -211,7 +213,10 @@ class SignUpView extends StatelessWidget {
         hintText: hint,
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 18,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide.none,
@@ -225,7 +230,7 @@ class _SocialIcon extends StatelessWidget {
   final IconData icon;
   final Color color;
 
-  const _SocialIcon(this.icon, this.color, {super.key});
+  const _SocialIcon(this.icon, this.color);
 
   @override
   Widget build(BuildContext context) {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'views/login_view.dart';
-import 'views/splash_view.dart';
 
 void main() {
   runApp(const MindApp());
