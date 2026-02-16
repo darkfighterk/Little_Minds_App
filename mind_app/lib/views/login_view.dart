@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart'; // Needed for tappable TextSpan
 import '../controllers/login_controller.dart';
 import 'home_view.dart';
 import '../models/user_model.dart';
@@ -15,10 +16,9 @@ class _LoginViewState extends State<LoginView> {
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
 
-  // LoginController instance
   final LoginController _loginController = LoginController();
 
-  // Login button logic
+  // ---------------- Login method ----------------
   void _onLoginPressed() async {
     final email = phoneController.text;
     final password = passwordController.text;
@@ -30,21 +30,24 @@ class _LoginViewState extends State<LoginView> {
       return;
     }
 
-    // Call the login method
     final User? user = await _loginController.login(email, password);
 
     if (user != null) {
-      // Navigate to HomeView with logged-in user
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => HomeView(user: user)),
       );
     } else {
-      // Show error message if login failed
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Login failed. Check your credentials.')),
       );
     }
+  }
+
+  // ---------------- Register method ----------------
+  void _onRegisterPressed() {
+    // Navigate to your Register screen (replace '/register' with your actual route)
+    Navigator.pushNamed(context, '/register');
   }
 
   @override
@@ -281,18 +284,24 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 48),
 
+                  // ---------------- Sign up RichText ----------------
                   Center(
                     child: RichText(
-                      text: const TextSpan(
+                      text: TextSpan(
                         text: "Don't have an account? ",
-                        style: TextStyle(color: Colors.black87, fontSize: 15),
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 15,
+                        ),
                         children: [
                           TextSpan(
                             text: 'Sign up',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Color(0xFFAB47BC),
                               fontWeight: FontWeight.bold,
                             ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = _onRegisterPressed,
                           ),
                         ],
                       ),
