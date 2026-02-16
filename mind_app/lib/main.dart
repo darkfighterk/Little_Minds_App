@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'views/login_view.dart';
-
-
-
+import 'views/sign_up_view.dart';
 
 void main() {
   runApp(const MindApp());
@@ -17,7 +15,11 @@ class MindApp extends StatelessWidget {
       title: 'Mind App',
       theme: ThemeData(primarySwatch: Colors.blue),
       debugShowCheckedModeBanner: false,
-      home: const LoginView(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const LoginView(),
+        '/register': (context) => const SignUpView(),
+      },
     );
   }
 }
