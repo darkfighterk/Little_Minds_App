@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart'; // Needed for tappable TextSpan
+import 'package:flutter/gestures.dart';
 import '../controllers/login_controller.dart';
 import 'home_view.dart';
 import '../models/user_model.dart';
@@ -13,15 +13,44 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   bool keepSignedIn = true;
-  final phoneController = TextEditingController();
+  bool isLoading = false;
+  final emailController =
+      TextEditingController(); // Changed from phoneController
   final passwordController = TextEditingController();
 
   final LoginController _loginController = LoginController();
 
-  // ---------------- Login method ----------------
+  @override
+  void initState() {
+    super.initState();
+    // Test connection on startup
+    _testConnection();
+  }
+
+  // Test backend connection
+  void _testConnection() async {
+    final isConnected = await _loginController.testConnection();
+    if (!mounted) return;
+
+    if (isConnected) {
+      print("✅ Backend is reachable");
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '⚠️ Cannot connect to backend. Make sure it\'s running on port 8080',
+          ),
+          duration: Duration(seconds: 5),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+  }
+
+  // Login method
   void _onLoginPressed() async {
-    final email = phoneController.text;
-    final password = passwordController.text;
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -30,24 +59,41 @@ class _LoginViewState extends State<LoginView> {
       return;
     }
 
+    setState(() => isLoading = true);
+
     final User? user = await _loginController.login(email, password);
 
+    setState(() => isLoading = false);
+
     if (user != null) {
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => HomeView(user: user)),
       );
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login failed. Check your credentials.')),
+        const SnackBar(
+          content: Text(
+            'Login failed. Check your credentials and make sure backend is running.',
+          ),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
 
-  // ---------------- Register method ----------------
+  // Register navigation
   void _onRegisterPressed() {
-    // Navigate to your Register screen (replace '/register' with your actual route)
     Navigator.pushNamed(context, '/register');
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -122,6 +168,13 @@ class _LoginViewState extends State<LoginView> {
                       'assets/illustrations/welcome_kids.png',
                       height: 220,
                       fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.child_care,
+                          size: 120,
+                          color: Color(0xFFAB47BC),
+                        );
+                      },
                     ),
                   ),
 
@@ -151,50 +204,18 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 48),
 
-                  // Tabs
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _TabItem(
-                        text: 'Email',
-                        isActive: false,
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Switching to Email login...'),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 60),
-                      _TabItem(
-                        text: 'Phone number',
-                        isActive: true,
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  // Input fields
+                  // Email input
                   _InputField(
-                    controller: phoneController,
-                    label: 'Phone Number',
-                    hint: '71 234 5678',
-                    prefix: const Text(
-                      '+94 ',
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    keyboardType: TextInputType.phone,
+                    controller: emailController,
+                    label: 'Email',
+                    hint: 'your@email.com',
+                    prefixIcon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
                   ),
 
                   const SizedBox(height: 24),
 
+                  // Password input
                   _InputField(
                     controller: passwordController,
                     label: 'Password',
@@ -239,7 +260,7 @@ class _LoginViewState extends State<LoginView> {
                     width: double.infinity,
                     height: 58,
                     child: ElevatedButton(
-                      onPressed: _onLoginPressed,
+                      onPressed: isLoading ? null : _onLoginPressed,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFAB47BC),
                         shape: RoundedRectangleBorder(
@@ -247,14 +268,23 @@ class _LoginViewState extends State<LoginView> {
                         ),
                         elevation: 3,
                       ),
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                      child: isLoading
+                          ? const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Login',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
                   ),
 
@@ -284,7 +314,7 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 48),
 
-                  // ---------------- Sign up RichText ----------------
+                  // Sign up link
                   Center(
                     child: RichText(
                       text: TextSpan(
@@ -320,46 +350,6 @@ class _LoginViewState extends State<LoginView> {
 }
 
 // ================== Helper widgets ==================
-
-class _TabItem extends StatelessWidget {
-  final String text;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _TabItem({
-    required this.text,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: isActive ? const Color(0xFFAB47BC) : Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            width: text.length * 9.0,
-            height: 4,
-            decoration: BoxDecoration(
-              color: isActive ? const Color(0xFFAB47BC) : Colors.transparent,
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _InputField extends StatelessWidget {
   final TextEditingController controller;
@@ -437,7 +427,13 @@ class _SocialButton extends StatelessWidget {
           BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10),
         ],
       ),
-      child: Image.asset(assetPath, height: 28),
+      child: Image.asset(
+        assetPath,
+        height: 28,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.login, size: 28);
+        },
+      ),
     );
   }
 }
