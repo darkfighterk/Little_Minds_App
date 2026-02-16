@@ -172,13 +172,14 @@ class HomeView extends StatelessWidget {
                 // Worlds grid
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 50),
+                    padding: const EdgeInsets.symmetric(horizontal: 70),
                     child: GridView.count(
                       crossAxisCount: 2,
                       mainAxisSpacing: 24,
                       crossAxisSpacing: 24,
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
+                      childAspectRatio: 1.0,
                       children: [
                         worldButton(Icons.nightlight_round, "Space", Colors.deepPurple),
                         worldButton(Icons.pets, "Animals", Colors.teal),
@@ -216,14 +217,14 @@ class HomeView extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 5),
-                      Text(
+                      /*Text(
                         "Quick Scan",
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.purple[800],
                           fontWeight: FontWeight.w600,
                         ),
-                      ),
+                      ),*/
                     ],
                   ),
                 ),
@@ -282,7 +283,7 @@ class HomeView extends StatelessWidget {
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: baseColor.withOpacity(0.5),
+              color: baseColor.withValues(alpha: 0.5),
               blurRadius: 14,
               offset: const Offset(0, 8),
             ),
@@ -290,14 +291,15 @@ class HomeView extends StatelessWidget {
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 58, color: Colors.white),
-            const SizedBox(height: 16),
+            Icon(icon, size: 52, color: Colors.white),
+            const SizedBox(height: 12),
             Text(
               label,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 20,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.4,
               ),
