@@ -9,7 +9,7 @@ class HomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFf9e8ff), // light purple-pinkish
+      backgroundColor: const Color(0xFFfee4ee), // light pinkish
       body: SafeArea(
         child: Stack(
           children: [
@@ -193,6 +193,10 @@ class HomeView extends StatelessWidget {
                 // Quick Scan section
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16, top: 8),
+                  child: InkWell(
+                    onTap: (){
+                    debugPrint("Quick Scan tapped – opening camera soon!");
+                  },
                   child: Column(
                     children: [
                       Container(
@@ -227,6 +231,7 @@ class HomeView extends StatelessWidget {
                       ),*/
                     ],
                   ),
+                ),
                 ),
               ],
             ),
@@ -316,7 +321,7 @@ class DotsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.purple.withOpacity(0.6)
+      ..color = Colors.purple.withValues(alpha: 1)
       ..style = PaintingStyle.fill;
 
     const step = 48.0;
