@@ -88,7 +88,7 @@ class _LoginViewState extends State<LoginView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
 
                   // Back arrow
                   GestureDetector(
@@ -114,13 +114,13 @@ class _LoginViewState extends State<LoginView> {
                     ),
                   ),
 
-                  const SizedBox(height: 44),
+                  const SizedBox(height: 10),
 
                   // Illustration
                   Center(
                     child: Image.asset(
                       'assets/illustrations/welcome_kids.png',
-                      height: 220,
+                      height: 150,
                       fit: BoxFit.contain,
                     ),
                   ),
@@ -149,7 +149,7 @@ class _LoginViewState extends State<LoginView> {
                     ),
                   ),
 
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 25),
 
                   // Tabs
                   Row(
@@ -166,7 +166,7 @@ class _LoginViewState extends State<LoginView> {
                           );
                         },
                       ),
-                      const SizedBox(width: 60),
+                      const SizedBox(width: 50),
                       _TabItem(
                         text: 'Phone number',
                         isActive: true,
@@ -175,7 +175,7 @@ class _LoginViewState extends State<LoginView> {
                     ],
                   ),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 10),
 
                   // Input fields
                   _InputField(
@@ -232,7 +232,7 @@ class _LoginViewState extends State<LoginView> {
                     ],
                   ),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 10),
 
                   // Login button
                   SizedBox(
@@ -258,7 +258,7 @@ class _LoginViewState extends State<LoginView> {
                     ),
                   ),
 
-                  const SizedBox(height: 36),
+                  const SizedBox(height: 10),
 
                   const Center(
                     child: Text(
