@@ -12,7 +12,7 @@ class HomeView extends StatelessWidget {
       appBar: AppBar(title: const Text("Home")),
       body: Center(
         child: Text(
-          "Welcome, ${user.username}!",
+          "Welcome, ${user.name}!", // Updated from username → name
           style: const TextStyle(fontSize: 24),
         ),
       ),

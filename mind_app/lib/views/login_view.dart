@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../controllers/login_controller.dart';
+import 'home_view.dart';
+import '../models/user_model.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -12,25 +15,46 @@ class _LoginViewState extends State<LoginView> {
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
 
-  // You can later connect this to the same LoginController your friend uses
-  void _onLoginPressed() {
-    // TODO: call your friend's LoginController or your own logic
-    // For testing right now → just print or navigate
-    print("Phone login attempt: ${phoneController.text}");
-    // Example navigation (change to your real home screen later)
-    // Navigator.pushReplacementNamed(context, '/home');
+  // LoginController instance
+  final LoginController _loginController = LoginController();
+
+  // Login button logic
+  void _onLoginPressed() async {
+    final email = phoneController.text;
+    final password = passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    // Call the login method
+    final User? user = await _loginController.login(email, password);
+
+    if (user != null) {
+      // Navigate to HomeView with logged-in user
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => HomeView(user: user)),
+      );
+    } else {
+      // Show error message if login failed
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Login failed. Check your credentials.')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(
-        0xFFFCE4F9,
-      ), // very light magenta/pink-purple
+      backgroundColor: const Color(0xFFFCE4F9),
       body: SafeArea(
         child: Stack(
           children: [
-            // Decorative background bubbles (like in proposal)
+            // Decorative bubbles
             Positioned(
               top: -100,
               right: -80,
@@ -63,7 +87,7 @@ class _LoginViewState extends State<LoginView> {
                 children: [
                   const SizedBox(height: 20),
 
-                  // Back arrow (same style as proposal)
+                  // Back arrow
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
@@ -89,10 +113,10 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 44),
 
-                  // Kids illustration (must match proposal)
+                  // Illustration
                   Center(
                     child: Image.asset(
-                      'assets/illustrations/welcome_kids.png', // ← put your image here
+                      'assets/illustrations/welcome_kids.png',
                       height: 220,
                       fit: BoxFit.contain,
                     ),
@@ -100,14 +124,14 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 36),
 
-                  // Welcome back text
+                  // Welcome text
                   const Center(
                     child: Text(
                       'Welcome Back!',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFFAB47BC), // vivid purple
+                        color: Color(0xFFAB47BC),
                         letterSpacing: 0.4,
                       ),
                     ),
@@ -124,7 +148,7 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 48),
 
-                  // Email / Phone tabs (exactly like proposal)
+                  // Tabs
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -132,7 +156,6 @@ class _LoginViewState extends State<LoginView> {
                         text: 'Email',
                         isActive: false,
                         onTap: () {
-                          // Later: navigate to friend's email login if you want
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Switching to Email login...'),
@@ -144,14 +167,14 @@ class _LoginViewState extends State<LoginView> {
                       _TabItem(
                         text: 'Phone number',
                         isActive: true,
-                        onTap: () {}, // already here
+                        onTap: () {},
                       ),
                     ],
                   ),
 
                   const SizedBox(height: 40),
 
-                  // Phone number field with +94
+                  // Input fields
                   _InputField(
                     controller: phoneController,
                     label: 'Phone Number',
@@ -169,7 +192,6 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 24),
 
-                  // Password field
                   _InputField(
                     controller: passwordController,
                     label: 'Password',
@@ -209,7 +231,7 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 40),
 
-                  // Big Login button
+                  // Login button
                   SizedBox(
                     width: double.infinity,
                     height: 58,
@@ -244,7 +266,6 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 24),
 
-                  // Social buttons row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -289,7 +310,7 @@ class _LoginViewState extends State<LoginView> {
   }
 }
 
-// Helper widgets
+// ================== Helper widgets ==================
 
 class _TabItem extends StatelessWidget {
   final String text;
