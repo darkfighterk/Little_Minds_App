@@ -40,7 +40,7 @@ class HomeView extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Hi, ${user.username}!",
+                              "Hi, ${user.name}!",
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -48,7 +48,8 @@ class HomeView extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              "Level ${user.level ?? 1} Explorer",
+                              //"Level ${user.level ?? 1} Explorer",
+                              "Level 1 Explorer", // hardcoded until backend create a level
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.purple[800],

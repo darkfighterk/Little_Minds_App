@@ -1,23 +1,17 @@
 class User {
   int? id;
-  String username;
-  int? level;
+  String name;
+  String email;
 
-  User({this.id, required this.username, this.level});
+  User({this.id, required this.name, required this.email});
 
-  factory User.fromMap(Map<String, dynamic> map) {
-    return User(
-      id: map['id'] as int?,
-      username: map['username'] as String,
-      level: map['level'] as int?,
-    );
+  // Create a User from JSON / Map
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(id: json['id'], name: json['name'], email: json['email']);
   }
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'username': username,
-      'level': level,
-    };
+  // Convert User to Map / JSON
+  Map<String, dynamic> toJson() {
+    return {'id': id, 'name': name, 'email': email};
   }
 }
