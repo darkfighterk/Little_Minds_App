@@ -19,7 +19,7 @@ class _SignUpViewState extends State<SignUpView> {
 
   bool isLoading = false;
 
-  // ------------------- Sign Up method -------------------
+  // Sign Up method
   void _onSignUpPressed() async {
     final name = firstNameController.text.trim();
     final email = emailController.text.trim();
@@ -32,6 +32,14 @@ class _SignUpViewState extends State<SignUpView> {
       return;
     }
 
+    // Basic email validation
+    if (!email.contains('@') || !email.contains('.')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email address')),
+      );
+      return;
+    }
+
     setState(() => isLoading = true);
 
     final User? user = await _loginController.addUser(name, email, password);
@@ -39,6 +47,8 @@ class _SignUpViewState extends State<SignUpView> {
     setState(() => isLoading = false);
 
     if (user != null) {
+      if (!mounted) return;
+
       // Clear fields
       firstNameController.clear();
       emailController.clear();
@@ -47,28 +57,37 @@ class _SignUpViewState extends State<SignUpView> {
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Registration successful! Please log in.'),
+          content: Text('✅ Registration successful! Please log in.'),
+          backgroundColor: Colors.green,
         ),
       );
 
-      // Redirect to LoginView (route '/')
+      // Redirect to LoginView
       Navigator.pushReplacementNamed(context, '/');
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration failed. Try again.')),
+        const SnackBar(
+          content: Text(
+            'Registration failed. Email might already exist or backend is not running.',
+          ),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
 
-  // ------------------- Build text field -------------------
+  // Build text field
   Widget _buildTextField(
     String hint, {
     bool isPassword = false,
     TextEditingController? controller,
+    TextInputType? keyboardType,
   }) {
     return TextField(
       controller: controller,
       obscureText: isPassword,
+      keyboardType: keyboardType,
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
@@ -83,6 +102,14 @@ class _SignUpViewState extends State<SignUpView> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    firstNameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -177,25 +204,21 @@ class _SignUpViewState extends State<SignUpView> {
 
                   const SizedBox(height: 50),
 
-                  // Name fields
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTextField(
-                          "First Name",
-                          controller: firstNameController,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(child: _buildTextField("Last Name")),
-                    ],
+                  // Name field
+                  _buildTextField("Full Name", controller: firstNameController),
+
+                  const SizedBox(height: 20),
+
+                  // Email field
+                  _buildTextField(
+                    "Email",
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
                   ),
 
                   const SizedBox(height: 20),
-                  _buildTextField("Email", controller: emailController),
-                  const SizedBox(height: 20),
-                  _buildTextField("Contact Number"), // optional
-                  const SizedBox(height: 20),
+
+                  // Password field
                   _buildTextField(
                     "Password",
                     controller: passwordController,
@@ -301,7 +324,7 @@ class _SignUpViewState extends State<SignUpView> {
   }
 }
 
-// ---------------- Social Icon ----------------
+// Social Icon widget
 class _SocialIcon extends StatelessWidget {
   final IconData icon;
   final Color color;
