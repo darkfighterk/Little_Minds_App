@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import '../controllers/login_controller.dart';
 import 'home_view.dart';
 import '../models/user_model.dart';
+import 'forgot_password_email_view.dart';  // ← NEW: added this import
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -14,8 +15,7 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   bool keepSignedIn = true;
   bool isLoading = false;
-  final emailController =
-      TextEditingController(); // Changed from phoneController
+  final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   final LoginController _loginController = LoginController();
@@ -23,11 +23,9 @@ class _LoginViewState extends State<LoginView> {
   @override
   void initState() {
     super.initState();
-    // Test connection on startup
     _testConnection();
   }
 
-  // Test backend connection
   void _testConnection() async {
     final isConnected = await _loginController.testConnection();
     if (!mounted) return;
@@ -47,7 +45,6 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
-  // Login method
   void _onLoginPressed() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -84,7 +81,6 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
-  // Register navigation
   void _onRegisterPressed() {
     Navigator.pushNamed(context, '/register');
   }
@@ -230,7 +226,14 @@ class _LoginViewState extends State<LoginView> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ForgotPasswordEmailView(),
+                          ),
+                        );
+                      },
                       child: const Text(
                         'Forgot Password?',
                         style: TextStyle(
@@ -245,8 +248,7 @@ class _LoginViewState extends State<LoginView> {
                     children: [
                       Checkbox(
                         value: keepSignedIn,
-                        onChanged: (v) =>
-                            setState(() => keepSignedIn = v ?? false),
+                        onChanged: (v) => setState(() => keepSignedIn = v ?? false),
                         activeColor: const Color(0xFFAB47BC),
                       ),
                       const Text('Keep me signed in'),
