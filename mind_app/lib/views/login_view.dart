@@ -3,7 +3,7 @@ import 'package:flutter/gestures.dart';
 import '../controllers/login_controller.dart';
 import 'home_view.dart';
 import '../models/user_model.dart';
-import 'forgot_password_email_view.dart';  // ← NEW: added this import
+import 'forgot_password_email_view.dart'; // ← NEW: added this import
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -230,7 +230,8 @@ class _LoginViewState extends State<LoginView> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ForgotPasswordEmailView(),
+                            builder: (context) =>
+                                const ForgotPasswordEmailView(),
                           ),
                         );
                       },
@@ -248,7 +249,8 @@ class _LoginViewState extends State<LoginView> {
                     children: [
                       Checkbox(
                         value: keepSignedIn,
-                        onChanged: (v) => setState(() => keepSignedIn = v ?? false),
+                        onChanged: (v) =>
+                            setState(() => keepSignedIn = v ?? false),
                         activeColor: const Color(0xFFAB47BC),
                       ),
                       const Text('Keep me signed in'),
@@ -439,3 +441,5 @@ class _SocialButton extends StatelessWidget {
     );
   }
 }
+
+//test
