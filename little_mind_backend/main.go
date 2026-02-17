@@ -5,10 +5,16 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golang-jwt/jwt/v5" // JWT library
+	"golang.org/x/crypto/bcrypt"   // Password hashing
 )
 
+// =====================
+// Models
+// =====================
 type User struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name"`
@@ -22,6 +28,14 @@ type Response struct {
 	Error   string      `json:"error,omitempty"`
 }
 
+// =====================
+// JWT Secret Key (Keep it safe in env variables in production)
+// =====================
+var jwtSecret = []byte("my_secret_key")
+
+// =====================
+// Database
+// =====================
 var db *sql.DB
 
 func main() {
@@ -39,7 +53,9 @@ func main() {
 	}
 	log.Println("Database connected successfully")
 
-	// Root endpoint
+	// =====================
+	// Routes
+	// =====================
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/register", enableCORS(registerHandler))
 	http.HandleFunc("/login", enableCORS(loginHandler))
@@ -48,14 +64,15 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-// CORS middleware to allow requests from Flutter app
+// =====================
+// CORS Middleware
+// =====================
 func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Authorization")
 
-		// Handle preflight requests
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
@@ -65,6 +82,9 @@ func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// =====================
+// Root Endpoint
+// =====================
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -80,14 +100,15 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// =====================
+// Register Endpoint
+// =====================
 func registerHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(Response{
-			Error: "Method not allowed",
-		})
+		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
 		return
 	}
 
@@ -95,18 +116,13 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{
-			Error: "Invalid request payload",
-		})
+		json.NewEncoder(w).Encode(Response{Error: "Invalid request payload"})
 		return
 	}
 
-	// Validate input
 	if user.Name == "" || user.Email == "" || user.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{
-			Error: "Name, email, and password are required",
-		})
+		json.NewEncoder(w).Encode(Response{Error: "Name, email, and password are required"})
 		return
 	}
 
@@ -116,32 +132,36 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("Database error:", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(Response{
-			Error: "Database error",
-		})
+		json.NewEncoder(w).Encode(Response{Error: "Database error"})
 		return
 	}
 
 	if exists {
 		w.WriteHeader(http.StatusConflict)
-		json.NewEncoder(w).Encode(Response{
-			Error: "User with this email already exists",
-		})
+		json.NewEncoder(w).Encode(Response{Error: "User with this email already exists"})
+		return
+	}
+
+	// =====================
+	// Hash the password before storing
+	// =====================
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Println("Error hashing password:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(Response{Error: "Failed to process password"})
 		return
 	}
 
 	// Insert user into database
-	result, err := db.Exec("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", user.Name, user.Email, user.Password)
+	result, err := db.Exec("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", user.Name, user.Email, string(hashedPassword))
 	if err != nil {
 		log.Println("Database error:", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(Response{
-			Error: "Failed to register user",
-		})
+		json.NewEncoder(w).Encode(Response{Error: "Failed to register user"})
 		return
 	}
 
-	// Get the inserted user ID
 	userID, err := result.LastInsertId()
 	if err != nil {
 		log.Println("Error getting last insert ID:", err)
@@ -158,14 +178,15 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// =====================
+// Login Endpoint
+// =====================
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(Response{
-			Error: "Method not allowed",
-		})
+		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
 		return
 	}
 
@@ -173,22 +194,16 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{
-			Error: "Invalid request payload",
-		})
+		json.NewEncoder(w).Encode(Response{Error: "Invalid request payload"})
 		return
 	}
 
-	// Validate input
 	if user.Email == "" || user.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{
-			Error: "Email and password are required",
-		})
+		json.NewEncoder(w).Encode(Response{Error: "Email and password are required"})
 		return
 	}
 
-	// Query user from database
 	var dbUser User
 	err = db.QueryRow("SELECT id, name, email, password FROM users WHERE email = ?", user.Email).Scan(
 		&dbUser.ID, &dbUser.Name, &dbUser.Email, &dbUser.Password,
@@ -196,29 +211,43 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == sql.ErrNoRows {
 			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(Response{
-				Error: "Invalid email or password",
-			})
+			json.NewEncoder(w).Encode(Response{Error: "Invalid email or password"})
 			return
 		}
 		log.Println("Database error:", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(Response{
-			Error: "Database error",
-		})
+		json.NewEncoder(w).Encode(Response{Error: "Database error"})
 		return
 	}
 
-	// Simple password check (in real apps, use hashed passwords!)
-	if user.Password != dbUser.Password {
+	// =====================
+	// Compare hashed passwords
+	// =====================
+	err = bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password))
+	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(Response{
-			Error: "Invalid email or password",
-		})
+		json.NewEncoder(w).Encode(Response{Error: "Invalid email or password"})
 		return
 	}
 
-	// Return user info on successful login (don't send password back)
+	// =====================
+	// Generate JWT token
+	// =====================
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": dbUser.ID,
+		"email":   dbUser.Email,
+		"exp":     time.Now().Add(time.Hour * 24).Unix(), // token expires in 24h
+	})
+
+	tokenString, err := token.SignedString(jwtSecret)
+	if err != nil {
+		log.Println("Error generating JWT:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(Response{Error: "Failed to generate token"})
+		return
+	}
+
+	// Return user info + token
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(Response{
 		Message: "Login successful",
@@ -226,6 +255,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			"id":    dbUser.ID,
 			"name":  dbUser.Name,
 			"email": dbUser.Email,
+			"token": tokenString,
 		},
 	})
 }
