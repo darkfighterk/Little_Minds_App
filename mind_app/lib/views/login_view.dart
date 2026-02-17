@@ -3,7 +3,6 @@ import 'package:flutter/gestures.dart';
 import '../controllers/login_controller.dart';
 import 'home_view.dart';
 import '../models/user_model.dart';
-import 'forgot_password_email_view.dart'; // ← NEW: added this import
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -15,7 +14,8 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   bool keepSignedIn = true;
   bool isLoading = false;
-  final emailController = TextEditingController();
+  final emailController =
+      TextEditingController(); // Changed from phoneController
   final passwordController = TextEditingController();
 
   final LoginController _loginController = LoginController();
@@ -23,9 +23,11 @@ class _LoginViewState extends State<LoginView> {
   @override
   void initState() {
     super.initState();
+    // Test connection on startup
     _testConnection();
   }
 
+  // Test backend connection
   void _testConnection() async {
     final isConnected = await _loginController.testConnection();
     if (!mounted) return;
@@ -45,6 +47,7 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
+  // Login method
   void _onLoginPressed() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -81,6 +84,7 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
+  // Register navigation
   void _onRegisterPressed() {
     Navigator.pushNamed(context, '/register');
   }
@@ -226,15 +230,7 @@ class _LoginViewState extends State<LoginView> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const ForgotPasswordEmailView(),
-                          ),
-                        );
-                      },
+                      onPressed: () {},
                       child: const Text(
                         'Forgot Password?',
                         style: TextStyle(
@@ -303,15 +299,15 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 24),
 
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _SocialButton('assets/icons/google.png'),
-                      const SizedBox(width: 20),
+                      SizedBox(width: 20),
                       _SocialButton('assets/icons/facebook.png'),
-                      const SizedBox(width: 20),
+                      SizedBox(width: 20),
                       _SocialButton('assets/icons/x.png'),
-                      const SizedBox(width: 20),
+                      SizedBox(width: 20),
                       _SocialButton('assets/icons/linkedin.png'),
                     ],
                   ),
@@ -359,7 +355,6 @@ class _InputField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
   final String? hint;
-  final Widget? prefix;
   final IconData? prefixIcon;
   final IconData? suffixIcon;
   final bool obscureText;
@@ -369,7 +364,6 @@ class _InputField extends StatelessWidget {
     required this.controller,
     required this.label,
     this.hint,
-    this.prefix,
     this.prefixIcon,
     this.suffixIcon,
     this.obscureText = false,
@@ -397,13 +391,11 @@ class _InputField extends StatelessWidget {
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
-          prefix: prefix,
           prefixIcon: prefixIcon != null
               ? Icon(prefixIcon, color: const Color(0xFFAB47BC))
               : null,
-          suffixIcon: suffixIcon != null
-              ? Icon(suffixIcon, color: Colors.grey)
-              : null,
+          suffixIcon:
+              suffixIcon != null ? Icon(suffixIcon, color: Colors.grey) : null,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             vertical: 18,
@@ -441,5 +433,3 @@ class _SocialButton extends StatelessWidget {
     );
   }
 }
-
-//test
