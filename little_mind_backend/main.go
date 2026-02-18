@@ -40,7 +40,7 @@ var db *sql.DB
 
 func main() {
 	var err error
-	db, err = sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/little_mind_db")
+	db, err = sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/shopdb")
 	if err != nil {
 		log.Fatal(err)
 	}
