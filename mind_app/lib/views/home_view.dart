@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/user_model.dart';
-import 'ar_camera_view.dart';          // ← AR scan screen
-import 'course_library_screen.dart';   // ← Course library screen
+import 'ar_camera_view.dart'; // ← AR scan screen
+// ...existing code...
+import 'bottom_nav_bar.dart'; // ← NEW: our extracted bottom nav
 
 class HomeView extends StatelessWidget {
   final User user;
@@ -60,7 +61,8 @@ class HomeView extends StatelessWidget {
                                   style: GoogleFonts.lexend(
                                     fontSize: 26,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : Colors.black87,
+                                    color:
+                                        isDark ? Colors.white : Colors.black87,
                                   ),
                                 ),
                               ],
@@ -122,8 +124,8 @@ class HomeView extends StatelessWidget {
                               hintStyle: TextStyle(color: Colors.grey[400]),
                               prefixIcon: Icon(Icons.search_rounded,
                                   color: Colors.grey[500]),
-                              suffixIcon: Icon(Icons.tune_rounded,
-                                  color: primary),
+                              suffixIcon:
+                                  Icon(Icons.tune_rounded, color: primary),
                               border: InputBorder.none,
                               contentPadding:
                                   const EdgeInsets.symmetric(vertical: 16),
@@ -177,7 +179,8 @@ class HomeView extends StatelessWidget {
                               child: Container(
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(isDark ? 0.14 : 0.78),
+                                  color: Colors.white
+                                      .withOpacity(isDark ? 0.14 : 0.78),
                                   borderRadius: BorderRadius.circular(14.5),
                                 ),
                                 child: Row(
@@ -185,18 +188,22 @@ class HomeView extends StatelessWidget {
                                     Stack(
                                       children: [
                                         ClipRRect(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                           child: Image.asset(
                                             'assets/images/human_heart_anatomy.png',
                                             width: 96,
                                             height: 96,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (context, error, stackTrace) {
+                                            errorBuilder:
+                                                (context, error, stackTrace) {
                                               return Container(
                                                 width: 96,
                                                 height: 96,
-                                                color: primary.withOpacity(0.25),
-                                                child: const Icon(Icons.image, size: 48),
+                                                color:
+                                                    primary.withOpacity(0.25),
+                                                child: const Icon(Icons.image,
+                                                    size: 48),
                                               );
                                             },
                                           ),
@@ -215,13 +222,17 @@ class HomeView extends StatelessWidget {
                                     const SizedBox(width: 16),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 10, vertical: 4),
                                             decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(0.28),
-                                              borderRadius: BorderRadius.circular(20),
+                                              color: Colors.white
+                                                  .withOpacity(0.28),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
                                             ),
                                             child: const Text(
                                               "BIOLOGY",
@@ -248,7 +259,8 @@ class HomeView extends StatelessWidget {
                                           Text(
                                             "Lesson 4: Ventricle Function",
                                             style: TextStyle(
-                                              color: Colors.white.withOpacity(0.75),
+                                              color: Colors.white
+                                                  .withOpacity(0.75),
                                               fontSize: 12,
                                             ),
                                           ),
@@ -257,12 +269,18 @@ class HomeView extends StatelessWidget {
                                             children: [
                                               Expanded(
                                                 child: ClipRRect(
-                                                  borderRadius: BorderRadius.circular(4),
-                                                  child: LinearProgressIndicator(
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                  child:
+                                                      LinearProgressIndicator(
                                                     value: 0.65,
                                                     minHeight: 6,
-                                                    backgroundColor: Colors.white.withOpacity(0.30),
-                                                    valueColor: const AlwaysStoppedAnimation(Colors.white),
+                                                    backgroundColor: Colors
+                                                        .white
+                                                        .withOpacity(0.30),
+                                                    valueColor:
+                                                        const AlwaysStoppedAnimation(
+                                                            Colors.white),
                                                   ),
                                                 ),
                                               ),
@@ -287,7 +305,8 @@ class HomeView extends StatelessWidget {
                                       elevation: 5,
                                       shape: const CircleBorder(),
                                       onPressed: () {},
-                                      child: const Icon(Icons.play_arrow_rounded),
+                                      child:
+                                          const Icon(Icons.play_arrow_rounded),
                                     ),
                                   ],
                                 ),
@@ -321,17 +340,26 @@ class HomeView extends StatelessWidget {
                               _CategoryBox(
                                 icon: Icons.science_rounded,
                                 title: "Biology",
-                                gradientColors: [Color(0xFFAB47BC), Color(0xFF7B1FA2)],
+                                gradientColors: [
+                                  Color(0xFFAB47BC),
+                                  Color(0xFF7B1FA2)
+                                ],
                               ),
                               _CategoryBox(
                                 icon: Icons.history_edu_rounded,
                                 title: "History",
-                                gradientColors: [Color(0xFFCE93D8), Color(0xFFAB47BC)],
+                                gradientColors: [
+                                  Color(0xFFCE93D8),
+                                  Color(0xFFAB47BC)
+                                ],
                               ),
                               _CategoryBox(
                                 icon: Icons.precision_manufacturing_rounded,
                                 title: "Engineering",
-                                gradientColors: [Color(0xFF8E24AA), Color(0xFF4A148C)],
+                                gradientColors: [
+                                  Color(0xFF8E24AA),
+                                  Color(0xFF4A148C)
+                                ],
                               ),
                             ],
                           ),
@@ -396,56 +424,18 @@ class HomeView extends StatelessWidget {
               ],
             ),
 
-            // Bottom Navigation Bar
+            // ── Bottom Navigation Bar (now extracted) ──
             Positioned(
               left: 0,
               right: 0,
               bottom: 0,
-              child: ClipRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? backgroundColor.withOpacity(0.82)
-                          : Colors.white.withOpacity(0.80),
-                      border: Border(
-                        top: BorderSide(color: primary.withOpacity(0.18)),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _NavItem(
-                          icon: Icons.home_rounded,
-                          label: "HOME",
-                          active: true,
-                        ),
-                        _NavItem(
-                          icon: Icons.auto_stories_rounded,
-                          label: "LIBRARY",
-                          active: false,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const CourseLibraryScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 56),
-                        _NavItem(icon: Icons.leaderboard_rounded, label: "RANKING", active: false),
-                        _NavItem(icon: Icons.person_rounded, label: "PROFILE", active: false),
-                      ],
-                    ),
-                  ),
-                ),
+              child: BottomNavBar(
+                primaryColor: primary,
+                isDark: isDark,
               ),
             ),
 
-            // Floating AR / Scan Button – now navigates to AR screen
+            // Floating AR / Scan Button
             Positioned(
               bottom: 48,
               left: 0,
@@ -481,7 +471,7 @@ class HomeView extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Helper classes (unchanged except _NavItem now supports onTap)
+// Helper classes (unchanged)
 // ──────────────────────────────────────────────────────────────────────────────
 
 class _CategoryBox extends StatelessWidget {
@@ -594,7 +584,8 @@ class _FeaturedCard extends StatelessWidget {
                       return Container(
                         color: const Color(0xFF4A1C48),
                         child: const Center(
-                          child: Icon(Icons.broken_image, color: Colors.white70, size: 48),
+                          child: Icon(Icons.broken_image,
+                              color: Colors.white70, size: 48),
                         ),
                       );
                     },
@@ -604,7 +595,8 @@ class _FeaturedCard extends StatelessWidget {
                   top: 12,
                   left: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.60),
                       borderRadius: BorderRadius.circular(8),
@@ -612,7 +604,8 @@ class _FeaturedCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.view_in_ar_rounded, color: primary, size: 16),
+                        Icon(Icons.view_in_ar_rounded,
+                            color: primary, size: 16),
                         const SizedBox(width: 4),
                         Text(
                           "3D MODEL",
@@ -650,7 +643,10 @@ class _FeaturedCard extends StatelessWidget {
                 subtitle,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[Theme.of(context).brightness == Brightness.dark ? 400 : 600],
+                  color: Colors.grey[
+                      Theme.of(context).brightness == Brightness.dark
+                          ? 400
+                          : 600],
                 ),
               ),
               Row(
@@ -659,51 +655,12 @@ class _FeaturedCard extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     rating.toStringAsFixed(1),
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 13),
                   ),
                 ],
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool active;
-  final VoidCallback? onTap;
-
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    this.active = false,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = const Color(0xFFAB47BC);
-    final color = active ? primary : Colors.grey[500]!;
-
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.lexend(
-              fontSize: 10,
-              fontWeight: active ? FontWeight.bold : FontWeight.w500,
-              color: color,
-            ),
           ),
         ],
       ),

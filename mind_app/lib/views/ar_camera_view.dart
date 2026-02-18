@@ -19,8 +19,7 @@ class _ARCameraViewState extends State<ARCameraView> {
   Widget build(BuildContext context) {
     // ── Theme colors matching HomeView / Login ──
     const primary = Color(0xFFAB47BC);
-    const primaryDark = Color(0xFF8E24AA);
-    const bgDark = Color(0xFF1A0F1C);
+    // ...existing code...
     const glassBase = Color(0xFF1A0F1C); // same as home dark bg
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -68,7 +67,10 @@ class _ARCameraViewState extends State<ARCameraView> {
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                         shadows: const [
-                          Shadow(blurRadius: 12, color: Colors.black54, offset: Offset(0, 2)),
+                          Shadow(
+                              blurRadius: 12,
+                              color: Colors.black54,
+                              offset: Offset(0, 2)),
                         ],
                       ),
                     ),
@@ -134,7 +136,8 @@ class _ARCameraViewState extends State<ARCameraView> {
                   height: 320,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: primary.withOpacity(0.20), width: 1.5),
+                    border: Border.all(
+                        color: primary.withOpacity(0.20), width: 1.5),
                   ),
                 ),
 
@@ -165,7 +168,10 @@ class _ARCameraViewState extends State<ARCameraView> {
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(color: primary.withOpacity(0.28)),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.42), blurRadius: 20, offset: const Offset(0, 8)),
+                      BoxShadow(
+                          color: Colors.black.withOpacity(0.42),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8)),
                     ],
                   ),
                   child: Column(
@@ -187,9 +193,13 @@ class _ARCameraViewState extends State<ARCameraView> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _FactRow(label: "Daily Activity", value: "The heart beats ~100k times a day."),
+                      _FactRow(
+                          label: "Daily Activity",
+                          value: "The heart beats ~100k times a day."),
                       const Divider(color: Colors.white24, height: 24),
-                      _FactRow(label: "Capacity", value: "It pumps 2,000 gallons of blood daily."),
+                      _FactRow(
+                          label: "Capacity",
+                          value: "It pumps 2,000 gallons of blood daily."),
                       const SizedBox(height: 16),
                       _LearnMoreButton(primary: primary),
                     ],
@@ -221,54 +231,66 @@ class _ARCameraViewState extends State<ARCameraView> {
                   children: [
                     if (surfaceDetected)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
                         decoration: BoxDecoration(
                           color: glassBase.withOpacity(glassOpacity),
                           borderRadius: BorderRadius.circular(999),
-                          border: Border.all(color: Colors.white.withOpacity(0.14)),
+                          border:
+                              Border.all(color: Colors.white.withOpacity(0.14)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Symbols.check_circle, color: primary, size: 18),
+                            Icon(Symbols.check_circle,
+                                color: primary, size: 18),
                             const SizedBox(width: 8),
                             const Text(
                               "Surface detected",
-                              style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
                       ),
-
                     const SizedBox(height: 20),
-
                     ElevatedButton.icon(
                       onPressed: () {},
                       icon: const Icon(Symbols.add_circle, size: 28),
                       label: const Text(
                         "PLACE OBJECT",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primary,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 18),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 36, vertical: 18),
                         shape: const StadiumBorder(),
                         elevation: 12,
                         shadowColor: primary.withOpacity(0.55),
                       ),
                     ),
-
                     const SizedBox(height: 36),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _BottomActionButton(icon: Symbols.image, label: "Gallery", primary: primary),
+                        _BottomActionButton(
+                            icon: Symbols.image,
+                            label: "Gallery",
+                            primary: primary),
                         const SizedBox(width: 60),
                         _ShutterButton(primary: primary),
                         const SizedBox(width: 60),
-                        _BottomActionButton(icon: Symbols.history, label: "Recent", primary: primary),
+                        _BottomActionButton(
+                            icon: Symbols.history,
+                            label: "Recent",
+                            primary: primary),
                       ],
                     ),
                   ],
@@ -299,26 +321,46 @@ class _ARCameraViewState extends State<ARCameraView> {
   }
 
   List<Widget> _buildCornerBrackets(Color primary) {
-    const double size = 36;
+    // ...existing code...
     const double offset = -6;
     return [
-      Positioned(top: offset, left: offset, child: _Bracket(primary, topLeft: true)),
-      Positioned(top: offset, right: offset, child: _Bracket(primary, topRight: true)),
-      Positioned(bottom: offset, left: offset, child: _Bracket(primary, bottomLeft: true)),
-      Positioned(bottom: offset, right: offset, child: _Bracket(primary, bottomRight: true)),
+      Positioned(
+          top: offset, left: offset, child: _Bracket(primary, topLeft: true)),
+      Positioned(
+          top: offset, right: offset, child: _Bracket(primary, topRight: true)),
+      Positioned(
+          bottom: offset,
+          left: offset,
+          child: _Bracket(primary, bottomLeft: true)),
+      Positioned(
+          bottom: offset,
+          right: offset,
+          child: _Bracket(primary, bottomRight: true)),
     ];
   }
 
-  Widget _Bracket(Color color, {bool topLeft = false, bool topRight = false, bool bottomLeft = false, bool bottomRight = false}) {
+  Widget _Bracket(Color color,
+      {bool topLeft = false,
+      bool topRight = false,
+      bool bottomLeft = false,
+      bool bottomRight = false}) {
     return Container(
       width: 36,
       height: 36,
       decoration: BoxDecoration(
         border: Border(
-          top: (topLeft || topRight) ? BorderSide(color: color, width: 3) : BorderSide.none,
-          left: (topLeft || bottomLeft) ? BorderSide(color: color, width: 3) : BorderSide.none,
-          right: (topRight || bottomRight) ? BorderSide(color: color, width: 3) : BorderSide.none,
-          bottom: (bottomLeft || bottomRight) ? BorderSide(color: color, width: 3) : BorderSide.none,
+          top: (topLeft || topRight)
+              ? BorderSide(color: color, width: 3)
+              : BorderSide.none,
+          left: (topLeft || bottomLeft)
+              ? BorderSide(color: color, width: 3)
+              : BorderSide.none,
+          right: (topRight || bottomRight)
+              ? BorderSide(color: color, width: 3)
+              : BorderSide.none,
+          bottom: (bottomLeft || bottomRight)
+              ? BorderSide(color: color, width: 3)
+              : BorderSide.none,
         ),
       ),
     );
@@ -347,7 +389,9 @@ class _GlassButton extends StatelessWidget {
           color: const Color(0xFF1A0F1C).withOpacity(0.68),
           shape: BoxShape.circle,
           border: Border.all(color: primary.withOpacity(0.28)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 12)],
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 12)
+          ],
         ),
         child: Icon(icon, color: Colors.white, size: 26),
       ),
@@ -407,7 +451,11 @@ class _FactRow extends StatelessWidget {
       children: [
         Text(
           label.toUpperCase(),
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white54, letterSpacing: 0.6),
+          style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.white54,
+              letterSpacing: 0.6),
         ),
         const SizedBox(height: 4),
         Text(value, style: const TextStyle(fontSize: 13, height: 1.3)),
@@ -436,7 +484,8 @@ class _LearnMoreButton extends StatelessWidget {
             children: [
               Text(
                 "Learn More",
-                style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                    color: primary, fontSize: 12, fontWeight: FontWeight.w600),
               ),
               const SizedBox(width: 6),
               Icon(Symbols.arrow_forward, size: 16, color: primary),
@@ -453,7 +502,8 @@ class _ZoomSlider extends StatelessWidget {
   final ValueChanged<double> onChanged;
   final Color primary;
 
-  const _ZoomSlider({required this.value, required this.onChanged, required this.primary});
+  const _ZoomSlider(
+      {required this.value, required this.onChanged, required this.primary});
 
   @override
   Widget build(BuildContext context) {
@@ -476,14 +526,18 @@ class _ZoomSlider extends StatelessWidget {
               children: [
                 Container(
                   width: 6,
-                  decoration: BoxDecoration(color: primary.withOpacity(0.25), borderRadius: BorderRadius.circular(999)),
+                  decoration: BoxDecoration(
+                      color: primary.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(999)),
                 ),
                 FractionallySizedBox(
                   heightFactor: value,
                   alignment: Alignment.bottomCenter,
                   child: Container(
                     width: 6,
-                    decoration: BoxDecoration(color: primary, borderRadius: BorderRadius.circular(999)),
+                    decoration: BoxDecoration(
+                        color: primary,
+                        borderRadius: BorderRadius.circular(999)),
                   ),
                 ),
                 Align(
@@ -495,7 +549,9 @@ class _ZoomSlider extends StatelessWidget {
                       color: Colors.white,
                       shape: BoxShape.circle,
                       border: Border.all(color: primary, width: 3),
-                      boxShadow: [BoxShadow(color: Colors.black38, blurRadius: 8)],
+                      boxShadow: [
+                        BoxShadow(color: Colors.black38, blurRadius: 8)
+                      ],
                     ),
                   ),
                 ),
@@ -515,7 +571,8 @@ class _BottomActionButton extends StatelessWidget {
   final String label;
   final Color primary;
 
-  const _BottomActionButton({required this.icon, required this.label, required this.primary});
+  const _BottomActionButton(
+      {required this.icon, required this.label, required this.primary});
 
   @override
   Widget build(BuildContext context) {
@@ -532,7 +589,8 @@ class _BottomActionButton extends StatelessWidget {
           child: Icon(icon, color: Colors.white70, size: 28),
         ),
         const SizedBox(height: 6),
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.white60)),
+        Text(label,
+            style: const TextStyle(fontSize: 11, color: Colors.white60)),
       ],
     );
   }
@@ -557,12 +615,14 @@ class _ShutterButton extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(6),
           child: Container(
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+                color: Colors.white, shape: BoxShape.circle),
             child: Center(
               child: Container(
                 width: 20,
                 height: 20,
-                decoration: BoxDecoration(color: primary, shape: BoxShape.circle),
+                decoration:
+                    BoxDecoration(color: primary, shape: BoxShape.circle),
               ),
             ),
           ),

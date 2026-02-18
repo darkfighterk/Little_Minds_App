@@ -3,6 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'bottom_nav_bar.dart';  // ← Shared bottom navigation bar
+
 class CourseLibraryScreen extends StatelessWidget {
   const CourseLibraryScreen({super.key});
 
@@ -12,7 +14,6 @@ class CourseLibraryScreen extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     const primary = Color(0xFFAB47BC);
-    const primaryDark = Color(0xFF8E24AA);
     const bgLight = Color(0xFFFAF5FB);
     const bgDark = Color(0xFF1A0F1C);
 
@@ -52,7 +53,9 @@ class CourseLibraryScreen extends StatelessWidget {
                                   "What shall we discover today?",
                                   style: GoogleFonts.lexend(
                                     fontSize: 14,
-                                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                    color: isDark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
                                   ),
                                 ),
                               ],
@@ -100,7 +103,9 @@ class CourseLibraryScreen extends StatelessWidget {
                         // Search bar – matched with HomeView
                         Container(
                           decoration: BoxDecoration(
-                            color: isDark ? primary.withOpacity(0.08) : Colors.white,
+                            color: isDark
+                                ? primary.withOpacity(0.08)
+                                : Colors.white,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: primary.withOpacity(isDark ? 0.25 : 0.18),
@@ -110,9 +115,11 @@ class CourseLibraryScreen extends StatelessWidget {
                             decoration: InputDecoration(
                               hintText: "Search adventures...",
                               hintStyle: TextStyle(color: Colors.grey[400]),
-                              prefixIcon: Icon(Icons.search_rounded, color: Colors.grey[500]),
+                              prefixIcon: Icon(Icons.search_rounded,
+                                  color: Colors.grey[500]),
                               border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 16),
                             ),
                           ),
                         ),
@@ -149,56 +156,14 @@ class CourseLibraryScreen extends StatelessWidget {
               ],
             ),
 
-            // ── Bottom Navigation ───────────────────────────────────────
+            // ── Reusable Bottom Navigation Bar ───────────────────────────
             Positioned(
               left: 0,
               right: 0,
               bottom: 0,
-              child: ClipRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? backgroundColor.withOpacity(0.82)
-                          : Colors.white.withOpacity(0.80),
-                      border: Border(
-                        top: BorderSide(color: primary.withOpacity(0.18)),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _NavItem(
-                          icon: Icons.grid_view_rounded,
-                          label: "LIBRARY",
-                          active: true,
-                          primary: primary,
-                        ),
-                        _NavItem(
-                          icon: Icons.collections_bookmark_rounded,
-                          label: "LESSONS",
-                          active: false,
-                          primary: primary,
-                        ),
-                        const SizedBox(width: 56), // space for FAB
-                        _NavItem(
-                          icon: Icons.emoji_events_rounded,
-                          label: "AWARDS",
-                          active: false,
-                          primary: primary,
-                        ),
-                        _NavItem(
-                          icon: Icons.person_rounded,
-                          label: "PROFILE",
-                          active: false,
-                          primary: primary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              child: BottomNavBar(
+                primaryColor: primary,
+                isDark: isDark,
               ),
             ),
 
@@ -288,53 +253,16 @@ class CourseLibraryScreen extends StatelessWidget {
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              children: [
-                // You can keep your _CourseCard widgets here
-                // Just pass the new primary color
-                // Example:
-                // _CourseCard(..., primary: primary),
-                // _CourseCard(..., primary: primary),
+              children: const [
+                // Placeholder – replace with your actual course cards
+                // e.g. _CourseCard(...),
+                //      _CourseCard(...),
               ],
             ),
           ),
           const SizedBox(height: 40),
         ],
       ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool active;
-  final Color primary;
-
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    required this.active,
-    required this.primary,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = active ? primary : Colors.grey[500]!;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: color, size: 28),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          style: GoogleFonts.lexend(
-            fontSize: 10,
-            fontWeight: active ? FontWeight.bold : FontWeight.w600,
-            color: color,
-          ),
-        ),
-      ],
     );
   }
 }
