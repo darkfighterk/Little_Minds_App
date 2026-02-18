@@ -39,25 +39,6 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
       end: Offset.zero,
     ).animate(
         CurvedAnimation(parent: _fadeController, curve: Curves.easeOutCubic));
-
-    _testConnection();
-  }
-
-  void _testConnection() async {
-    final isConnected = await _loginController.testConnection();
-    if (!mounted) return;
-    if (isConnected) {
-      print("✅ Backend is reachable");
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-              '⚠️ Cannot connect to backend. Make sure it\'s running on port 8080'),
-          duration: Duration(seconds: 5),
-          backgroundColor: Colors.orange,
-        ),
-      );
-    }
   }
 
   void _onLoginPressed() async {
