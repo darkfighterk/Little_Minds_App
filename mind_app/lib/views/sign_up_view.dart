@@ -83,7 +83,7 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ Registration successful! Please log in.'),
+          content: Text('Registration successful! Please log in.'),
           backgroundColor: Colors.green,
         ),
       );
