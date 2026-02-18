@@ -1,17 +1,27 @@
 class User {
-  int? id;
-  String name;
-  String email;
+  final int id;
+  final String name;
+  final String email;
 
-  User({this.id, required this.name, required this.email});
+  User({required this.id, required this.name, required this.email});
 
-  // Create a User from JSON / Map
+  // Create a User from JSON (from backend response)
   factory User.fromJson(Map<String, dynamic> json) {
-    return User(id: json['id'], name: json['name'], email: json['email']);
+    print("📦 Parsing user from JSON: $json");
+    return User(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+    );
   }
 
-  // Convert User to Map / JSON
+  // Convert User to JSON (for sending to backend if needed)
   Map<String, dynamic> toJson() {
     return {'id': id, 'name': name, 'email': email};
+  }
+
+  @override
+  String toString() {
+    return 'User(id: $id, name: $name, email: $email)';
   }
 }

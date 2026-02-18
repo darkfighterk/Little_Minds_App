@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'views/splash_view.dart';
+import 'views/onboarding_view.dart';
 import 'views/login_view.dart';
 import 'views/sign_up_view.dart';
 
@@ -17,7 +19,9 @@ class MindApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context) => const LoginView(),
+        '/': (context) => const SplashView(),
+        '/onboarding': (context) => const OnboardingView(),
+        '/login': (context) => const LoginView(),
         '/register': (context) => const SignUpView(),
       },
     );
