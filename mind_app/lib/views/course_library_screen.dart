@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/course_model.dart';
 import '../services/course_service.dart';
 import 'bottom_nav_bar.dart';
+import 'category_filter_screen.dart';
 
 class CourseLibraryScreen extends StatefulWidget {
   const CourseLibraryScreen({super.key});
@@ -20,7 +21,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch courses when screen initializes
+    // Fetch courses from Backend (10.0.2.2)
     _futureCourses = _courseService.fetchCourses();
   }
 
@@ -58,7 +59,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
 
                 return Column(
                   children: [
-                    // Wrap CustomScrollView with Expanded to fix "RenderFlex overflow" error
+                    // Wrap with Expanded to fix "RenderFlex overflow"
                     Expanded(
                       child: CustomScrollView(
                         slivers: [
@@ -110,7 +111,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
               child: BottomNavBar(primaryColor: primary, isDark: isDark),
             ),
 
-            // AR Button (Floating)
+            // AR Button
             Positioned(
               bottom: 48,
               left: 0,
@@ -138,20 +139,21 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Hi, Little Explorer! 🚀",
-                    style: GoogleFonts.lexend(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87)),
-                Text("What shall we discover today?",
-                    style:
-                        GoogleFonts.lexend(fontSize: 14, color: Colors.grey)),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Hi, Little Explorer! 🚀",
+                      style: GoogleFonts.lexend(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black87)),
+                  Text("What shall we discover today?",
+                      style:
+                          GoogleFonts.lexend(fontSize: 14, color: Colors.grey)),
+                ],
+              ),
             ),
-            // Points Container
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -164,7 +166,6 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
           ],
         ),
         const SizedBox(height: 28),
-        // Search Bar
         TextField(
           decoration: InputDecoration(
             hintText: "Search adventures...",
@@ -188,13 +189,34 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Text(title,
-                style: GoogleFonts.lexend(
-                    fontSize: 20, fontWeight: FontWeight.bold)),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(title,
+                    style: GoogleFonts.lexend(
+                        fontSize: 20, fontWeight: FontWeight.bold)),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CategoryFilterScreen(
+                          categoryName: title,
+                          courses: courses,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Text("View All",
+                      style: TextStyle(
+                          color: primary, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
           ),
           SizedBox(
-            height: 240, // Reduced height to fit better and avoid overflow
+            height: 240,
             child: courses.isEmpty
                 ? const Center(child: Text("No courses in this category"))
                 : ListView.builder(
@@ -207,6 +229,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
                     },
                   ),
           ),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -244,7 +267,8 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
               children: [
                 Text(course.title,
                     style: const TextStyle(fontWeight: FontWeight.bold),
-                    maxLines: 1),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
                 Text(course.instructor,
                     style: const TextStyle(color: Colors.grey, fontSize: 12)),
               ],
