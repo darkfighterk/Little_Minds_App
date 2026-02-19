@@ -22,7 +22,7 @@ dependencies:
   # flutter_riverpod: ^2.5.1
 
   # Networking & Storage
-  http: ^1.2.2
+  http: ^1.6.0
   sqflite: ^2.3.3+1
   path: ^1.9.0
   shared_preferences: ^2.3.0
