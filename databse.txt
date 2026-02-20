@@ -16,3 +16,39 @@ INSERT INTO users (name, email, password) VALUES
 ('Charlie Brown', 'charlie.brown@example.com', 'charlie2026'),
 ('Diana Prince', 'diana.prince@example.com', 'wonderwoman'),
 ('Ethan Hunt', 'ethan.hunt@example.com', 'impossible123');
+
+
+CREATE TABLE courses (
+    id INT(11) AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    description TEXT,
+    imageUrl VARCHAR(255),
+    instructor VARCHAR(255) NOT NULL
+);
+
+INSERT INTO courses (title, category, description, imageUrl, instructor) VALUES
+('Machine Learning Basics', 'AI', 
+ 'Learn fundamentals of Machine Learning including supervised and unsupervised learning.', 
+ 'https://example.com/images/ml.jpg', 
+ 'Dr. Silva'),
+
+('Full Stack Web Development', 'Web Development', 
+ 'Complete MERN stack development course covering MongoDB, Express, React, and Node.js.', 
+ 'https://example.com/images/mern.jpg', 
+ 'Mr. Perera'),
+
+('Data Structures & Algorithms', 'Programming', 
+ 'Master DSA concepts for coding interviews and competitive programming.', 
+ 'https://example.com/images/dsa.jpg', 
+ 'Ms. Fernando'),
+
+('Deep Learning with TensorFlow', 'AI', 
+ 'Build neural networks and deep learning models using TensorFlow and Keras.', 
+ 'https://example.com/images/dl.jpg', 
+ 'Dr. Jayasinghe'),
+
+('Mobile App Development', 'Mobile Development', 
+ 'Create Android and iOS apps using React Native.', 
+ 'https://example.com/images/mobile.jpg', 
+ 'Mr. Kumar');
