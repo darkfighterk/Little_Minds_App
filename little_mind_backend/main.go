@@ -8,20 +8,33 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/golang-jwt/jwt/v5" // JWT library
-	"golang.org/x/crypto/bcrypt"   // Password hashing
+	"github.com/golang-jwt/jwt/v5" // JWT library for secure authentication
+	"golang.org/x/crypto/bcrypt"   // Library for password hashing and verification
 )
 
 // =====================
-// Models
+// Data Models
 // =====================
+
+// User represents the user account structure in the database
 type User struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name"`
 	Email    string `json:"email"`
-	Password string `json:"password,omitempty"`
+	Password string `json:"password,omitempty"` // omitempty prevents password from being sent in JSON responses
 }
 
+// Course represents the educational content structure
+type Course struct {
+	ID          int    `json:"id"`
+	Title       string `json:"title"`
+	Category    string `json:"category"`
+	Description string `json:"description"`
+	ImageURL    string `json:"imageUrl"`
+	Instructor  string `json:"instructor"`
+}
+
+// Response is a generic structure for all API responses
 type Response struct {
 	Message string      `json:"message"`
 	Data    interface{} `json:"data,omitempty"`
@@ -29,44 +42,47 @@ type Response struct {
 }
 
 // =====================
-// JWT Secret Key (Keep it safe in env variables in production)
+// Global Variables & Security
 // =====================
-var jwtSecret = []byte("my_secret_key")
 
-// =====================
-// Database
-// =====================
-var db *sql.DB
+var jwtSecret = []byte("my_secret_key") // Secret key for JWT signing
+var db *sql.DB                          // Global database connection pool
 
 func main() {
 	var err error
-	db, err = sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/little_mind_db")
+	// Initialize MySQL connection to 'shopdb'
+	db, err = sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/shopdb")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to open database connection:", err)
 	}
 	defer db.Close()
 
-	// Test database connection
+	// Verify database connectivity
 	err = db.Ping()
 	if err != nil {
-		log.Fatal("Cannot connect to database:", err)
+		log.Fatal("Cannot reach the database server:", err)
 	}
 	log.Println("Database connected successfully")
 
 	// =====================
-	// Routes
+	// API Route Definitions
 	// =====================
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/register", enableCORS(registerHandler))
 	http.HandleFunc("/login", enableCORS(loginHandler))
+	
+	// Endpoint for retrieving course lists with optional filtering
+	http.HandleFunc("/courses", enableCORS(coursesHandler))
 
 	log.Println("Server started at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 // =====================
-// CORS Middleware
+// Middleware
 // =====================
+
+// enableCORS handles Cross-Origin Resource Sharing for frontend connectivity
 func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -83,8 +99,10 @@ func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // =====================
-// Root Endpoint
+// API Handlers
 // =====================
+
+// rootHandler provides API metadata and available endpoints
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -94,15 +112,15 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 			"version": "1.0.0",
 			"endpoints": []string{
 				"POST /register - Register a new user",
-				"POST /login - Login user",
+				"POST /login - Authenticate user",
+				"GET /courses - Fetch all courses",
+				"GET /courses?category=X - Filter courses by category",
 			},
 		},
 	})
 }
 
-// =====================
-// Register Endpoint
-// =====================
+// registerHandler processes new user creation with password hashing
 func registerHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -116,21 +134,22 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{Error: "Invalid request payload"})
+		json.NewEncoder(w).Encode(Response{Error: "Invalid request body"})
 		return
 	}
 
+	// Validate required fields
 	if user.Name == "" || user.Email == "" || user.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{Error: "Name, email, and password are required"})
+		json.NewEncoder(w).Encode(Response{Error: "All fields are required"})
 		return
 	}
 
-	// Check if user already exists
+	// Check for existing email in database
 	var exists bool
 	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = ?)", user.Email).Scan(&exists)
 	if err != nil {
-		log.Println("Database error:", err)
+		log.Println("Database lookup error:", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(Response{Error: "Database error"})
 		return
@@ -138,49 +157,36 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	if exists {
 		w.WriteHeader(http.StatusConflict)
-		json.NewEncoder(w).Encode(Response{Error: "User with this email already exists"})
+		json.NewEncoder(w).Encode(Response{Error: "Email already registered"})
 		return
 	}
 
-	// =====================
-	// Hash the password before storing
-	// =====================
+	// Hash password for secure storage
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		log.Println("Error hashing password:", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(Response{Error: "Failed to process password"})
+		json.NewEncoder(w).Encode(Response{Error: "Security processing error"})
 		return
 	}
 
-	// Insert user into database
+	// Save new user record
 	result, err := db.Exec("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", user.Name, user.Email, string(hashedPassword))
 	if err != nil {
-		log.Println("Database error:", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(Response{Error: "Failed to register user"})
+		json.NewEncoder(w).Encode(Response{Error: "Registration failed"})
 		return
 	}
 
-	userID, err := result.LastInsertId()
-	if err != nil {
-		log.Println("Error getting last insert ID:", err)
-	}
+	userID, _ := result.LastInsertId()
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(Response{
-		Message: "User registered successfully",
-		Data: map[string]interface{}{
-			"id":    userID,
-			"name":  user.Name,
-			"email": user.Email,
-		},
+		Message: "User created successfully",
+		Data: map[string]interface{}{"id": userID, "name": user.Name, "email": user.Email},
 	})
 }
 
-// =====================
-// Login Endpoint
-// =====================
+// loginHandler verifies credentials and issues a JWT token
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -191,71 +197,85 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user User
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{Error: "Invalid request payload"})
-		return
-	}
-
-	if user.Email == "" || user.Password == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{Error: "Email and password are required"})
-		return
-	}
+	json.NewDecoder(r.Body).Decode(&user)
 
 	var dbUser User
-	err = db.QueryRow("SELECT id, name, email, password FROM users WHERE email = ?", user.Email).Scan(
+	err := db.QueryRow("SELECT id, name, email, password FROM users WHERE email = ?", user.Email).Scan(
 		&dbUser.ID, &dbUser.Name, &dbUser.Email, &dbUser.Password,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(Response{Error: "Invalid email or password"})
-			return
-		}
-		log.Println("Database error:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(Response{Error: "Database error"})
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(Response{Error: "Invalid credentials"})
 		return
 	}
 
-	// =====================
-	// Compare hashed passwords
-	// =====================
+	// Compare provided password with stored hash
 	err = bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password))
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(Response{Error: "Invalid email or password"})
+		json.NewEncoder(w).Encode(Response{Error: "Invalid credentials"})
 		return
 	}
 
-	// =====================
-	// Generate JWT token
-	// =====================
+	// Generate a 24-hour expiration JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": dbUser.ID,
 		"email":   dbUser.Email,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(), // token expires in 24h
+		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 	})
 
-	tokenString, err := token.SignedString(jwtSecret)
-	if err != nil {
-		log.Println("Error generating JWT:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(Response{Error: "Failed to generate token"})
-		return
-	}
+	tokenString, _ := token.SignedString(jwtSecret)
 
-	// Return user info + token
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(Response{
 		Message: "Login successful",
 		Data: map[string]interface{}{
-			"id":    dbUser.ID,
-			"name":  dbUser.Name,
-			"email": dbUser.Email,
-			"token": tokenString,
+			"id": dbUser.ID, "name": dbUser.Name, "email": dbUser.Email, "token": tokenString,
 		},
+	})
+}
+
+// coursesHandler handles fetching course lists with optional category filtering
+func coursesHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
+		return
+	}
+
+	// Parse category query parameter from URL
+	category := r.URL.Query().Get("category")
+	var rows *sql.Rows
+	var err error
+
+	if category != "" {
+		rows, err = db.Query("SELECT id, title, category, description, imageUrl, instructor FROM courses WHERE category = ?", category)
+	} else {
+		rows, err = db.Query("SELECT id, title, category, description, imageUrl, instructor FROM courses")
+	}
+
+	if err != nil {
+		log.Println("Database query failed:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(Response{Error: "Database access error"})
+		return
+	}
+	defer rows.Close()
+
+	courses := []Course{}
+	for rows.Next() {
+		var c Course
+		if err := rows.Scan(&c.ID, &c.Title, &c.Category, &c.Description, &c.ImageURL, &c.Instructor); err != nil {
+			continue
+		}
+		courses = append(courses, c)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(Response{
+		Message: "Courses retrieved successfully",
+		Data:    courses,
 	})
 }
