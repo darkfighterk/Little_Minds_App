@@ -51,7 +51,7 @@ var db *sql.DB                          // Global database connection pool
 func main() {
 	var err error
 	// Initialize MySQL connection to 'shopdb'
-	db, err = sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/shopdb")
+	db, err = sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/little_mind_db")
 	if err != nil {
 		log.Fatal("Failed to open database connection:", err)
 	}
@@ -70,7 +70,7 @@ func main() {
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/register", enableCORS(registerHandler))
 	http.HandleFunc("/login", enableCORS(loginHandler))
-	
+
 	// Endpoint for retrieving course lists with optional filtering
 	http.HandleFunc("/courses", enableCORS(coursesHandler))
 
@@ -182,7 +182,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(Response{
 		Message: "User created successfully",
-		Data: map[string]interface{}{"id": userID, "name": user.Name, "email": user.Email},
+		Data:    map[string]interface{}{"id": userID, "name": user.Name, "email": user.Email},
 	})
 }
 
