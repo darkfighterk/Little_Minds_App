@@ -36,22 +36,22 @@ class AuthService {
 
       final response = await http
           .post(
-            Uri.parse('$baseUrl/register'),
-            headers: {"Content-Type": "application/json"},
-            body: jsonEncode({
-              "name": name,
-              "email": email,
-              "password": password,
-            }),
-          )
+        Uri.parse('$baseUrl/register'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "name": name,
+          "email": email,
+          "password": password,
+        }),
+      )
           .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              throw Exception(
-                'Connection timeout - Check if backend is running',
-              );
-            },
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception(
+            'Connection timeout - Check if backend is running',
           );
+        },
+      );
 
       print("✅ POST /register status: ${response.statusCode}");
       print("✅ POST /register body: ${response.body}");
@@ -93,18 +93,18 @@ class AuthService {
 
       final response = await http
           .post(
-            Uri.parse('$baseUrl/login'),
-            headers: {"Content-Type": "application/json"},
-            body: jsonEncode({"email": email, "password": password}),
-          )
+        Uri.parse('$baseUrl/login'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": email, "password": password}),
+      )
           .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              throw Exception(
-                'Connection timeout - Check if backend is running',
-              );
-            },
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception(
+            'Connection timeout - Check if backend is running',
           );
+        },
+      );
 
       print("✅ POST /login status: ${response.statusCode}");
       print("✅ POST /login body: ${response.body}");

@@ -4,7 +4,6 @@ import 'views/onboarding_view.dart';
 import 'views/login_view.dart';
 import 'views/sign_up_view.dart';
 
-
 void main() {
   runApp(const MindApp());
 }
@@ -18,7 +17,7 @@ class MindApp extends StatelessWidget {
       title: 'Mind App',
       theme: ThemeData(primarySwatch: Colors.blue),
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',   
+      initialRoute: '/',
       routes: {
         '/': (context) => const SplashView(),
         '/onboarding': (context) => const OnboardingView(),

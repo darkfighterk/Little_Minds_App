@@ -1,4 +1,10 @@
+// ============================================================
+// login_controller.dart  (UPDATED — saves JWT session)
+// Place in: lib/controllers/login_controller.dart
+// ============================================================
+
 import '../services/auth_service.dart';
+import '../services/game_service.dart';
 import '../models/user_model.dart';
 
 class LoginController {
@@ -19,18 +25,26 @@ class LoginController {
       return null;
     }
 
-    // Check for error in response
     if (response.containsKey('error')) {
       print("❌ LoginController: Error - ${response['error']}");
       return null;
     }
 
-    // Check if we have user data
-    // Backend returns: { "message": "Login successful", "data": { "id": 1, "name": "...", "email": "..." } }
     if (response.containsKey('data') && response['data'] != null) {
+      final data = response['data'] as Map<String, dynamic>;
+
+      // ── SAVE SESSION (user_id + JWT token) ──────────────────
+      // This lets GameService authenticate progress API calls.
+      final userId = (data['id'] as num?)?.toInt() ?? 0;
+      final token = (data['token'] as String?) ?? '';
+
+      if (userId > 0 && token.isNotEmpty) {
+        await GameService.saveSession(userId, token);
+        print("✅ Session saved: userId=$userId");
+      }
+
       print("✅ LoginController: Login successful");
-      print("User data: ${response['data']}");
-      return User.fromJson(response['data']);
+      return User.fromJson(data);
     }
 
     print("❌ LoginController: Invalid response structure");
@@ -52,17 +66,13 @@ class LoginController {
       return null;
     }
 
-    // Check for error in response
     if (response.containsKey('error')) {
       print("❌ LoginController: Error - ${response['error']}");
       return null;
     }
 
-    // Check if we have user data
-    // Backend returns: { "message": "User registered successfully", "data": { "id": 1, "name": "...", "email": "..." } }
     if (response.containsKey('data') && response['data'] != null) {
       print("✅ LoginController: Registration successful");
-      print("User data: ${response['data']}");
       return User.fromJson(response['data']);
     }
 
@@ -70,9 +80,7 @@ class LoginController {
     return null;
   }
 
-  // Test backend connection
   Future<bool> testConnection() async {
-    print("🔵 Testing backend connection...");
     return await _authService.testConnection();
   }
 }

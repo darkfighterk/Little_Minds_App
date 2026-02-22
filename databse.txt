@@ -1,3 +1,5 @@
+X-Admin-Key: LittleMind@Admin2024
+
 CREATE DATABASE little_mind_db;
 
 USE little_mind_db;
@@ -52,3 +54,43 @@ INSERT INTO courses (title, category, description, imageUrl, instructor) VALUES
  'Create Android and iOS apps using React Native.', 
  'https://example.com/images/mobile.jpg', 
  'Mr. Kumar');
+
+-- Subjects created via the admin panel
+CREATE TABLE IF NOT EXISTS quiz_subjects (
+    id            VARCHAR(50)  PRIMARY KEY,           -- e.g. "math", "geography"
+    name          VARCHAR(100) NOT NULL,
+    emoji         VARCHAR(20)  NOT NULL DEFAULT '📚',
+    gradient_start VARCHAR(10) NOT NULL DEFAULT '#4FC3F7',
+    gradient_end  VARCHAR(10)  NOT NULL DEFAULT '#0288D1',
+    created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Levels belonging to a subject
+CREATE TABLE IF NOT EXISTS quiz_levels (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    subject_id     VARCHAR(50)  NOT NULL,
+    level_number   INT          NOT NULL,
+    title          VARCHAR(100) NOT NULL,
+    icon           VARCHAR(20)  NOT NULL DEFAULT '🎯',
+    stars_required INT          NOT NULL DEFAULT 0,
+    created_at     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_subject_level (subject_id, level_number),
+    FOREIGN KEY (subject_id) REFERENCES quiz_subjects(id) ON DELETE CASCADE
+);
+
+-- Questions belonging to a level
+CREATE TABLE IF NOT EXISTS quiz_questions (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    level_id      INT           NOT NULL,
+    question_text TEXT          NOT NULL,         -- may be empty if image_url is set
+    image_url     VARCHAR(500)  DEFAULT NULL,     -- optional image for the question
+    option_a      VARCHAR(500)  NOT NULL,
+    option_b      VARCHAR(500)  NOT NULL,
+    option_c      VARCHAR(500)  NOT NULL,
+    option_d      VARCHAR(500)  NOT NULL,
+    correct_index INT           NOT NULL,         -- 0=A, 1=B, 2=C, 3=D
+    fun_fact      TEXT          DEFAULT NULL,
+    sort_order    INT           NOT NULL DEFAULT 0,
+    created_at    TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (level_id) REFERENCES quiz_levels(id) ON DELETE CASCADE
+);
