@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
+import 'settings_view.dart';
 
 // You can keep these imports commented until you actually create the screens
 // import 'progress_view.dart';
@@ -80,12 +81,14 @@ class BottomNavBar extends StatelessWidget {
                 label: "SETTINGS",
                 active: false,
                 color: primaryColor,
-                // onTap: () {
-                //   Navigator.push(
-                //     context,
-                //     MaterialPageRoute(builder: (_) => const SettingsView()),
-                //   );
-                // },
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsView(),   // ← your widget name
+                    ),
+                  );
+                },
               ),
             ],
           ),
