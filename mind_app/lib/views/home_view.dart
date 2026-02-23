@@ -1,5 +1,5 @@
 // ============================================================
-// home_view.dart  (FIXED — progress bar + admin level counts)
+// home_view.dart  
 // Place in: lib/views/home_view.dart
 // ============================================================
 
@@ -12,6 +12,10 @@ import '../services/game_service.dart';
 import '../services/admin_service.dart';
 import 'level_map_view.dart';
 import 'admin_view.dart';
+
+// ── Add this import ────────────────────────────────────────────
+import 'bottom_nav_bar.dart'; // ← adjust path if your file is in different folder
+// e.g. '../widgets/bottom_nav_bar.dart' or 'package:your_app/widgets/bottom_nav_bar.dart'
 
 class HomeView extends StatefulWidget {
   final User user;
@@ -32,11 +36,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   final Map<String, double> _progress = {};
   final Map<String, int> _stars = {};
 
-  // FIX: track total level count per subject (needed for admin subjects
-  // whose Subject model is created with levels: const [])
+  // track total level count per subject
   final Map<String, int> _totalLevelCounts = {};
-
-  int _navIndex = 0;
 
   @override
   void initState() {
@@ -52,15 +53,13 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 800),
     )..forward();
 
-    // Seed built-in level counts so progress is correct even before API call
+    // Seed built-in level counts
     for (final s in GameData.subjects) {
       _totalLevelCounts[s.id] = s.levels.length;
     }
 
     _loadAdminSubjects();
   }
-
-  // ── FIX: unified loader — loads subjects then progress together ──
 
   Future<void> _loadAdminSubjects() async {
     final data = await _adminService.getSubjects();
@@ -83,7 +82,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     if (!mounted) return;
     setState(() => _adminSubjects = newSubjects);
 
-    // FIX: fetch actual level counts for admin subjects from backend
+    // Fetch actual level counts for admin subjects
     for (final subject in newSubjects) {
       final levels = await _adminService.getLevels(subject.id);
       if (mounted) {
@@ -91,7 +90,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       }
     }
 
-    // Now load progress for all subjects (built-in + admin)
     await _loadProgress();
   }
 
@@ -100,8 +98,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     for (final subject in allSubjects) {
       final result = await _gameService.fetchProgress(subject.id);
 
-      // FIX: use _totalLevelCounts which is populated for both built-in and
-      // admin subjects, falling back to the model's levels list length.
       final totalLevels =
           _totalLevelCounts[subject.id] ?? subject.levels.length;
 
@@ -124,8 +120,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  // ── Build ──────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -144,10 +138,15 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               Expanded(
                 child: _buildSubjectGrid(),
               ),
-              _buildBottomNav(),
             ],
           ),
         ),
+      ),
+
+      // ── Bottom Navigation Bar added here ────────────────────────
+      bottomNavigationBar: BottomNavBar(
+        primaryColor: const Color(0xFFFFD700), // gold / yellow accent
+        isDark: true,                           // dark theme
       ),
     );
   }
@@ -161,7 +160,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
       child: Column(
         children: [
-          // Top row: greeting + stars counter
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -187,7 +185,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 ],
               ),
 
-              // Stars badge
               AnimatedBuilder(
                 animation: _floatController,
                 builder: (context, child) {
@@ -202,10 +199,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
+                    color: Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(30),
                     border: Border.all(
-                      color: const Color(0xFFFFD700).withValues(alpha: 0.5),
+                      color: const Color(0xFFFFD700).withOpacity(0.5),
                       width: 1.5,
                     ),
                   ),
@@ -240,7 +237,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
           const SizedBox(height: 16),
 
-          // Decorative floating stars row
           _buildDecoStars(),
         ],
       ),
@@ -262,8 +258,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 child: Icon(
                   Icons.star_rounded,
                   size: 14 + (i % 3) * 4.0,
-                  color:
-                      const Color(0xFFFFD700).withValues(alpha: 0.5 + i * 0.1),
+                  color: const Color(0xFFFFD700).withOpacity(0.5 + i * 0.1),
                 ),
               ),
             );
@@ -287,7 +282,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
         child: Column(
           children: [
-            // Top two subjects side by side
             Row(
               children: [
                 Expanded(
@@ -314,7 +308,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
             const SizedBox(height: 14),
 
-            // Third subject full-width (landscape card)
             _SubjectCardWide(
               subject: GameData.subjects[2],
               progress: _progress[GameData.subjects[2].id] ?? 0,
@@ -323,7 +316,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               onTap: () => _openSubject(GameData.subjects[2]),
             ),
 
-            // ── Admin-created subjects ─────────────────────────
             if (_adminSubjects.isNotEmpty) ...[
               const SizedBox(height: 14),
               ..._buildAdminSubjectRows(),
@@ -380,14 +372,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             position: Tween(
               begin: const Offset(1, 0),
               end: Offset.zero,
-            ).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
             child: child,
           );
         },
       ),
     );
-    // FIX: await the progress reload so state updates before rebuild
     if (mounted) await _loadProgress();
   }
 
@@ -396,62 +386,9 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       context,
       MaterialPageRoute(builder: (_) => const AdminGateView()),
     );
-    // Reload subjects & progress when returning from admin panel
     if (mounted) {
       await _loadAdminSubjects();
     }
-  }
-
-  // ── Bottom Nav ─────────────────────────────────────────────
-
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, -3),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _NavItem(
-                icon: Icons.home_rounded,
-                label: 'Home',
-                selected: _navIndex == 0,
-                onTap: () => setState(() => _navIndex = 0),
-              ),
-              _NavItem(
-                icon: Icons.bar_chart_rounded,
-                label: 'Progress',
-                selected: _navIndex == 1,
-                onTap: () => setState(() => _navIndex = 1),
-              ),
-              _NavItem(
-                icon: Icons.person_rounded,
-                label: 'Profile',
-                selected: _navIndex == 2,
-                onTap: () => setState(() => _navIndex = 2),
-              ),
-              _NavItem(
-                icon: Icons.admin_panel_settings_rounded,
-                label: 'Admin',
-                selected: _navIndex == 3,
-                onTap: _openAdmin,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
 
@@ -511,7 +448,7 @@ class _SubjectCard extends StatelessWidget {
             border: Border.all(color: _borderColor, width: 2.5),
             boxShadow: [
               BoxShadow(
-                color: _borderColor.withValues(alpha: 0.3),
+                color: _borderColor.withOpacity(0.3),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
               ),
@@ -520,13 +457,12 @@ class _SubjectCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
           child: Column(
             children: [
-              // Emoji in circle
               Container(
                 width: 70,
                 height: 70,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: _borderColor.withValues(alpha: 0.15),
+                  color: _borderColor.withOpacity(0.15),
                 ),
                 child: Center(
                   child: Text(
@@ -548,7 +484,6 @@ class _SubjectCard extends StatelessWidget {
 
               const SizedBox(height: 8),
 
-              // Progress bar
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(
@@ -614,7 +549,7 @@ class _SubjectCardWide extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF29B6F6).withValues(alpha: 0.3),
+                color: const Color(0xFF29B6F6).withOpacity(0.3),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
               ),
@@ -623,13 +558,12 @@ class _SubjectCardWide extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           child: Row(
             children: [
-              // Icon circle
               Container(
                 width: 70,
                 height: 70,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF29B6F6).withValues(alpha: 0.15),
+                  color: const Color(0xFF29B6F6).withOpacity(0.15),
                 ),
                 child: Center(
                   child: Text(
@@ -686,49 +620,6 @@ class _SubjectCardWide extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ── Nav Item ───────────────────────────────────────────────────
-
-class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    const purple = Color(0xFF7C3AED);
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 26,
-            color: selected ? purple : Colors.grey[400],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.nunito(
-              fontSize: 12,
-              color: selected ? purple : Colors.grey[400],
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-            ),
-          ),
-        ],
       ),
     );
   }
