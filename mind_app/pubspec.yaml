@@ -37,6 +37,7 @@ dependencies:
   intl: ^0.19.0
   cupertino_icons: ^1.0.8
   material_symbols_icons: ^4.2781.2   # modern Material Symbols icons
+  google_generative_ai: ^0.4.7
 
 dev_dependencies:
   flutter_test:
