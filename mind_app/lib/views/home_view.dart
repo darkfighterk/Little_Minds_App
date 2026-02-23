@@ -12,6 +12,7 @@ import '../services/game_service.dart';
 import '../services/admin_service.dart';
 import 'level_map_view.dart';
 import 'admin_view.dart';
+import 'chat_screen.dart';
 
 class HomeView extends StatefulWidget {
   final User user;
@@ -129,6 +130,19 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // ── ADDED: Floating Action Button for AI Chat ──
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ChatScreen()),
+          );
+        },
+        backgroundColor: const Color(0xFFAB47BC),
+        child: const Icon(Icons.chat_bubble_rounded, color: Colors.white),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
