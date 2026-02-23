@@ -29,12 +29,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   late AnimationController _floatController;
   late AnimationController _starController;
 
-  // progress per subject  (0.0 – 1.0)
   final Map<String, double> _progress = {};
   final Map<String, int> _stars = {};
-
-  // FIX: track total level count per subject (needed for admin subjects
-  // whose Subject model is created with levels: const [])
   final Map<String, int> _totalLevelCounts = {};
 
   int _navIndex = 0;
@@ -53,15 +49,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 800),
     )..forward();
 
-    // Seed built-in level counts so progress is correct even before API call
     for (final s in GameData.subjects) {
       _totalLevelCounts[s.id] = s.levels.length;
     }
 
     _loadAdminSubjects();
   }
-
-  // ── FIX: unified loader — loads subjects then progress together ──
 
   Future<void> _loadAdminSubjects() async {
     final data = await _adminService.getSubjects();
@@ -84,15 +77,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     if (!mounted) return;
     setState(() => _adminSubjects = newSubjects);
 
-    // FIX: fetch actual level counts for admin subjects from backend
     for (final subject in newSubjects) {
       final levels = await _adminService.getLevels(subject.id);
       if (mounted) {
         setState(() => _totalLevelCounts[subject.id] = levels.length);
       }
     }
-
-    // Now load progress for all subjects (built-in + admin)
     await _loadProgress();
   }
 
@@ -100,9 +90,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     final allSubjects = [...GameData.subjects, ..._adminSubjects];
     for (final subject in allSubjects) {
       final result = await _gameService.fetchProgress(subject.id);
-
-      // FIX: use _totalLevelCounts which is populated for both built-in and
-      // admin subjects, falling back to the model's levels list length.
       final totalLevels =
           _totalLevelCounts[subject.id] ?? subject.levels.length;
 
@@ -125,21 +112,55 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  // ── Build ──────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // ── ADDED: Floating Action Button for AI Chat ──
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
+      // ── UPDATED: Playful Mindie Robot Floating Action Button ──
+      floatingActionButton: GestureDetector(
+        onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const ChatScreen()),
           );
         },
-        backgroundColor: const Color(0xFFAB47BC),
-        child: const Icon(Icons.chat_bubble_rounded, color: Colors.white),
+        child: Container(
+          height: 85,
+          width: 85,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF00E5FF).withOpacity(0.4),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Background Glow
+              Container(
+                height: 65,
+                width: 65,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF00E5FF), Color(0xFF1DE9B6)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+              // Mindie Image
+              Image.asset(
+                'assets/images/mindie.png',
+                height: 80,
+                fit: BoxFit.contain,
+              ),
+            ],
+          ),
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
 
@@ -166,16 +187,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
-  // ── Header ─────────────────────────────────────────────────
-
   Widget _buildHeader() {
     final totalStars = _stars.values.fold(0, (a, b) => a + b);
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
       child: Column(
         children: [
-          // Top row: greeting + stars counter
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -200,8 +217,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   ),
                 ],
               ),
-
-              // Stars badge
               AnimatedBuilder(
                 animation: _floatController,
                 builder: (context, child) {
@@ -216,10 +231,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
+                    color: Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(30),
                     border: Border.all(
-                      color: const Color(0xFFFFD700).withValues(alpha: 0.5),
+                      color: const Color(0xFFFFD700).withOpacity(0.5),
                       width: 1.5,
                     ),
                   ),
@@ -240,9 +255,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               ),
             ],
           ),
-
           const SizedBox(height: 6),
-
           Text(
             'Continue your learning journey!',
             style: GoogleFonts.nunito(
@@ -251,10 +264,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               fontWeight: FontWeight.w600,
             ),
           ),
-
           const SizedBox(height: 16),
-
-          // Decorative floating stars row
           _buildDecoStars(),
         ],
       ),
@@ -276,8 +286,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 child: Icon(
                   Icons.star_rounded,
                   size: 14 + (i % 3) * 4.0,
-                  color:
-                      const Color(0xFFFFD700).withValues(alpha: 0.5 + i * 0.1),
+                  color: const Color(0xFFFFD700).withOpacity(0.5 + i * 0.1),
                 ),
               ),
             );
@@ -286,8 +295,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       },
     );
   }
-
-  // ── Subject Grid ───────────────────────────────────────────
 
   Widget _buildSubjectGrid() {
     return RefreshIndicator(
@@ -301,7 +308,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
         child: Column(
           children: [
-            // Top two subjects side by side
             Row(
               children: [
                 Expanded(
@@ -325,10 +331,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 ),
               ],
             ),
-
             const SizedBox(height: 14),
-
-            // Third subject full-width (landscape card)
             _SubjectCardWide(
               subject: GameData.subjects[2],
               progress: _progress[GameData.subjects[2].id] ?? 0,
@@ -336,8 +339,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               floatController: _floatController,
               onTap: () => _openSubject(GameData.subjects[2]),
             ),
-
-            // ── Admin-created subjects ─────────────────────────
             if (_adminSubjects.isNotEmpty) ...[
               const SizedBox(height: 14),
               ..._buildAdminSubjectRows(),
@@ -401,7 +402,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         },
       ),
     );
-    // FIX: await the progress reload so state updates before rebuild
     if (mounted) await _loadProgress();
   }
 
@@ -410,13 +410,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       context,
       MaterialPageRoute(builder: (_) => const AdminGateView()),
     );
-    // Reload subjects & progress when returning from admin panel
     if (mounted) {
       await _loadAdminSubjects();
     }
   }
-
-  // ── Bottom Nav ─────────────────────────────────────────────
 
   Widget _buildBottomNav() {
     return Container(
@@ -424,7 +421,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 12,
             offset: const Offset(0, -3),
           ),
@@ -469,8 +466,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 }
 
-// ── Subject Card (Portrait / Square) ──────────────────────────
-
 class _SubjectCard extends StatelessWidget {
   final Subject subject;
   final double progress;
@@ -486,30 +481,19 @@ class _SubjectCard extends StatelessWidget {
     required this.onTap,
   });
 
-  Color get _borderColor {
-    switch (subject.id) {
-      case 'science':
-        return const Color(0xFF4FC3F7);
-      case 'biology':
-        return const Color(0xFF81C784);
-      default:
-        return const Color(0xFFFFB74D);
-    }
-  }
-
-  Color get _progressColor {
-    switch (subject.id) {
-      case 'science':
-        return const Color(0xFF29B6F6);
-      case 'biology':
-        return const Color(0xFF66BB6A);
-      default:
-        return const Color(0xFFFFA726);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    Color borderColor = (subject.id == 'science')
+        ? const Color(0xFF4FC3F7)
+        : (subject.id == 'biology'
+            ? const Color(0xFF81C784)
+            : const Color(0xFFFFB74D));
+    Color progressColor = (subject.id == 'science')
+        ? const Color(0xFF29B6F6)
+        : (subject.id == 'biology'
+            ? const Color(0xFF66BB6A)
+            : const Color(0xFFFFA726));
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedBuilder(
@@ -522,10 +506,10 @@ class _SubjectCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _borderColor, width: 2.5),
+            border: Border.all(color: borderColor, width: 2.5),
             boxShadow: [
               BoxShadow(
-                color: _borderColor.withValues(alpha: 0.3),
+                color: borderColor.withOpacity(0.3),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
               ),
@@ -534,13 +518,12 @@ class _SubjectCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
           child: Column(
             children: [
-              // Emoji in circle
               Container(
                 width: 70,
                 height: 70,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: _borderColor.withValues(alpha: 0.15),
+                  color: borderColor.withOpacity(0.15),
                 ),
                 child: Center(
                   child: Text(
@@ -549,9 +532,7 @@ class _SubjectCard extends StatelessWidget {
                   ),
                 ),
               ),
-
               const SizedBox(height: 12),
-
               Text(
                 subject.name,
                 style: GoogleFonts.fredoka(
@@ -559,22 +540,17 @@ class _SubjectCard extends StatelessWidget {
                   color: const Color(0xFF3A1C72),
                 ),
               ),
-
               const SizedBox(height: 8),
-
-              // Progress bar
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 8,
                   backgroundColor: Colors.grey.shade200,
-                  valueColor: AlwaysStoppedAnimation<Color>(_progressColor),
+                  valueColor: AlwaysStoppedAnimation<Color>(progressColor),
                 ),
               ),
-
               const SizedBox(height: 6),
-
               Text(
                 '${(progress * 100).round()}% Complete',
                 style: GoogleFonts.nunito(
@@ -590,8 +566,6 @@ class _SubjectCard extends StatelessWidget {
     );
   }
 }
-
-// ── Wide Card (Landscape) ──────────────────────────────────────
 
 class _SubjectCardWide extends StatelessWidget {
   final Subject subject;
@@ -628,7 +602,7 @@ class _SubjectCardWide extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF29B6F6).withValues(alpha: 0.3),
+                color: const Color(0xFF29B6F6).withOpacity(0.3),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
               ),
@@ -637,13 +611,12 @@ class _SubjectCardWide extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           child: Row(
             children: [
-              // Icon circle
               Container(
                 width: 70,
                 height: 70,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF29B6F6).withValues(alpha: 0.15),
+                  color: const Color(0xFF29B6F6).withOpacity(0.15),
                 ),
                 child: Center(
                   child: Text(
@@ -652,9 +625,7 @@ class _SubjectCardWide extends StatelessWidget {
                   ),
                 ),
               ),
-
               const SizedBox(width: 16),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -690,7 +661,6 @@ class _SubjectCardWide extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(width: 12),
               const Icon(
                 Icons.arrow_forward_ios_rounded,
@@ -704,8 +674,6 @@ class _SubjectCardWide extends StatelessWidget {
     );
   }
 }
-
-// ── Nav Item ───────────────────────────────────────────────────
 
 class _NavItem extends StatelessWidget {
   final IconData icon;

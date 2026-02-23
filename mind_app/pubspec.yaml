@@ -1,20 +1,19 @@
 name: mind_app
 description: "A Flutter application for interactive learning and AR experiences"
 
-publish_to: 'none'
+publish_to: "none"
 
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.3.0 <4.0.0'
+  sdk: ">=3.3.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-    
 
   # UI & Theming
-  google_fonts: ^6.2.1          # ← used for Lexend (no need to bundle .ttf files)
+  google_fonts: ^6.2.1 # ← used for Lexend (no need to bundle .ttf files)
   flutter_svg: ^2.0.10+1
 
   # State management (choose one – provider is simpler to start with)
@@ -36,7 +35,7 @@ dependencies:
   # Utilities
   intl: ^0.19.0
   cupertino_icons: ^1.0.8
-  material_symbols_icons: ^4.2781.2   # modern Material Symbols icons
+  material_symbols_icons: ^4.2781.2 # modern Material Symbols icons
   google_generative_ai: ^0.4.7
 
 dev_dependencies:
@@ -53,6 +52,7 @@ flutter:
     - assets/icons/
     - assets/illustrations/
     - assets/images/
+    - assets/images/mindie.png
     # Categories section (image backgrounds)
     - assets/images/category_biology_heart.png
     - assets/images/category_history_ruins.png
