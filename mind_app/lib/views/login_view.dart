@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import '../controllers/login_controller.dart';
-import 'home_view.dart';
+import 'main_home_view.dart';
 import '../models/user_model.dart';
 
 class LoginView extends StatefulWidget {
@@ -60,7 +60,7 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => HomeView(user: user)),
+        MaterialPageRoute(builder: (_) => HomePage(user: user)),
       );
     } else {
       if (!mounted) return;
