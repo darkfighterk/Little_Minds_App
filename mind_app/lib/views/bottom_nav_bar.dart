@@ -1,8 +1,13 @@
+// bottom_nav_bar.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
+import 'settings_view.dart';
 
-import 'course_library_screen.dart'; // ← import only what's needed
+// You can keep these imports commented until you actually create the screens
+// import 'progress_view.dart';
+// import 'friends_view.dart';
+// import 'settings_view.dart';
 
 class BottomNavBar extends StatelessWidget {
   final Color primaryColor;
@@ -22,7 +27,7 @@ class BottomNavBar extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
           decoration: BoxDecoration(
             color: isDark
                 ? backgroundColor.withOpacity(0.82)
@@ -34,7 +39,7 @@ class BottomNavBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              // Home (active)
+              // Home (active when on home screen)
               _NavItem(
                 icon: Icons.home_rounded,
                 label: "HOME",
@@ -42,39 +47,48 @@ class BottomNavBar extends StatelessWidget {
                 color: primaryColor,
               ),
 
-              // Library
+              // Progress – beautiful modern icon
               _NavItem(
-                icon: Icons.auto_stories_rounded,
-                label: "LIBRARY",
+                icon: Icons.auto_graph_rounded,
+                label: "PROGRESS",
+                active: false,
+                color: primaryColor,
+                // onTap: () {
+                //   Navigator.push(
+                //     context,
+                //     MaterialPageRoute(builder: (_) => const ProgressView()),
+                //   );
+                // },
+              ),
+
+              // Friends
+              _NavItem(
+                icon: Icons.group_rounded,
+                label: "FRIENDS",
+                active: false,
+                color: primaryColor,
+                // onTap: () {
+                //   Navigator.push(
+                //     context,
+                //     MaterialPageRoute(builder: (_) => const FriendsView()),
+                //   );
+                // },
+              ),
+
+              // Settings
+              _NavItem(
+                icon: Icons.settings_rounded,
+                label: "SETTINGS",
                 active: false,
                 color: primaryColor,
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const CourseLibraryScreen(),
+                      builder: (context) => const SettingsView(),   // ← your widget name
                     ),
                   );
                 },
-              ),
-
-              // Spacer for FAB
-              const SizedBox(width: 56),
-
-              // Ranking
-              _NavItem(
-                icon: Icons.leaderboard_rounded,
-                label: "RANKING",
-                active: false,
-                color: primaryColor,
-              ),
-
-              // Profile
-              _NavItem(
-                icon: Icons.person_rounded,
-                label: "PROFILE",
-                active: false,
-                color: primaryColor,
               ),
             ],
           ),
@@ -88,7 +102,7 @@ class _NavItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool active;
-  final Color color; // primary color passed from parent
+  final Color color;
   final VoidCallback? onTap;
 
   const _NavItem({
@@ -101,7 +115,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final itemColor = active ? color : Colors.grey[500]!;
+    final itemColor = active ? color : Colors.grey[400]!;
 
     return GestureDetector(
       onTap: onTap,

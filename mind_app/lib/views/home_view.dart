@@ -1,5 +1,5 @@
 // ============================================================
-// home_view.dart  (FIXED — progress bar + admin level counts)
+// home_view.dart
 // Place in: lib/views/home_view.dart
 // ============================================================
 
@@ -12,6 +12,10 @@ import '../services/game_service.dart';
 import '../services/admin_service.dart';
 import 'level_map_view.dart';
 import 'admin_view.dart';
+
+// ── Add this import ────────────────────────────────────────────
+import 'bottom_nav_bar.dart'; // ← adjust path if your file is in different folder
+// e.g. '../widgets/bottom_nav_bar.dart' or 'package:your_app/widgets/bottom_nav_bar.dart'
 import 'chat_screen.dart';
 
 class HomeView extends StatefulWidget {
@@ -31,9 +35,9 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
   final Map<String, double> _progress = {};
   final Map<String, int> _stars = {};
-  final Map<String, int> _totalLevelCounts = {};
 
-  int _navIndex = 0;
+  // track total level count per subject
+  final Map<String, int> _totalLevelCounts = {};
 
   @override
   void initState() {
@@ -49,6 +53,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 800),
     )..forward();
 
+    // Seed built-in level counts
     for (final s in GameData.subjects) {
       _totalLevelCounts[s.id] = s.levels.length;
     }
@@ -77,12 +82,14 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     if (!mounted) return;
     setState(() => _adminSubjects = newSubjects);
 
+    // Fetch actual level counts for admin subjects
     for (final subject in newSubjects) {
       final levels = await _adminService.getLevels(subject.id);
       if (mounted) {
         setState(() => _totalLevelCounts[subject.id] = levels.length);
       }
     }
+
     await _loadProgress();
   }
 
@@ -90,6 +97,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     final allSubjects = [...GameData.subjects, ..._adminSubjects];
     for (final subject in allSubjects) {
       final result = await _gameService.fetchProgress(subject.id);
+
       final totalLevels =
           _totalLevelCounts[subject.id] ?? subject.levels.length;
 
@@ -179,10 +187,15 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               Expanded(
                 child: _buildSubjectGrid(),
               ),
-              _buildBottomNav(),
             ],
           ),
         ),
+      ),
+
+      // ── Bottom Navigation Bar added here ────────────────────────
+      bottomNavigationBar: BottomNavBar(
+        primaryColor: const Color(0xFFFFD700), // gold / yellow accent
+        isDark: true, // dark theme
       ),
     );
   }
@@ -232,8 +245,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(30),
                     border: Border.all(
+                      color: const Color(0xFFFFD700).withOpacity(0.5),
                       color: const Color(0xFFFFD700).withOpacity(0.5),
                       width: 1.5,
                     ),
@@ -286,6 +301,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 child: Icon(
                   Icons.star_rounded,
                   size: 14 + (i % 3) * 4.0,
+                  color: const Color(0xFFFFD700).withOpacity(0.5 + i * 0.1),
                   color: const Color(0xFFFFD700).withOpacity(0.5 + i * 0.1),
                 ),
               ),
@@ -509,6 +525,7 @@ class _SubjectCard extends StatelessWidget {
             border: Border.all(color: borderColor, width: 2.5),
             boxShadow: [
               BoxShadow(
+                color: _borderColor.withOpacity(0.3),
                 color: borderColor.withOpacity(0.3),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
@@ -523,6 +540,7 @@ class _SubjectCard extends StatelessWidget {
                 height: 70,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
+                  color: _borderColor.withOpacity(0.15),
                   color: borderColor.withOpacity(0.15),
                 ),
                 child: Center(
@@ -603,6 +621,7 @@ class _SubjectCardWide extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF29B6F6).withOpacity(0.3),
+                color: const Color(0xFF29B6F6).withOpacity(0.3),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
               ),
@@ -616,6 +635,7 @@ class _SubjectCardWide extends StatelessWidget {
                 height: 70,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
+                  color: const Color(0xFF29B6F6).withOpacity(0.15),
                   color: const Color(0xFF29B6F6).withOpacity(0.15),
                 ),
                 child: Center(
