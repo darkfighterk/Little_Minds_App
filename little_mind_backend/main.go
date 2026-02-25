@@ -15,6 +15,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/joho/godotenv"
 )
 
 // =====================================================================
@@ -56,6 +57,36 @@ type Response struct {
 	Message string      `json:"message"`
 	Data    interface{} `json:"data,omitempty"`
 	Error   string      `json:"error,omitempty"`
+}
+
+
+// AI Chat Data Models
+
+
+// ChatRequest represents the incoming JSON request from the Flutter app
+type ChatRequest struct {
+	Message string `json:"message"`
+}
+
+// GroqMessage represents a single message object in the Groq API format
+type GroqMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+// GroqRequest represents the payload sent to the Groq Chat Completion API
+type GroqRequest struct {
+	Model    string        `json:"model"`
+	Messages []GroqMessage `json:"messages"`
+}
+
+// GroqResponse represents the JSON response structure returned by the Groq API
+type GroqResponse struct {
+	Choices []struct {
+		Message struct {
+			Content string `json:"content"`
+		} `json:"message"`
+	} `json:"choices"`
 }
 
 // =====================================================================
@@ -122,6 +153,12 @@ const adminSecret = "LittleMind@Admin2024"
 // =====================================================================
 
 func main() {
+
+	envErr := godotenv.Load()
+    if envErr != nil {
+        log.Println("Warning: .env file not found, checking system environment variables...")
+    }
+
 	var err error
 	db, err = sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/little_mind_db")
 	if err != nil {
@@ -145,6 +182,7 @@ func main() {
 	http.HandleFunc("/login", enableCORS(loginHandler))
 	http.HandleFunc("/courses", enableCORS(coursesHandler))
 	http.HandleFunc("/progress", enableCORS(requireAuth(progressHandler)))
+	http.HandleFunc("/chat", enableCORS(aiChatHandler))
 
 	// ── Static file server (uploaded quiz images) ────────────────────
 	http.Handle("/uploads/", enableCORSHandler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads")))))
@@ -882,4 +920,82 @@ func adminFullQuizHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(Response{Message: "Quiz retrieved", Data: result})
+}
+
+
+// api.groq.com/openai/v1/chat/completions
+
+func aiChatHandler(w http.ResponseWriter, r *http.Request) {
+	// 1. Check if the request method is POST
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	// 2. Decode the incoming JSON request body
+	var req ChatRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(Response{Error: "Invalid request"})
+		return
+	}
+
+	// 3. Retrieve the API Key strictly from Environment Variables
+	apiKey := os.Getenv("GROQ_API_KEY")
+	
+	// If the key is missing from .env, we stop the process for security
+	if apiKey == "" {
+		log.Println("❌ Critical Error: GROQ_API_KEY is not set in environment variables")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(Response{Error: "AI service configuration error"})
+		return
+	}
+
+	// 4. Prepare the payload for the Groq AI service
+	groqBody := GroqRequest{
+		Model: "llama-3.3-70b-versatile",
+		Messages: []GroqMessage{
+			{
+				Role: "system",
+				Content: "Your name is Mindie. You are a friendly and encouraging AI buddy for the 'Little Minds' educational app. Your goal is to help kids learn and stay curious. Respond warmly and creatively in English, Sinhala, or Singlish.",
+			},
+			{Role: "user", Content: req.Message},
+		},
+	}
+
+	bodyBytes, _ := json.Marshal(groqBody)
+	apiReq, _ := http.NewRequest("POST", "https://api.groq.com/openai/v1/chat/completions", strings.NewReader(string(bodyBytes)))
+	
+	// Set necessary Authorization and Content-Type headers using the secure key
+	apiReq.Header.Set("Authorization", "Bearer "+apiKey)
+	apiReq.Header.Set("Content-Type", "application/json")
+
+	// 5. Send the request to the Groq API
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Do(apiReq)
+	if err != nil {
+		log.Printf("❌ AI Service Error: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(Response{Error: "AI service is temporarily unavailable"})
+		return
+	}
+	defer resp.Body.Close()
+
+	// 6. Decode and return the AI's response to the Flutter app
+	var groqResp GroqResponse
+	if err := json.NewDecoder(resp.Body).Decode(&groqResp); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(Response{Error: "Failed to parse AI response"})
+		return
+	}
+
+	if len(groqResp.Choices) > 0 {
+		json.NewEncoder(w).Encode(map[string]string{
+			"reply": groqResp.Choices[0].Message.Content,
+		})
+	} else {
+		json.NewEncoder(w).Encode(map[string]string{
+			"reply": "Mindie is thinking hard! Please try again in a moment. 🦄",
+		})
+	}
 }
