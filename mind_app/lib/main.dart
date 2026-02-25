@@ -20,7 +20,7 @@ class MindApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context) => const TextFromImagePage(),
+        '/': (context) => const SplashView(),
         '/onboarding': (context) => const OnboardingView(),
         '/login': (context) => const LoginView(),
         '/register': (context) => const SignUpView(),
