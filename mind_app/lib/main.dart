@@ -3,6 +3,7 @@ import 'views/splash_view.dart';
 import 'views/onboarding_view.dart';
 import 'views/login_view.dart';
 import 'views/sign_up_view.dart';
+import 'views/text_to_image.dart';
 
 void main() {
   runApp(const MindApp());
@@ -19,7 +20,7 @@ class MindApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context) => const SplashView(),
+        '/': (context) => const TextFromImagePage(),
         '/onboarding': (context) => const OnboardingView(),
         '/login': (context) => const LoginView(),
         '/register': (context) => const SignUpView(),
