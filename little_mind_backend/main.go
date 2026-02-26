@@ -138,6 +138,35 @@ type FullQuizLevel struct {
 	AdminLevel
 	Questions []AdminQuestion `json:"questions"`
 }
+// =====================================================================
+// Data Models —points and achivements
+// =====================================================================
+// total points of a user
+type UserPoints struct {
+    UserID      int `json:"user_id"`
+    TotalPoints int `json:"total_points"`
+}
+// each points earning event
+type PointHistory struct {
+    ID          int       `json:"id"`
+    UserID      int       `json:"user_id"`
+    PointsEarned int      `json:"points_earned"`
+    Source      string    `json:"source"`
+    CreatedAt   time.Time `json:"created_at"`
+}
+// badges a user can earn
+type Achievement struct {
+    ID             int    `json:"id"`
+    BadgeName      string `json:"badge_name"`
+    CriteriaPoints int    `json:"criteria_points"`
+}
+// badge earned by a user
+type UserAchievement struct {
+    ID            int       `json:"id"`
+    UserID        int       `json:"user_id"`
+    AchievementID int       `json:"achievement_id"`
+    EarnedAt      time.Time `json:"earned_at"`
+}
 
 // =====================================================================
 // Globals
@@ -194,6 +223,12 @@ func main() {
 	http.HandleFunc("/admin/upload", enableCORS(requireAdmin(adminUploadHandler)))
 	// Full quiz for a subject (used by Flutter to load admin-made quizzes)
 	http.HandleFunc("/admin/quiz", enableCORS(requireAdmin(adminFullQuizHandler)))
+
+	// Leaderboard Routes
+	http.HandleFunc("/leaderboard", enableCORS(leaderboardHandler))
+
+	// Quiz point Routes
+	http.HandleFunc("/quiz/complete", enableCORS(completeQuizHandler))
 
 	log.Println("🚀 Server started at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -998,4 +1033,109 @@ func aiChatHandler(w http.ResponseWriter, r *http.Request) {
 			"reply": "Mindie is thinking hard! Please try again in a moment. 🦄",
 		})
 	}
+}
+
+// =====================================================================
+// Leaderboard
+// GET /leaderboard
+// Returns the top users ranked by points along with their total points
+// =====================================================================
+
+func leaderboardHandler(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    if r.Method != http.MethodGet {
+        w.WriteHeader(http.StatusMethodNotAllowed)
+        json.NewEncoder(w).Encode(map[string]string{"error": "Method not allowed"})
+        return
+    }
+
+    rows, err := db.Query(`
+        SELECT u.id, u.name, up.total_points 
+        FROM users u
+        JOIN user_points up ON u.id = up.user_id
+        ORDER BY up.total_points DESC
+        LIMIT 10
+    `)
+    if err != nil {
+        log.Println("DB query failed:", err)
+        w.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+        return
+    }
+    defer rows.Close()
+
+    leaderboard := []map[string]interface{}{}
+    for rows.Next() {
+        var id, totalPoints int
+        var name string
+        rows.Scan(&id, &name, &totalPoints)
+        leaderboard = append(leaderboard, map[string]interface{}{
+            "user_id":      id,
+            "name":         name,
+            "total_points": totalPoints,
+        })
+    }
+
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "message": "Leaderboard retrieved",
+        "data":    leaderboard,
+    })
+}
+
+// =====================================================================
+// Points Management
+// addPoints(userID, points, source) → Adds points to a user and logs them
+// Updates `user_points` table and inserts a record into `points_history`
+// =====================================================================
+
+func addPoints(userID int, points int, source string) error {
+    // Update total points in user_points table
+    _, err := db.Exec(`
+        INSERT INTO user_points (user_id, total_points)
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE total_points = total_points + ?`,
+        userID, points, points)
+    if err != nil {
+        log.Println("Error updating user_points:", err)
+        return err
+    }
+
+    // Add entry to points_history table
+    _, err = db.Exec(`
+        INSERT INTO points_history (user_id, points_earned, source)
+        VALUES (?, ?, ?)`,
+        userID, points, source)
+    if err != nil {
+        log.Println("Error inserting into points_history:", err)
+        return err
+    }
+
+    log.Printf("✅ Added %d points to user_id=%d (source: %s)\n", points, userID, source)
+    return nil
+}
+// =====================================================================
+// Quiz
+// POST /quiz/complete → Awards points after quiz completion
+// =====================================================================
+
+func completeQuizHandler(w http.ResponseWriter, r *http.Request) {
+    var req struct {
+        UserID int `json:"user_id"`
+        Points int `json:"points"`
+    }
+
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        http.Error(w, "Invalid request", http.StatusBadRequest)
+        return
+    }
+
+    err := addPoints(req.UserID, req.Points, "Quiz Completion")
+    if err != nil {
+        http.Error(w, "Failed to add points", http.StatusInternalServerError)
+        return
+    }
+
+    json.NewEncoder(w).Encode(map[string]string{
+        "message": "Points added successfully",
+    })
 }

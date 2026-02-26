@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/user_model.dart';
 import '../models/game_model.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class QuizView extends StatefulWidget {
   final Subject subject;
@@ -114,6 +116,16 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
 
   void _showResults() {
     final starsEarned = _calculateStars();
+    Future<void> _sendPointsToBackend(int starsEarned) async {
+      await http.post(
+        Uri.parse("http://localhost:8080/quiz/complete"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "user_id": widget.user.id,
+          "points": starsEarned,
+        }),
+      );
+    }
     // Capture the quiz-screen context BEFORE opening the dialog,
     // so we still hold a valid reference after the dialog is popped.
     final quizContext = context;
@@ -126,7 +138,8 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
         totalQuestions: _totalQuestions,
         starsEarned: starsEarned,
         levelTitle: widget.level.title,
-        onContinue: () {
+        onContinue: () async {
+          await _sendPointsToBackend(starsEarned);
           // 1. Close the dialog using the dialog's own context.
           Navigator.of(dialogContext).pop();
           // 2. Pop the quiz screen using the quiz-screen context,
