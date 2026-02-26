@@ -126,7 +126,30 @@ class SettingsView extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // Settings list
+                // Profile & Admin tiles (new)
+                _buildSettingsTile(
+                  icon: Icons.person,
+                  iconColor: const Color(0xFF00D4FF),
+                  title: "Profile",
+                  subtitle: "View and edit your account",
+                  onTap: () {
+                    // TODO: Navigate to profile screen
+                  },
+                ),
+                const SizedBox(height: 8),
+
+                _buildSettingsTile(
+                  icon: Icons.admin_panel_settings,
+                  iconColor: const Color(0xFFFF5252),
+                  title: "Admin",
+                  subtitle: "Management & controls",
+                  onTap: () {
+                    // TODO: Navigate to admin dashboard (maybe with auth check)
+                  },
+                ),
+                const SizedBox(height: 24),
+
+                // Remaining original settings
                 _buildSettingsTile(
                   icon: Icons.translate,
                   iconColor: const Color(0xFF00D4FF),
@@ -145,28 +168,6 @@ class SettingsView extends StatelessWidget {
                   subtitle: isDark ? "Dark Mode, Purple Theme" : "Light Mode, Purple Theme",
                   onTap: () {
                     // TODO: Open theme / appearance selector (light/dark/toggle)
-                  },
-                ),
-                const SizedBox(height: 8),
-
-                _buildSettingsTile(
-                  icon: Icons.security,
-                  iconColor: const Color(0xFF4CAF50),
-                  title: "Privacy & Security",
-                  subtitle: "Manage your data",
-                  onTap: () {
-                    // TODO: Navigate to privacy screen
-                  },
-                ),
-                const SizedBox(height: 8),
-
-                _buildSettingsTile(
-                  icon: Icons.system_update,
-                  iconColor: const Color(0xFFFFC107),
-                  title: "Updates",
-                  subtitle: "Version 2.4.0 (Latest)",
-                  onTap: () {
-                    // TODO: Show update info / check for updates
                   },
                 ),
                 const SizedBox(height: 8),
@@ -213,30 +214,11 @@ class SettingsView extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 80), // space before bottom nav
+                const SizedBox(height: 80), // extra bottom space
               ],
             ),
           ),
         ),
-      ),
-
-      // Bottom Navigation Bar
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: isDark ? const Color(0xFF1A0F3A) : const Color(0xFF5A3CCC),
-        selectedItemColor: const Color(0xFF00D4FF),
-        unselectedItemColor: Colors.white70,
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        currentIndex: 3, // Settings is selected
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'HOME'),
-          BottomNavigationBarItem(icon: Icon(Icons.play_arrow), label: 'PLAY'),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'STATS'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'SETTINGS'),
-        ],
-        onTap: (index) {
-          // TODO: Handle navigation between tabs (use indexed stack / go_router / etc.)
-        },
       ),
     );
   }
