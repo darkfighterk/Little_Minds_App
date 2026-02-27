@@ -116,16 +116,7 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
 
   void _showResults() {
     final starsEarned = _calculateStars();
-    Future<void> _sendPointsToBackend(int starsEarned) async {
-      await http.post(
-        Uri.parse("http://localhost:8080/quiz/complete"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "user_id": widget.user.id,
-          "points": starsEarned,
-        }),
-      );
-    }
+
     // Capture the quiz-screen context BEFORE opening the dialog,
     // so we still hold a valid reference after the dialog is popped.
     final quizContext = context;
@@ -182,6 +173,16 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
     if (ratio >= 0.66) return 20;
     if (ratio >= 0.33) return 10;
     return 0;
+  }
+  Future<void> _sendPointsToBackend(int starsEarned) async {
+    await http.post(
+      Uri.parse("http://10.0.2.2:8080/quiz/complete"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "user_id": widget.user.id,
+        "points": starsEarned,
+      }),
+    );
   }
 
   // ── Build ──────────────────────────────────────────────────
