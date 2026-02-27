@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mind_app/views/text_to_image.dart';
 import '../models/user_model.dart';
+import '../widgets/mindie_button.dart';
 import 'home_view.dart';
 import 'bottom_nav_bar.dart';
 
@@ -15,13 +16,16 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
+  // Animation controller for floating effects throughout the page
   late AnimationController _floatController;
 
+  // Primary accent color for consistency across the page
   static const Color primaryAccent = Color(0xFFDA22FF);
 
   @override
   void initState() {
     super.initState();
+    // Initialize continuous floating animation
     _floatController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 5, milliseconds: 200),
@@ -30,6 +34,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    // Clean up controller to prevent memory leaks
     _floatController.dispose();
     super.dispose();
   }
@@ -40,10 +45,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     return Scaffold(
       extendBody: true,
+      // Global Mindie AI Button placed in the standard floating action button slot
+      floatingActionButton: const MindieButton(),
+      // Standard position for bottom-right floating button
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
+          // Deep space theme background gradient
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -57,7 +68,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
         child: Stack(
           children: [
-            // Glow orbs
+            // Decorative background glow effects (Orbs)
             Positioned(
               top: -120,
               right: -140,
@@ -72,17 +83,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
 
             SafeArea(
-              bottom: false,
               child: Column(
                 children: [
-                  _buildHeader(),
-                  Expanded(child: _buildMainButtonsGrid()),
+                  _buildHeader(), // User greeting and stars
+                  Expanded(child: _buildMainButtonsGrid()), // App features grid
                 ],
               ),
             ),
           ],
         ),
       ),
+      // Persistent bottom navigation bar
       bottomNavigationBar: BottomNavBar(
         primaryColor: primaryAccent,
         isDark: true,
@@ -90,6 +101,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  // Header Widget: Displays user profile, name, and floating stars
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
@@ -118,6 +130,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Gradient text for welcoming the user
                     ShaderMask(
                       shaderCallback: (bounds) => const LinearGradient(
                         colors: [Color(0xFFFF9EF5), Colors.white],
@@ -153,12 +166,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
           const SizedBox(height: 16),
-          _buildFloatingStars(),
+          _buildFloatingStars(), // Animating stars under the greeting
         ],
       ),
     );
   }
 
+  // Widget to generate animating star icons with staggered offsets
   Widget _buildFloatingStars() {
     return AnimatedBuilder(
       animation: _floatController,
@@ -185,6 +199,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  // Grid layout for main feature buttons
   Widget _buildMainButtonsGrid() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -193,7 +208,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         mainAxisSpacing: 20,
         crossAxisSpacing: 20,
         shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
+        physics: const BouncingScrollPhysics(),
         children: [
           _buildBigButton(
             title: 'Quiz Arena',
@@ -222,13 +237,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             onTap: () => _showComingSoon('Notebook 📝'),
           ),
           _buildBigButton(
-            title: 'coming soon 1',
+            title: 'Stories',
             icon: Icons.menu_book_rounded,
             accentColor: const Color(0xFFFFB74D),
             onTap: () => _showComingSoon('Stories 📖✨'),
           ),
           _buildBigButton(
-            title: 'coming soon2',
+            title: 'Fun Games',
             icon: Icons.sports_esports_rounded,
             accentColor: const Color(0xFFEC407A),
             onTap: () => _showComingSoon('Fun Games 🎮'),
@@ -238,6 +253,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  // Reusable card widget for the main feature grid
   Widget _buildBigButton({
     required String title,
     required IconData icon,
@@ -249,6 +265,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: AnimatedBuilder(
         animation: _floatController,
         builder: (_, child) => Transform.translate(
+          // Subtle individual floating animation for buttons
           offset: Offset(0, sin((_floatController.value + 0.25) * pi) * 5),
           child: child,
         ),
@@ -286,6 +303,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  // Simple feedback utility for features not yet implemented
   void _showComingSoon(String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$feature coming soon!')),
@@ -293,6 +311,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 }
 
+// Background decoration: Soft glowing radial gradients
 class _GlowOrb extends StatelessWidget {
   final double size;
   final Color color;
