@@ -1,13 +1,40 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 import 'AboutPage.dart';
 
-class SettingsView extends StatelessWidget {
+class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
+
+  @override
+  State<SettingsView> createState() => _SettingsViewState();
+}
+
+class _SettingsViewState extends State<SettingsView> {
+  final ImagePicker _picker = ImagePicker();
+  File? _avatarImage; // Mobile file
+  Uint8List? _avatarBytes; // Web file
+
+  // ⚠️ Login eken ganna one (danata test ekata 1 dammu)
+  String loggedUserId = "1";
+
+  bool get isWeb => identical(0, 0.0); // Flutter Web check
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    ImageProvider avatarProvider() {
+      if (_avatarBytes != null) return MemoryImage(_avatarBytes!);
+      if (_avatarImage != null) return FileImage(_avatarImage!);
+      return const NetworkImage(
+        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -63,14 +90,15 @@ class SettingsView extends StatelessWidget {
                 Stack(
                   alignment: Alignment.bottomRight,
                   children: [
-                    CircleAvatar(
-                      radius: 54,
-                      backgroundColor: Colors.white.withOpacity(0.25),
+                    GestureDetector(
+                      onTap: () => _showImageSourceDialog(),
                       child: CircleAvatar(
-                        radius: 50,
-                        backgroundImage: const NetworkImage(
-                          'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-                        ), // cute bird / character placeholder
+                        radius: 54,
+                        backgroundColor: Colors.white.withOpacity(0.25),
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundImage: avatarProvider(),
+                        ),
                       ),
                     ),
                     Positioned(
@@ -79,7 +107,7 @@ class SettingsView extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: const BoxDecoration(
-                          color: Color(0xFFFFD700), // gold/yellow sparkle
+                          color: Color(0xFFFFD700),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -94,7 +122,6 @@ class SettingsView extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                // Greeting
                 const Text(
                   "Hi there, Explorer!",
                   style: TextStyle(
@@ -116,8 +143,6 @@ class SettingsView extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 36),
-
-                // Settings group title
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -132,15 +157,12 @@ class SettingsView extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // Profile & Admin tiles
                 _buildSettingsTile(
                   icon: Icons.person,
                   iconColor: const Color(0xFF00D4FF),
                   title: "Profile",
                   subtitle: "View and edit your account",
-                  onTap: () {
-                    // TODO: Navigate to profile screen
-                  },
+                  onTap: () {},
                 ),
                 const SizedBox(height: 8),
 
@@ -149,21 +171,16 @@ class SettingsView extends StatelessWidget {
                   iconColor: const Color(0xFFFF5252),
                   title: "Admin",
                   subtitle: "Management & controls",
-                  onTap: () {
-                    // TODO: Navigate to admin dashboard (maybe with auth check)
-                  },
+                  onTap: () {},
                 ),
                 const SizedBox(height: 24),
 
-                // Remaining settings
                 _buildSettingsTile(
                   icon: Icons.translate,
                   iconColor: const Color(0xFF00D4FF),
                   title: "App Language",
                   subtitle: "English (US)",
-                  onTap: () {
-                    // TODO: Open language selector
-                  },
+                  onTap: () {},
                 ),
                 const SizedBox(height: 8),
 
@@ -174,9 +191,7 @@ class SettingsView extends StatelessWidget {
                   subtitle: isDark
                       ? "Dark Mode, Purple Theme"
                       : "Light Mode, Purple Theme",
-                  onTap: () {
-                    // TODO: Open theme / appearance selector (light/dark/toggle)
-                  },
+                  onTap: () {},
                 ),
                 const SizedBox(height: 8),
 
@@ -185,18 +200,13 @@ class SettingsView extends StatelessWidget {
                   iconColor: const Color(0xFFAB47BC),
                   title: "Help & Support",
                   subtitle: "FAQs and Chat",
-                  onTap: () {
-                    // TODO: Open help / support screen (or merge with About?)
-                  },
+                  onTap: () {},
                 ),
 
                 const SizedBox(height: 40),
 
-                // Sign out button
                 GestureDetector(
-                  onTap: () {
-                    // TODO: Show confirm dialog → sign out logic
-                  },
+                  onTap: () {},
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
@@ -223,13 +233,92 @@ class SettingsView extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 80), // extra bottom space
+                const SizedBox(height: 80),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  // ---------------- IMAGE PICKER ----------------
+
+  void _showImageSourceDialog() {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Camera'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? pickedFile =
+        await _picker.pickImage(source: source, imageQuality: 80);
+
+    if (pickedFile == null) return;
+
+    if (kIsWeb) {
+      final bytes = await pickedFile.readAsBytes();
+      setState(() {
+        _avatarBytes = bytes;
+      });
+    } else {
+      setState(() {
+        _avatarImage = File(pickedFile.path);
+      });
+    }
+
+    // ⚡ Temporary: comment backend upload to test preview
+    // await _uploadImageToServer(_avatarImage!);
+  }
+
+  Future<void> _uploadImageToServer(File imageFile) async {
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('http://localhost:8080/upload-profile'),
+    );
+
+    request.fields['user_id'] = loggedUserId;
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'profile_image',
+        imageFile.path,
+      ),
+    );
+
+    var response = await request.send();
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Profile image uploaded successfully")),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Upload failed")),
+      );
+    }
   }
 
   Widget _buildSettingsTile({

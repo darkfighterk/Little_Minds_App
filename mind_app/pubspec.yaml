@@ -12,6 +12,10 @@ dependencies:
   flutter:
     sdk: flutter
 
+  http: ^1.6.0
+  
+  cupertino_icons: ^1.0.2
+
   # UI & Theming
   google_fonts: ^6.2.1 # ← used for Lexend (no need to bundle .ttf files)
   flutter_svg: ^2.0.10+1
@@ -22,22 +26,22 @@ dependencies:
   # flutter_riverpod: ^2.5.1
 
   # Networking & Storage
-  http: ^1.6.0
   sqflite: ^2.3.3+1
   path: ^1.9.0
   shared_preferences: ^2.3.0
   path_provider: ^2.1.5
   url_launcher: ^6.3.0
+  image_pickers: ^2.0.6
 
   ##text file need 
-  #image_picker: ^0.8.7+5               # camera/gallery
-  google_mlkit_text_recognition: ^0.7.0 # OCR
-  #path_provider: ^2.0.14               # save files
-  pdf: ^3.10.0                         # generate PDF
-  open_file: ^3.2.1   
-  file_picker: ^8.0.0   
-  file_selector: ^0.9.0    
-  share_plus: ^8.0.1  
+  #image_picker: ^0.8.7+5
+  google_mlkit_text_recognition: ^0.7.0
+  #path_provider: ^2.0.14
+  pdf: ^3.10.0
+  open_file: ^3.2.1
+  file_picker: ^8.0.0
+  file_selector: ^0.9.0
+  share_plus: ^8.0.1
   #ntl: ^0.18.1
 
   # Images & Media
@@ -46,8 +50,7 @@ dependencies:
 
   # Utilities
   intl: ^0.19.0
-  cupertino_icons: ^1.0.8
-  material_symbols_icons: ^4.2781.2 # modern Material Symbols icons
+  material_symbols_icons: ^4.2781.2
   google_generative_ai: ^0.4.7
 
 dev_dependencies:
@@ -65,11 +68,6 @@ flutter:
     - assets/illustrations/
     - assets/images/
     - assets/images/mindie.png
-    # Categories section (image backgrounds)
     - assets/images/category_biology_heart.png
     - assets/images/category_history_ruins.png
     - assets/images/category_engineering_gears.png
-    # add more images here as needed
-    # - assets/models/             # add later if using 3D models (.glb, etc.)
-
-  # ar_flutter_plugin added to main dependencies above
