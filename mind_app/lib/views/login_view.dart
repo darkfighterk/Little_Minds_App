@@ -474,32 +474,6 @@ class _GlowOrb extends StatelessWidget {
   }
 }
 
-class _GlassButton extends StatelessWidget {
-  final Widget child;
-  final VoidCallback onTap;
-
-  const _GlassButton({required this.child, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.08),
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white.withOpacity(0.12),
-            width: 1,
-          ),
-        ),
-        child: child,
-      ),
-    );
-  }
-}
-
 class _GlassCard extends StatelessWidget {
   final Widget child;
 

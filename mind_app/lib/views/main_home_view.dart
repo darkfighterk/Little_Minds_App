@@ -132,7 +132,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       ),
                     ),
                     Text(
-                      'Hi, ${widget.user.name ?? "Explorer"}! 🌟',
+                      'Hi, ${widget.user.name}! 🌟',
                       style: GoogleFonts.fredoka(
                         fontSize: 26,
                         color: const Color(0xFFFFD700),

@@ -3,7 +3,6 @@ import 'views/splash_view.dart';
 import 'views/onboarding_view.dart';
 import 'views/login_view.dart';
 import 'views/sign_up_view.dart';
-import 'views/text_to_image.dart';
 
 void main() {
   runApp(const MindApp());

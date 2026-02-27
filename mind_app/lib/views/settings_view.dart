@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'AboutPage.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -29,7 +30,12 @@ class SettingsView extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.help_outline, color: Colors.white),
             onPressed: () {
-              // TODO: Open help modal / page
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AboutPage(),
+                ),
+              );
             },
           ),
         ],
@@ -126,7 +132,7 @@ class SettingsView extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // Profile & Admin tiles (new)
+                // Profile & Admin tiles
                 _buildSettingsTile(
                   icon: Icons.person,
                   iconColor: const Color(0xFF00D4FF),
@@ -149,7 +155,7 @@ class SettingsView extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
 
-                // Remaining original settings
+                // Remaining settings
                 _buildSettingsTile(
                   icon: Icons.translate,
                   iconColor: const Color(0xFF00D4FF),
@@ -165,7 +171,9 @@ class SettingsView extends StatelessWidget {
                   icon: Icons.palette,
                   iconColor: const Color(0xFFFF80AB),
                   title: "Appearance",
-                  subtitle: isDark ? "Dark Mode, Purple Theme" : "Light Mode, Purple Theme",
+                  subtitle: isDark
+                      ? "Dark Mode, Purple Theme"
+                      : "Light Mode, Purple Theme",
                   onTap: () {
                     // TODO: Open theme / appearance selector (light/dark/toggle)
                   },
@@ -178,7 +186,7 @@ class SettingsView extends StatelessWidget {
                   title: "Help & Support",
                   subtitle: "FAQs and Chat",
                   onTap: () {
-                    // TODO: Open help / support screen
+                    // TODO: Open help / support screen (or merge with About?)
                   },
                 ),
 
@@ -194,7 +202,8 @@ class SettingsView extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.redAccent.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.redAccent.withOpacity(0.4)),
+                      border:
+                          Border.all(color: Colors.redAccent.withOpacity(0.4)),
                     ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
