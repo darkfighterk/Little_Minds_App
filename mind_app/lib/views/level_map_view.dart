@@ -71,6 +71,7 @@ class _LevelMapViewState extends State<LevelMapView>
               ))
           .toList();
       return GameLevel(
+        id: (l['id'] as num?)?.toInt(),
         levelNumber: (l['level_number'] as num?)?.toInt() ?? 0,
         title: l['title'] as String? ?? '',
         icon: l['icon'] as String? ?? '🎯',
@@ -473,7 +474,7 @@ class _LevelMapViewState extends State<LevelMapView>
       // Save to backend
       await _gameService.saveLevelResult(
         subjectId: widget.subject.id,
-        levelNumber: level.levelNumber,
+        levelId: level.id!,
         starsEarned: result.starsEarned,
         quizScore: result.quizScore,
         totalQuestions: result.totalQuestions,

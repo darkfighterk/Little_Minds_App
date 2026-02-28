@@ -47,7 +47,8 @@ type SubjectProgress struct {
 type LevelResult struct {
 	UserID         int    `json:"user_id"`
 	SubjectID      string `json:"subject_id"`
-	LevelNumber    int    `json:"level_number"`
+	LevelID        int    `json:"level_id"`
+	LevelNumber    int     `json:"level_number"`
 	StarsEarned    int    `json:"stars_earned"`
 	QuizScore      int    `json:"quiz_score"`
 	TotalQuestions int    `json:"total_questions"`
@@ -521,8 +522,12 @@ func fetchSubjectProgress(userID, subjectID string) (*SubjectProgress, error) {
 		return nil, err
 	}
 	rows, err := db.Query(
-		"SELECT level_number FROM user_level_completions WHERE user_id = ? AND subject_id = ? ORDER BY level_number",
-		userID, subjectID,
+    `SELECT ql.level_number
+     FROM user_level_completions ulc
+     JOIN quiz_levels ql ON ulc.level_id = ql.id
+     WHERE ulc.user_id = ? AND ql.subject_id = ?
+     ORDER BY ql.level_number`,
+    userID, subjectID,
 	)
 	if err != nil {
 		return nil, err
@@ -549,16 +554,27 @@ func saveLevelResultHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(Response{Error: "user_id, subject_id and level_number are required"})
 		return
 	}
-	_, err := db.Exec(`
+	var levelID int
+	err := db.QueryRow(`
+		SELECT id FROM quiz_levels 
+		WHERE subject_id = ? AND level_number = ?
+	`, result.SubjectID, result.LevelNumber).Scan(&levelID)
+	if err != nil {
+		log.Println("saveLevelResultHandler: lookup level_id error:", err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(Response{Error: "Invalid subject or level_number"})
+		return
+	}
+	_, err = db.Exec(`
 		INSERT INTO user_level_completions
-		    (user_id, subject_id, level_number, stars_earned, quiz_score, total_questions)
+		    (user_id, subject_id, level_id, stars_earned, quiz_score, total_questions)
 		VALUES (?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE
 		    stars_earned    = GREATEST(stars_earned,    VALUES(stars_earned)),
 		    quiz_score      = GREATEST(quiz_score,      VALUES(quiz_score)),
 		    total_questions = VALUES(total_questions),
 		    completed_at    = CURRENT_TIMESTAMP
-	`, result.UserID, result.SubjectID, result.LevelNumber,
+	`, result.UserID, result.SubjectID, levelID,
 		result.StarsEarned, result.QuizScore, result.TotalQuestions,
 	)
 	if err != nil {

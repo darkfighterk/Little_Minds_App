@@ -123,7 +123,7 @@ class GameService {
   /// Returns updated total stars, or -1 on failure.
   Future<int> saveLevelResult({
     required String subjectId,
-    required int levelNumber,
+    required int levelId,
     required int starsEarned,
     required int quizScore,
     required int totalQuestions,
@@ -139,7 +139,7 @@ class GameService {
       final body = jsonEncode({
         'user_id': userId,
         'subject_id': subjectId,
-        'level_number': levelNumber,
+        'level_id': levelId,
         'stars_earned': starsEarned,
         'quiz_score': quizScore,
         'total_questions': totalQuestions,
@@ -157,7 +157,7 @@ class GameService {
         await fetchProgress(subjectId);
 
         print(
-            '✅ GameService: saved level $levelNumber — total stars: $newTotal');
+            '✅ GameService: saved level $levelId — total stars: $newTotal');
         return newTotal;
       } else {
         print('❌ GameService.saveLevelResult: HTTP ${response.statusCode}');

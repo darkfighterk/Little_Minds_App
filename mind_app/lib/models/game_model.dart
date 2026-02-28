@@ -18,6 +18,7 @@ class QuizQuestion {
 }
 
 class GameLevel {
+  final int? id;
   final int levelNumber;
   final String title;
   final String icon; // emoji
@@ -25,6 +26,7 @@ class GameLevel {
   final List<QuizQuestion> questions;
 
   const GameLevel({
+    this.id,
     required this.levelNumber,
     required this.title,
     required this.icon,
