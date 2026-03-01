@@ -83,6 +83,7 @@ class GameData {
   // ── SCIENCE ────────────────────────────────────────────────
   static const List<GameLevel> _scienceLevels = [
     GameLevel(
+      id: 1,
       levelNumber: 1,
       title: 'What is Science?',
       icon: '🧪',
@@ -113,6 +114,7 @@ class GameData {
       ],
     ),
     GameLevel(
+      id: 2,
       levelNumber: 2,
       title: 'Forces & Motion',
       icon: '🧲',
@@ -150,6 +152,7 @@ class GameData {
       ],
     ),
     GameLevel(
+      id: 3,
       levelNumber: 3,
       title: 'Space Explorer',
       icon: '🔭',
@@ -179,6 +182,7 @@ class GameData {
       ],
     ),
     GameLevel(
+      id: 4,
       levelNumber: 4,
       title: 'Energy & Light',
       icon: '⚛️',
@@ -217,6 +221,7 @@ class GameData {
       ],
     ),
     GameLevel(
+      id: 5,
       levelNumber: 5,
       title: 'Science Master',
       icon: '🏆',
@@ -250,6 +255,7 @@ class GameData {
   // ── BIOLOGY ────────────────────────────────────────────────
   static const List<GameLevel> _biologyLevels = [
     GameLevel(
+      id: 6,
       levelNumber: 1,
       title: 'Living Things',
       icon: '🌱',
@@ -278,6 +284,7 @@ class GameData {
       ],
     ),
     GameLevel(
+      id: 7,
       levelNumber: 2,
       title: 'Animal Kingdom',
       icon: '🦁',
@@ -306,6 +313,7 @@ class GameData {
       ],
     ),
     GameLevel(
+      id: 8,
       levelNumber: 3,
       title: 'Human Body',
       icon: '❤️',
@@ -334,6 +342,7 @@ class GameData {
       ],
     ),
     GameLevel(
+      id: 9,
       levelNumber: 4,
       title: 'Ecosystems',
       icon: '🌍',
@@ -365,6 +374,7 @@ class GameData {
       ],
     ),
     GameLevel(
+      id: 10,
       levelNumber: 5,
       title: 'Biology Champion',
       icon: '🏅',
@@ -402,6 +412,7 @@ class GameData {
   // ── HISTORY ────────────────────────────────────────────────
   static const List<GameLevel> _historyLevels = [
     GameLevel(
+      id: 11,
       levelNumber: 1,
       title: 'Ancient Egypt',
       icon: '🏺',
@@ -438,6 +449,7 @@ class GameData {
       ],
     ),
     GameLevel(
+      id: 12,
       levelNumber: 2,
       title: 'Ancient Greece',
       icon: '🏛️',
@@ -472,6 +484,7 @@ class GameData {
       ],
     ),
     GameLevel(
+      id: 13,
       levelNumber: 3,
       title: 'Middle Ages',
       icon: '⚔️',
@@ -506,6 +519,7 @@ class GameData {
       ],
     ),
     GameLevel(
+      id: 14,
       levelNumber: 4,
       title: 'Age of Exploration',
       icon: '⛵',
@@ -541,6 +555,7 @@ class GameData {
       ],
     ),
     GameLevel(
+      id: 15,
       levelNumber: 5,
       title: 'History Hero',
       icon: '👑',
