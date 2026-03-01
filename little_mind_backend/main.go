@@ -129,6 +129,20 @@ type BatchQuestionsRequest struct {
 	Questions []AdminQuestion `json:"questions"`
 }
 
+// =====================================================================
+// Data Models — puzzles
+// =====================================================================
+
+type PuzzleCollection struct {
+	ID         int    `json:"id"`
+	Title      string `json:"title"`
+	ImageURL   string `json:"image_url"`
+	PieceCount int    `json:"piece_count"`
+	Category   string `json:"category"`
+	Difficulty string `json:"difficulty"`
+	CreatedAt  string `json:"created_at,omitempty"`
+}
+
 // Full quiz structure returned for the Flutter game
 type FullQuizSubject struct {
 	AdminSubject
@@ -194,6 +208,10 @@ func main() {
 	http.HandleFunc("/admin/upload", enableCORS(requireAdmin(adminUploadHandler)))
 	// Full quiz for a subject (used by Flutter to load admin-made quizzes)
 	http.HandleFunc("/admin/quiz", enableCORS(requireAdmin(adminFullQuizHandler)))
+
+	// ── Puzzle Routes ────────────────────────────────────────────────
+	http.HandleFunc("/admin/puzzles", enableCORS(requireAdmin(adminPuzzlesHandler)))
+	http.HandleFunc("/puzzles", enableCORS(puzzlesPublicHandler))
 
 	log.Println("🚀 Server started at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -290,6 +308,9 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 				"POST /admin/questions                  (Admin)",
 				"POST /admin/upload                     (Admin)",
 				"GET  /admin/quiz?subject_id=X          (Admin)",
+				"GET  /admin/puzzles                    (Admin)",
+				"POST /admin/puzzles                    (Admin)",
+				"GET  /puzzles                          (Public)",
 			},
 		},
 	})
@@ -998,4 +1019,126 @@ func aiChatHandler(w http.ResponseWriter, r *http.Request) {
 			"reply": "Mindie is thinking hard! Please try again in a moment. 🦄",
 		})
 	}
+}
+// =====================================================================
+// Admin — Puzzles
+// GET    /admin/puzzles         list all puzzles
+// POST   /admin/puzzles         create a new puzzle
+// DELETE /admin/puzzles?id=X    delete a puzzle
+// =====================================================================
+
+func adminPuzzlesHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		rows, err := db.Query(
+			"SELECT id, title, image_url, piece_count, category, difficulty, created_at FROM puzzles ORDER BY id DESC",
+		)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(Response{Error: "Database error"})
+			return
+		}
+		defer rows.Close()
+		puzzles := []PuzzleCollection{}
+		for rows.Next() {
+			var p PuzzleCollection
+			rows.Scan(&p.ID, &p.Title, &p.ImageURL, &p.PieceCount, &p.Category, &p.Difficulty, &p.CreatedAt)
+			puzzles = append(puzzles, p)
+		}
+		json.NewEncoder(w).Encode(Response{Message: "Puzzles retrieved", Data: puzzles})
+
+	case http.MethodPost:
+		var p PuzzleCollection
+		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(Response{Error: "Invalid request body"})
+			return
+		}
+		if p.Title == "" || p.ImageURL == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(Response{Error: "title and image_url are required"})
+			return
+		}
+		if p.PieceCount == 0 {
+			p.PieceCount = 16
+		}
+		if p.Category == "" {
+			p.Category = "General"
+		}
+		if p.Difficulty == "" {
+			p.Difficulty = "Medium"
+		}
+		result, err := db.Exec(
+			"INSERT INTO puzzles (title, image_url, piece_count, category, difficulty) VALUES (?, ?, ?, ?, ?)",
+			p.Title, p.ImageURL, p.PieceCount, p.Category, p.Difficulty,
+		)
+		if err != nil {
+			log.Println("adminPuzzlesHandler insert:", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(Response{Error: "Failed to create puzzle"})
+			return
+		}
+		id, _ := result.LastInsertId()
+		p.ID = int(id)
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(Response{Message: "Puzzle created", Data: p})
+
+	case http.MethodDelete:
+		idStr := r.URL.Query().Get("id")
+		if idStr == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(Response{Error: "id is required"})
+			return
+		}
+		_, err := db.Exec("DELETE FROM puzzles WHERE id = ?", idStr)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(Response{Error: "Failed to delete puzzle"})
+			return
+		}
+		json.NewEncoder(w).Encode(Response{Message: "Puzzle deleted"})
+
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
+	}
+}
+
+// =====================================================================
+// Public — Puzzles  GET /puzzles?category=X
+// =====================================================================
+
+func puzzlesPublicHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
+		return
+	}
+	category := r.URL.Query().Get("category")
+	var rows *sql.Rows
+	var err error
+	if category != "" {
+		rows, err = db.Query(
+			"SELECT id, title, image_url, piece_count, category, difficulty, created_at FROM puzzles WHERE category = ? ORDER BY id DESC",
+			category,
+		)
+	} else {
+		rows, err = db.Query(
+			"SELECT id, title, image_url, piece_count, category, difficulty, created_at FROM puzzles ORDER BY id DESC",
+		)
+	}
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(Response{Error: "Database error"})
+		return
+	}
+	defer rows.Close()
+	puzzles := []PuzzleCollection{}
+	for rows.Next() {
+		var p PuzzleCollection
+		rows.Scan(&p.ID, &p.Title, &p.ImageURL, &p.PieceCount, &p.Category, &p.Difficulty, &p.CreatedAt)
+		puzzles = append(puzzles, p)
+	}
+	json.NewEncoder(w).Encode(Response{Message: "Puzzles retrieved", Data: puzzles})
 }

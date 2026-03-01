@@ -5,6 +5,7 @@ import 'package:mind_app/views/text_to_image.dart';
 import '../models/user_model.dart';
 import 'home_view.dart';
 import 'bottom_nav_bar.dart';
+import 'puzzles_list_view.dart';
 
 class HomePage extends StatefulWidget {
   final User user;
@@ -232,6 +233,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             icon: Icons.sports_esports_rounded,
             accentColor: const Color(0xFFEC407A),
             onTap: () => _showComingSoon('Fun Games 🎮'),
+          ),
+          _buildBigButton(
+            title: 'Puzzles',
+            icon: Icons.extension_rounded,
+            accentColor: const Color(0xFFFF7043),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PuzzlesListView(user: widget.user),
+              ),
+            ),
           ),
         ],
       ),

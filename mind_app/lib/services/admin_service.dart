@@ -202,4 +202,69 @@ class AdminService {
     }
     return null;
   }
+
+  // ── PUZZLES ───────────────────────────────────────────────────────────
+
+  /// Returns all puzzles from the DB.
+  Future<List<Map<String, dynamic>>> getPuzzles() async {
+    try {
+      final resp = await http
+          .get(Uri.parse('$baseUrl/admin/puzzles'), headers: _headers)
+          .timeout(const Duration(seconds: 10));
+      if (resp.statusCode == 200) {
+        final body = jsonDecode(resp.body);
+        final data = body['data'] as List<dynamic>? ?? [];
+        return data.cast<Map<String, dynamic>>();
+      }
+    } catch (e) {
+      print('AdminService.getPuzzles error: $e');
+    }
+    return [];
+  }
+
+  /// Creates a new puzzle. Returns the created puzzle map or null on failure.
+  Future<Map<String, dynamic>?> createPuzzle({
+    required String title,
+    required String imageUrl,
+    required int pieceCount,
+    required String category,
+    required String difficulty,
+  }) async {
+    try {
+      final resp = await http
+          .post(
+            Uri.parse('$baseUrl/admin/puzzles'),
+            headers: _headers,
+            body: jsonEncode({
+              'title': title,
+              'image_url': imageUrl,
+              'piece_count': pieceCount,
+              'category': category,
+              'difficulty': difficulty,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+      if (resp.statusCode == 201) {
+        final body = jsonDecode(resp.body);
+        return body['data'] as Map<String, dynamic>?;
+      }
+      print('AdminService.createPuzzle HTTP ${resp.statusCode}: ${resp.body}');
+    } catch (e) {
+      print('AdminService.createPuzzle error: $e');
+    }
+    return null;
+  }
+
+  /// Deletes a puzzle by ID. Returns true on success.
+  Future<bool> deletePuzzle(int id) async {
+    try {
+      final resp = await http
+          .delete(Uri.parse('$baseUrl/admin/puzzles?id=$id'), headers: _headers)
+          .timeout(const Duration(seconds: 10));
+      return resp.statusCode == 200;
+    } catch (e) {
+      print('AdminService.deletePuzzle error: $e');
+      return false;
+    }
+  }
 }
