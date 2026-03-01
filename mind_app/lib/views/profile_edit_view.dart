@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:google_fonts/google_fonts.dart';
 // import '../models/user_model.dart'; // uncomment if needed
 
 class ProfileEditView extends StatefulWidget {
@@ -40,7 +39,8 @@ class _ProfileEditViewState extends State<ProfileEditView> {
             leading: const Icon(Icons.photo_library),
             title: const Text('Choose from Gallery'),
             onTap: () async {
-              final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+              final XFile? image =
+                  await picker.pickImage(source: ImageSource.gallery);
               if (image != null) {
                 setState(() => _profileImage = File(image.path));
               }
@@ -51,7 +51,8 @@ class _ProfileEditViewState extends State<ProfileEditView> {
             leading: const Icon(Icons.camera_alt),
             title: const Text('Take Photo with Camera'),
             onTap: () async {
-              final XFile? image = await picker.pickImage(source: ImageSource.camera);
+              final XFile? image =
+                  await picker.pickImage(source: ImageSource.camera);
               if (image != null) {
                 setState(() => _profileImage = File(image.path));
               }
@@ -82,8 +83,8 @@ class _ProfileEditViewState extends State<ProfileEditView> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF7C5CFF),   // top - lighter purple
-              Color(0xFF5A3CCC),   // bottom - deep purple-blue
+              Color(0xFF7C5CFF), // top - lighter purple
+              Color(0xFF5A3CCC), // bottom - deep purple-blue
             ],
           ),
         ),
@@ -115,7 +116,9 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                         backgroundColor: Colors.white.withOpacity(0.15),
                         backgroundImage: _profileImage != null
                             ? FileImage(_profileImage!)
-                            : const AssetImage('assets/images/default_profile.png') as ImageProvider,
+                            : const AssetImage(
+                                    'assets/images/default_profile.png')
+                                as ImageProvider,
                       ),
                       Positioned(
                         bottom: 0,
@@ -124,7 +127,8 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                           radius: 24,
                           backgroundColor: const Color(0xFFFFD700),
                           child: IconButton(
-                            icon: const Icon(Icons.camera_alt, color: Colors.deepPurple),
+                            icon: const Icon(Icons.camera_alt,
+                                color: Colors.deepPurple),
                             onPressed: _pickImage,
                           ),
                         ),
@@ -139,13 +143,15 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                     decoration: InputDecoration(
                       labelText: 'Name',
                       prefixIcon: const Icon(Icons.person),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       filled: true,
                       fillColor: Colors.white.withOpacity(0.12),
                       labelStyle: const TextStyle(color: Colors.white70),
                     ),
                     style: const TextStyle(color: Colors.white),
-                    validator: (value) => value!.isEmpty ? 'Name is required' : null,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Name is required' : null,
                   ),
                   const SizedBox(height: 20),
 
@@ -155,7 +161,8 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                     decoration: InputDecoration(
                       labelText: 'Email',
                       prefixIcon: const Icon(Icons.email),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       filled: true,
                       fillColor: Colors.white.withOpacity(0.12),
                       labelStyle: const TextStyle(color: Colors.white70),
@@ -164,7 +171,8 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value!.isEmpty) return 'Email is required';
-                      if (!value.contains('@')) return 'Please enter a valid email';
+                      if (!value.contains('@'))
+                        return 'Please enter a valid email';
                       return null;
                     },
                   ),
@@ -176,7 +184,8 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                     decoration: InputDecoration(
                       labelText: 'About Me (optional)',
                       prefixIcon: const Icon(Icons.info),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       filled: true,
                       fillColor: Colors.white.withOpacity(0.12),
                       labelStyle: const TextStyle(color: Colors.white70),
@@ -190,12 +199,15 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                   ElevatedButton.icon(
                     onPressed: _saveProfile,
                     icon: const Icon(Icons.save),
-                    label: const Text('Save Changes', style: TextStyle(fontSize: 18)),
+                    label: const Text('Save Changes',
+                        style: TextStyle(fontSize: 18)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF7C5CFF),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 40, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)),
                     ),
                   ),
                 ],

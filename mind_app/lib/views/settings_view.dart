@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'AboutPage.dart';
 import 'profile_edit_view.dart';
-// Import the admin gate view (adjust path according to your project structure)
-import '../views/admin_view.dart';   // ← added this line (change path if needed)
+import 'admin_view.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -73,7 +72,7 @@ class SettingsView extends StatelessWidget {
                         radius: 50,
                         backgroundImage: const NetworkImage(
                           'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-                        ), // cute bird / character placeholder
+                        ),
                       ),
                     ),
                     Positioned(
@@ -82,7 +81,7 @@ class SettingsView extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: const BoxDecoration(
-                          color: Color(0xFFFFD700), // gold/yellow sparkle
+                          color: Color(0xFFFFD700),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -143,8 +142,9 @@ class SettingsView extends StatelessWidget {
                   subtitle: "View and edit your account",
                   onTap: () {
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const ProfileEditView()),
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const ProfileEditView()),
                     );
                   },
                 ),
@@ -186,7 +186,7 @@ class SettingsView extends StatelessWidget {
                       ? "Dark Mode, Purple Theme"
                       : "Light Mode, Purple Theme",
                   onTap: () {
-                    // TODO: Open theme / appearance selector (light/dark/toggle)
+                    // TODO: Open theme / appearance selector
                   },
                 ),
                 const SizedBox(height: 8),
@@ -197,7 +197,7 @@ class SettingsView extends StatelessWidget {
                   title: "Help & Support",
                   subtitle: "FAQs and Chat",
                   onTap: () {
-                    // TODO: Open help / support screen (or merge with About?)
+                    // TODO: Open help / support screen
                   },
                 ),
 
@@ -234,7 +234,7 @@ class SettingsView extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 80), // extra bottom space
+                const SizedBox(height: 80),
               ],
             ),
           ),
