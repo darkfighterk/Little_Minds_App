@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mind_app/views/text_to_image.dart';
 import '../models/user_model.dart';
 import 'home_view.dart';
 import 'bottom_nav_bar.dart';
@@ -60,12 +61,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             Positioned(
               top: -120,
               right: -140,
-              child: _GlowOrb(size: 240, color: const Color(0xFF8B2FC9), opacity: 0.18),
+              child: _GlowOrb(
+                  size: 240, color: const Color(0xFF8B2FC9), opacity: 0.18),
             ),
             Positioned(
               bottom: size.height * 0.12,
               left: -120,
-              child: _GlowOrb(size: 200, color: const Color(0xFFDA22FF), opacity: 0.12),
+              child: _GlowOrb(
+                  size: 200, color: const Color(0xFFDA22FF), opacity: 0.12),
             ),
 
             SafeArea(
@@ -111,7 +114,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ),
               ),
               const SizedBox(width: 16),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,7 +132,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       ),
                     ),
                     Text(
-                      'Hi, ${widget.user.name ?? "Explorer"}! 🌟',
+                      'Hi, ${widget.user.name}! 🌟',
                       style: GoogleFonts.fredoka(
                         fontSize: 26,
                         color: const Color(0xFFFFD700),
@@ -200,6 +202,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => HomeView(user: widget.user)),
+            ),
+          ),
+          _buildBigButton(
+            title: 'Text to Image',
+            icon: Icons.image_rounded,
+            accentColor: const Color(0xFF66BB6A),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const TextFromImagePage(),
+              ),
             ),
           ),
           _buildBigButton(
@@ -285,7 +298,8 @@ class _GlowOrb extends StatelessWidget {
   final Color color;
   final double opacity;
 
-  const _GlowOrb({required this.size, required this.color, required this.opacity});
+  const _GlowOrb(
+      {required this.size, required this.color, required this.opacity});
 
   @override
   Widget build(BuildContext context) {

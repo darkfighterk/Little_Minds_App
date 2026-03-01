@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'AboutPage.dart';
+import 'profile_edit_view.dart';
+import 'admin_view.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -29,7 +32,12 @@ class SettingsView extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.help_outline, color: Colors.white),
             onPressed: () {
-              // TODO: Open help modal / page
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AboutPage(),
+                ),
+              );
             },
           ),
         ],
@@ -64,7 +72,7 @@ class SettingsView extends StatelessWidget {
                         radius: 50,
                         backgroundImage: const NetworkImage(
                           'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-                        ), // cute bird / character placeholder
+                        ),
                       ),
                     ),
                     Positioned(
@@ -73,7 +81,7 @@ class SettingsView extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: const BoxDecoration(
-                          color: Color(0xFFFFD700), // gold/yellow sparkle
+                          color: Color(0xFFFFD700),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -126,7 +134,39 @@ class SettingsView extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // Settings list
+                // Profile & Admin tiles
+                _buildSettingsTile(
+                  icon: Icons.person,
+                  iconColor: const Color(0xFF00D4FF),
+                  title: "Profile",
+                  subtitle: "View and edit your account",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const ProfileEditView()),
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
+
+                _buildSettingsTile(
+                  icon: Icons.admin_panel_settings,
+                  iconColor: const Color(0xFFFF5252),
+                  title: "Admin",
+                  subtitle: "Management & controls",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AdminGateView(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 24),
+
+                // Remaining settings
                 _buildSettingsTile(
                   icon: Icons.translate,
                   iconColor: const Color(0xFF00D4FF),
@@ -142,31 +182,11 @@ class SettingsView extends StatelessWidget {
                   icon: Icons.palette,
                   iconColor: const Color(0xFFFF80AB),
                   title: "Appearance",
-                  subtitle: isDark ? "Dark Mode, Purple Theme" : "Light Mode, Purple Theme",
+                  subtitle: isDark
+                      ? "Dark Mode, Purple Theme"
+                      : "Light Mode, Purple Theme",
                   onTap: () {
-                    // TODO: Open theme / appearance selector (light/dark/toggle)
-                  },
-                ),
-                const SizedBox(height: 8),
-
-                _buildSettingsTile(
-                  icon: Icons.security,
-                  iconColor: const Color(0xFF4CAF50),
-                  title: "Privacy & Security",
-                  subtitle: "Manage your data",
-                  onTap: () {
-                    // TODO: Navigate to privacy screen
-                  },
-                ),
-                const SizedBox(height: 8),
-
-                _buildSettingsTile(
-                  icon: Icons.system_update,
-                  iconColor: const Color(0xFFFFC107),
-                  title: "Updates",
-                  subtitle: "Version 2.4.0 (Latest)",
-                  onTap: () {
-                    // TODO: Show update info / check for updates
+                    // TODO: Open theme / appearance selector
                   },
                 ),
                 const SizedBox(height: 8),
@@ -193,7 +213,8 @@ class SettingsView extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.redAccent.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.redAccent.withOpacity(0.4)),
+                      border:
+                          Border.all(color: Colors.redAccent.withOpacity(0.4)),
                     ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -213,30 +234,11 @@ class SettingsView extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 80), // space before bottom nav
+                const SizedBox(height: 80),
               ],
             ),
           ),
         ),
-      ),
-
-      // Bottom Navigation Bar
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: isDark ? const Color(0xFF1A0F3A) : const Color(0xFF5A3CCC),
-        selectedItemColor: const Color(0xFF00D4FF),
-        unselectedItemColor: Colors.white70,
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        currentIndex: 3, // Settings is selected
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'HOME'),
-          BottomNavigationBarItem(icon: Icon(Icons.play_arrow), label: 'PLAY'),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'STATS'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'SETTINGS'),
-        ],
-        onTap: (index) {
-          // TODO: Handle navigation between tabs (use indexed stack / go_router / etc.)
-        },
       ),
     );
   }

@@ -12,7 +12,6 @@ class SplashView extends StatefulWidget {
 
 class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
   late AnimationController _logoController;
-  late AnimationController _nameController;
   late AnimationController _taglineController;
   late AnimationController _bgController;
   late AnimationController _particleController;
@@ -20,8 +19,6 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
 
   late Animation<double> _logoScale;
   late Animation<double> _logoOpacity;
-  late Animation<double> _nameOpacity;
-  late Animation<Offset> _nameSlide;
   late Animation<double> _taglineOpacity;
   late Animation<Offset> _taglineSlide;
   late Animation<double> _pulseAnim;
@@ -50,11 +47,6 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 1000),
     );
 
-    _nameController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-
     _taglineController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -69,15 +61,6 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
         curve: const Interval(0.0, 0.4, curve: Curves.easeIn),
       ),
     );
-
-    _nameOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _nameController, curve: Curves.easeOut),
-    );
-    _nameSlide = Tween<Offset>(
-      begin: const Offset(0, 0.5),
-      end: Offset.zero,
-    ).animate(
-        CurvedAnimation(parent: _nameController, curve: Curves.easeOutCubic));
 
     _taglineOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _taglineController, curve: Curves.easeOut),
@@ -94,9 +77,7 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
 
     // Staggered entrance
     _logoController.forward().then((_) {
-      _nameController.forward().then((_) {
-        _taglineController.forward();
-      });
+      _taglineController.forward();
     });
 
     Timer(const Duration(seconds: 4), () {
@@ -117,7 +98,6 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
   @override
   void dispose() {
     _logoController.dispose();
-    _nameController.dispose();
     _taglineController.dispose();
     _bgController.dispose();
     _particleController.dispose();

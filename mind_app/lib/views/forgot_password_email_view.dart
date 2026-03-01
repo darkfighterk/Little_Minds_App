@@ -5,7 +5,8 @@ class ForgotPasswordEmailView extends StatefulWidget {
   const ForgotPasswordEmailView({super.key});
 
   @override
-  State<ForgotPasswordEmailView> createState() => _ForgotPasswordEmailViewState();
+  State<ForgotPasswordEmailView> createState() =>
+      _ForgotPasswordEmailViewState();
 }
 
 class _ForgotPasswordEmailViewState extends State<ForgotPasswordEmailView> {
@@ -47,7 +48,6 @@ class _ForgotPasswordEmailViewState extends State<ForgotPasswordEmailView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFCE4F9),
-
       body: SafeArea(
         child: Stack(
           children: [
@@ -72,7 +72,6 @@ class _ForgotPasswordEmailViewState extends State<ForgotPasswordEmailView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 20),
-
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
@@ -95,9 +94,7 @@ class _ForgotPasswordEmailViewState extends State<ForgotPasswordEmailView> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 44),
-
                   const Center(
                     child: Text(
                       'Forgot Password?',
@@ -108,9 +105,7 @@ class _ForgotPasswordEmailViewState extends State<ForgotPasswordEmailView> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 12),
-
                   Center(
                     child: Text(
                       'Please enter your email address to receive a verification code',
@@ -118,9 +113,7 @@ class _ForgotPasswordEmailViewState extends State<ForgotPasswordEmailView> {
                       textAlign: TextAlign.center,
                     ),
                   ),
-
                   const SizedBox(height: 36),
-
                   Center(
                     child: Image.asset(
                       'assets/illustrations/forgot_password.png',
@@ -135,9 +128,7 @@ class _ForgotPasswordEmailViewState extends State<ForgotPasswordEmailView> {
                       },
                     ),
                   ),
-
                   const SizedBox(height: 40),
-
                   _InputField(
                     controller: emailController,
                     label: 'Email Address',
@@ -145,9 +136,7 @@ class _ForgotPasswordEmailViewState extends State<ForgotPasswordEmailView> {
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
                   ),
-
                   const SizedBox(height: 40),
-
                   SizedBox(
                     width: double.infinity,
                     height: 58,
@@ -155,7 +144,8 @@ class _ForgotPasswordEmailViewState extends State<ForgotPasswordEmailView> {
                       onPressed: isLoading ? null : _onSendCodePressed,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFAB47BC),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                         elevation: 3,
                       ),
                       child: isLoading
@@ -177,19 +167,17 @@ class _ForgotPasswordEmailViewState extends State<ForgotPasswordEmailView> {
                             ),
                     ),
                   ),
-
                   const SizedBox(height: 24),
-
                   Center(
                     child: TextButton(
                       onPressed: () => Navigator.pop(context),
                       child: const Text(
                         'Try another way',
-                        style: TextStyle(color: Color(0xFFAB47BC), fontSize: 15),
+                        style:
+                            TextStyle(color: Color(0xFFAB47BC), fontSize: 15),
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 60),
                 ],
               ),
