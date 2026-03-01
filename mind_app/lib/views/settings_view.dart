@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'AboutPage.dart';
+import 'profile_edit_view.dart';
+// Import the admin gate view (adjust path according to your project structure)
+import '../views/admin_view.dart';   // ← added this line (change path if needed)
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -139,7 +142,10 @@ class SettingsView extends StatelessWidget {
                   title: "Profile",
                   subtitle: "View and edit your account",
                   onTap: () {
-                    // TODO: Navigate to profile screen
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ProfileEditView()),
+                    );
                   },
                 ),
                 const SizedBox(height: 8),
@@ -150,7 +156,12 @@ class SettingsView extends StatelessWidget {
                   title: "Admin",
                   subtitle: "Management & controls",
                   onTap: () {
-                    // TODO: Navigate to admin dashboard (maybe with auth check)
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AdminGateView(),
+                      ),
+                    );
                   },
                 ),
                 const SizedBox(height: 24),

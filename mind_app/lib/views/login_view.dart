@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import '../controllers/login_controller.dart';
 import 'main_home_view.dart';
 import '../models/user_model.dart';
+import 'forgot_password_email_view.dart'; // ← Added this import
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -282,7 +283,15 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
                               ],
                             ),
                             TextButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ForgotPasswordEmailView(),
+                                  ),
+                                );
+                              },
                               child: const Text(
                                 'Forgot Password?',
                                 style: TextStyle(
