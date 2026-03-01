@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'AboutPage.dart';
-import 'admin_view.dart';           // ← added this import
+import 'profile_edit_view.dart';
+import 'admin_view.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -140,7 +141,11 @@ class SettingsView extends StatelessWidget {
                   title: "Profile",
                   subtitle: "View and edit your account",
                   onTap: () {
-                    // TODO: Navigate to profile screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const ProfileEditView()),
+                    );
                   },
                 ),
                 const SizedBox(height: 8),
