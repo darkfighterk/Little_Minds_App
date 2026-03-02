@@ -85,7 +85,7 @@ type GroqResponse struct {
 		Message struct {
 			Content string `json:"content"`
 		} `json:"message"`
-	} `json:"choices"`
+	} `choices"`
 }
 
 // =====================================================================
@@ -557,7 +557,24 @@ func getProgressHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(Response{Message: "Progress retrieved", Data: progress})
 		return
 	}
+
+    // FETCH ALL SUBJECTS DYNAMICALLY
 	subjects := []string{"science", "biology", "history"}
+    rows, err := db.Query("SELECT id FROM quiz_subjects")
+    if err == nil {
+        defer rows.Close()
+        for rows.Next() {
+            var sid string
+            if err := rows.Scan(&sid); err == nil {
+                found := false
+                for _, existing := range subjects {
+                    if existing == sid { found = true; break }
+                }
+                if !found { subjects = append(subjects, sid) }
+            }
+        }
+    }
+
 	allProgress := make([]SubjectProgress, 0, len(subjects))
 	for _, sid := range subjects {
 		progress, err := fetchSubjectProgress(userIDStr, sid)

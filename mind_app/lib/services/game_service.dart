@@ -11,6 +11,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'admin_service.dart';
 
 class GameService {
   // ── Base URL (matches auth_service.dart) ───────────────────
@@ -188,7 +189,16 @@ class GameService {
   }
 
   Future<void> fetchAllProgress() async {
-    final subjects = ['science', 'biology', 'history'];
-    await Future.wait(subjects.map((s) => fetchProgress(s)));
+    final adminService = AdminService();
+    final builtIn = ['science', 'biology', 'history'];
+    
+    // Get all custom subjects too
+    final adminSubjects = await adminService.getSubjects();
+    final allIds = {
+      ...builtIn,
+      ...adminSubjects.map((s) => s['id'] as String),
+    };
+
+    await Future.wait(allIds.map((id) => fetchProgress(id)));
   }
 }

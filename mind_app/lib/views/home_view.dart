@@ -53,30 +53,42 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     final data = await _adminService.getSubjects();
     final builtInIds = GameData.subjects.map((s) => s.id).toSet();
 
-    final newSubjects = data
-        .where((s) => !builtInIds.contains(s['id'] as String))
-        .map((s) => Subject(
-              id: s['id'] as String,
-              name: s['name'] as String,
-              emoji: s['emoji'] as String? ?? '📚',
-              gradientColors: [
-                s['gradient_start'] as String? ?? '#4FC3F7',
-                s['gradient_end'] as String? ?? '#0288D1',
-              ],
-              levels: const [],
-            ))
-        .toList();
+    final List<Subject> newSubjects = [];
+    
+    for (var s in data) {
+      final id = s['id'] as String;
+      if (builtInIds.contains(id)) continue;
+
+      // Fetch levels to populate the Subject object properly
+      final levelData = await _adminService.getLevels(id);
+      
+      newSubjects.add(Subject(
+        id: id,
+        name: s['name'] as String,
+        emoji: s['emoji'] as String? ?? '📚',
+        gradientColors: [
+          s['gradient_start'] as String? ?? '#4FC3F7',
+          s['gradient_end'] as String? ?? '#0288D1',
+        ],
+        // Note: Full level/question data is loaded by LevelMapView/QuizView 
+        // using AdminService. Here we just need the count for progress calculation.
+        levels: List.generate(levelData.length, (index) => GameLevel(
+          levelNumber: index + 1,
+          title: '',
+          icon: '',
+          starsRequired: 0,
+          questions: [],
+        )),
+      ));
+      
+      if (mounted) {
+        setState(() => _totalLevelCounts[id] = levelData.length);
+      }
+    }
 
     if (!mounted) return;
 
     setState(() => _adminSubjects = newSubjects);
-
-    for (final subject in newSubjects) {
-      final levels = await _adminService.getLevels(subject.id);
-      if (!mounted) return;
-      setState(() => _totalLevelCounts[subject.id] = levels.length);
-    }
-
     await _loadProgress();
   }
 
@@ -264,6 +276,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   Widget _buildSubjectGrid() {
+    final allSubjects = [...GameData.subjects, ..._adminSubjects];
+
     return RefreshIndicator(
       onRefresh: _loadAdminSubjects,
       child: SingleChildScrollView(
@@ -271,26 +285,25 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
         child: Column(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _SubjectCard(
-                    subject: GameData.subjects[0],
-                    progress: _progress[GameData.subjects[0].id] ?? 0,
-                    floatController: _floatController,
-                    onTap: () => _openSubject(GameData.subjects[0]),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: _SubjectCard(
-                    subject: GameData.subjects[1],
-                    progress: _progress[GameData.subjects[1].id] ?? 0,
-                    floatController: _floatController,
-                    onTap: () => _openSubject(GameData.subjects[1]),
-                  ),
-                ),
-              ],
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 14,
+                mainAxisSpacing: 14,
+                childAspectRatio: 0.85,
+              ),
+              itemCount: allSubjects.length,
+              itemBuilder: (context, index) {
+                final subject = allSubjects[index];
+                return _SubjectCard(
+                  subject: subject,
+                  progress: _progress[subject.id] ?? 0,
+                  floatController: _floatController,
+                  onTap: () => _openSubject(subject),
+                );
+              },
             ),
             const SizedBox(height: 14),
             _PuzzlesCard(
@@ -442,8 +455,16 @@ class _SubjectCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 subject.emoji,
@@ -452,14 +473,28 @@ class _SubjectCard extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 subject.name,
+                textAlign: TextAlign.center,
                 style: GoogleFonts.fredoka(
-                  fontSize: 18,
-                  color: Color(0xFF3A1C72),
+                  fontSize: 16,
+                  color: const Color(0xFF3A1C72),
+                  fontWeight: FontWeight.bold,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 8),
-              LinearProgressIndicator(
-                value: progress,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  backgroundColor: Colors.grey[200],
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    subject.gradientColors.length > 1 
+                      ? Color(int.parse(subject.gradientColors[1].replaceAll('#', '0xFF')))
+                      : Colors.blue,
+                  ),
+                  minHeight: 8,
+                ),
               ),
             ],
           ),

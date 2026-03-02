@@ -51,35 +51,55 @@ class _LevelMapViewState extends State<LevelMapView>
   }
 
   Future<void> _loadLevels() async {
-    if (widget.subject.levels.isNotEmpty) return;
+    // 1. Start with hardcoded levels from the model
+    final Map<int, GameLevel> levelsMap = {
+      for (var l in widget.subject.levels) l.levelNumber: l
+    };
+
+    // 2. Fetch all levels from the database for this subject
     final quiz = await _adminService.getFullQuiz(widget.subject.id);
-    if (quiz == null || !mounted) return;
-    final rawLevels = (quiz['levels'] as List<dynamic>?) ?? [];
-    final levels = rawLevels.map((l) {
-      final rawQs = (l['questions'] as List<dynamic>?) ?? [];
-      final questions = rawQs
-          .map((q) => QuizQuestion(
-                question: q['question_text'] as String? ?? '',
-                options: [
-                  q['option_a'] as String? ?? '',
-                  q['option_b'] as String? ?? '',
-                  q['option_c'] as String? ?? '',
-                  q['option_d'] as String? ?? '',
-                ],
-                correctIndex: (q['correct_index'] as num?)?.toInt() ?? 0,
-                funFact: q['fun_fact'] as String?,
-              ))
-          .toList();
-      return GameLevel(
-        id: (l['id'] as num?)?.toInt(),
-        levelNumber: (l['level_number'] as num?)?.toInt() ?? 0,
-        title: l['title'] as String? ?? '',
-        icon: l['icon'] as String? ?? '🎯',
-        starsRequired: (l['stars_required'] as num?)?.toInt() ?? 0,
-        questions: questions,
-      );
-    }).toList();
-    if (mounted) setState(() => _dynamicLevels = levels);
+    
+    if (quiz != null) {
+      final rawLevels = (quiz['levels'] as List<dynamic>?) ?? [];
+      for (var l in rawLevels) {
+        final rawQs = (l['questions'] as List<dynamic>?) ?? [];
+        final questions = rawQs
+            .map((q) => QuizQuestion(
+                  question: q['question_text'] as String? ?? '',
+                  options: [
+                    q['option_a'] as String? ?? '',
+                    q['option_b'] as String? ?? '',
+                    q['option_c'] as String? ?? '',
+                    q['option_d'] as String? ?? '',
+                  ],
+                  correctIndex: (q['correct_index'] as num?)?.toInt() ?? 0,
+                  funFact: q['fun_fact'] as String?,
+                ))
+            .toList();
+            
+        final dbLevel = GameLevel(
+          id: (l['id'] as num?)?.toInt(),
+          levelNumber: (l['level_number'] as num?)?.toInt() ?? 0,
+          title: l['title'] as String? ?? '',
+          icon: l['icon'] as String? ?? '🎯',
+          starsRequired: (l['stars_required'] as num?)?.toInt() ?? 0,
+          questions: questions,
+        );
+        
+        // Database levels OVERRIDE hardcoded ones with the same level number
+        levelsMap[dbLevel.levelNumber] = dbLevel;
+      }
+    }
+
+    // 3. Sort by level number to ensure correct path order
+    final sortedLevels = levelsMap.values.toList()
+      ..sort((a, b) => a.levelNumber.compareTo(b.levelNumber));
+
+    if (mounted) {
+      setState(() {
+        _dynamicLevels = sortedLevels;
+      });
+    }
   }
 
   Future<void> _loadProgress() async {
@@ -143,7 +163,7 @@ class _LevelMapViewState extends State<LevelMapView>
                     ),
                   ),
                 )
-              else if (widget.subject.levels.isEmpty && _dynamicLevels.isEmpty)
+              else if (_dynamicLevels.isEmpty && widget.subject.levels.isEmpty)
                 Expanded(
                   child: Center(
                     child: Column(
@@ -184,7 +204,7 @@ class _LevelMapViewState extends State<LevelMapView>
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
+                color: Colors.white.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
@@ -229,10 +249,10 @@ class _LevelMapViewState extends State<LevelMapView>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
+                color: Colors.white.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+                  color: const Color(0xFFFFD700).withOpacity(0.4),
                 ),
               ),
               child: Row(
@@ -258,9 +278,9 @@ class _LevelMapViewState extends State<LevelMapView>
   // ── Level Map ──────────────────────────────────────────────
 
   Widget _buildLevelMap() {
-    final levels = widget.subject.levels.isNotEmpty
-        ? widget.subject.levels
-        : _dynamicLevels;
+    final levels = _dynamicLevels.isNotEmpty
+        ? _dynamicLevels
+        : widget.subject.levels;
 
     return RefreshIndicator(
       color: const Color(0xFFFFD700),
@@ -328,17 +348,17 @@ class _LevelMapViewState extends State<LevelMapView>
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: unlocked
-                        ? Colors.white.withValues(alpha: 0.1)
-                        : Colors.white.withValues(alpha: 0.04),
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.white.withOpacity(0.04),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: color.withValues(alpha: unlocked ? 0.6 : 0.2),
+                      color: color.withOpacity(unlocked ? 0.6 : 0.2),
                       width: 2,
                     ),
                     boxShadow: unlocked
                         ? [
                             BoxShadow(
-                              color: color.withValues(alpha: 0.25),
+                              color: color.withOpacity(0.25),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             )
@@ -436,7 +456,7 @@ class _LevelMapViewState extends State<LevelMapView>
                   width: 2,
                   height: 8,
                   margin: const EdgeInsets.symmetric(vertical: 2),
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: Colors.white.withOpacity(0.15),
                 );
               }),
             ),
