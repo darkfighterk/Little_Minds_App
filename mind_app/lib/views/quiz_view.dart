@@ -130,7 +130,6 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
         starsEarned: starsEarned,
         levelTitle: widget.level.title,
         onContinue: () async {
-          await _sendPointsToBackend(starsEarned);
           // 1. Close the dialog using the dialog's own context.
           Navigator.of(dialogContext).pop();
           // 2. Pop the quiz screen using the quiz-screen context,
@@ -174,17 +173,6 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
     if (ratio >= 0.33) return 10;
     return 0;
   }
-  Future<void> _sendPointsToBackend(int starsEarned) async {
-    await http.post(
-      Uri.parse("http://10.0.2.2:8080/quiz/complete"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "user_id": widget.user.id,
-        "points": starsEarned,
-      }),
-    );
-  }
-
   // ── Build ──────────────────────────────────────────────────
 
   @override

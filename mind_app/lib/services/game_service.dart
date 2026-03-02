@@ -124,6 +124,7 @@ class GameService {
   Future<int> saveLevelResult({
     required String subjectId,
     required int levelId,
+    required int levelNumber,
     required int starsEarned,
     required int quizScore,
     required int totalQuestions,
@@ -140,6 +141,7 @@ class GameService {
         'user_id': userId,
         'subject_id': subjectId,
         'level_id': levelId,
+        'level_number':levelNumber,
         'stars_earned': starsEarned,
         'quiz_score': quizScore,
         'total_questions': totalQuestions,

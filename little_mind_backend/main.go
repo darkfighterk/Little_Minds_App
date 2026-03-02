@@ -229,7 +229,7 @@ func main() {
 	http.HandleFunc("/leaderboard", enableCORS(leaderboardHandler))
 
 	// Quiz point Routes
-	http.HandleFunc("/quiz/complete", enableCORS(completeQuizHandler))
+	//http.HandleFunc("/quiz/complete", enableCORS(completeQuizHandler))
 
 	log.Println("🚀 Server started at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -565,6 +565,20 @@ func saveLevelResultHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(Response{Error: "Invalid subject or level_number"})
 		return
 	}
+	//  Add points only if stars improved 
+	var prevStars int
+	err = db.QueryRow(`
+		SELECT stars_earned 
+		FROM user_level_completions
+		WHERE user_id = ? AND level_id = ?
+	`, result.UserID, levelID).Scan(&prevStars)
+
+	if err != nil && err != sql.ErrNoRows {
+		log.Println("saveLevelResultHandler: fetch previous stars error:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(Response{Error: "Failed to fetch previous stars"})
+		return
+	}
 	_, err = db.Exec(`
 		INSERT INTO user_level_completions
 		    (user_id, subject_id, level_id, stars_earned, quiz_score, total_questions)
@@ -582,6 +596,18 @@ func saveLevelResultHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(Response{Error: "Failed to save level result"})
 		return
+	}
+	//points add logic
+	pointsToAdd := 0
+	if result.StarsEarned > prevStars {
+		pointsToAdd = result.StarsEarned - prevStars
+	}
+
+	//  Call addPoints 
+	if pointsToAdd > 0 {
+		if err := addPoints(result.UserID, pointsToAdd, "Level Completion"); err != nil {
+			log.Println("saveLevelResultHandler: addPoints error:", err)
+		}
 	}
 	var totalStars int
 	err = db.QueryRow(`
@@ -1128,30 +1154,4 @@ func addPoints(userID int, points int, source string) error {
 
     log.Printf("✅ Added %d points to user_id=%d (source: %s)\n", points, userID, source)
     return nil
-}
-// =====================================================================
-// Quiz
-// POST /quiz/complete → Awards points after quiz completion
-// =====================================================================
-
-func completeQuizHandler(w http.ResponseWriter, r *http.Request) {
-    var req struct {
-        UserID int `json:"user_id"`
-        Points int `json:"points"`
-    }
-
-    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-        http.Error(w, "Invalid request", http.StatusBadRequest)
-        return
-    }
-
-    err := addPoints(req.UserID, req.Points, "Quiz Completion")
-    if err != nil {
-        http.Error(w, "Failed to add points", http.StatusInternalServerError)
-        return
-    }
-
-    json.NewEncoder(w).Encode(map[string]string{
-        "message": "Points added successfully",
-    })
 }

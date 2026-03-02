@@ -475,12 +475,12 @@ class _LevelMapViewState extends State<LevelMapView>
       await _gameService.saveLevelResult(
         subjectId: widget.subject.id,
         levelId: level.id!,
+        levelNumber: level.levelNumber,
         starsEarned: result.starsEarned,
         quizScore: result.quizScore,
         totalQuestions: result.totalQuestions,
       );
     }
-
     // Always refresh progress after returning
     await _loadProgress();
   }
