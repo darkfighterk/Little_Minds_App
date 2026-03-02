@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'profile_edit_view.dart';  // ← Added this import
 
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
@@ -7,7 +7,6 @@ class ProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       body: Stack(
         children: [
           // Background design - purple space theme for kids
@@ -17,9 +16,9 @@ class ProfileView extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFF6B48FF),     // vibrant purple
-                  Color(0xFF4A2B99),     // deeper cosmic purple
-                  Color(0xFF2A1A66),     // dark space purple
+                  Color(0xFF6B48FF), // vibrant purple
+                  Color(0xFF4A2B99), // deeper cosmic purple
+                  Color(0xFF2A1A66), // dark space purple
                 ],
               ),
             ),
@@ -45,15 +44,6 @@ class ProfileView extends StatelessWidget {
             ),
           ),
 
-          // Optional: You can add a real asset image instead:
-          // Positioned.fill(
-          //   child: Image.asset(
-          //     'assets/images/space_bg_purple_kids.png',
-          //     fit: BoxFit.cover,
-          //     opacity: const AlwaysStoppedAnimation(0.4),
-          //   ),
-          // ),
-
           // Main content
           SafeArea(
             child: SingleChildScrollView(
@@ -68,11 +58,15 @@ class ProfileView extends StatelessWidget {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.settings, color: Colors.white),
-                        onPressed: () {},
+                        onPressed: () {
+                          // TODO: open settings page
+                        },
                       ),
                       IconButton(
                         icon: const Icon(Icons.share, color: Colors.white),
-                        onPressed: () {},
+                        onPressed: () {
+                          // TODO: implement share
+                        },
                       ),
                     ],
                   ),
@@ -99,7 +93,7 @@ class ProfileView extends StatelessWidget {
                         ),
                         child: ClipOval(
                           child: Image.network(
-                            'https://images.unsplash.com/photo-1620332360178-664f4d97b0d8?w=400', // placeholder boy avatar
+                            'https://images.unsplash.com/photo-1620332360178-664f4d97b0d8?w=400',
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => const Icon(
                               Icons.person,
@@ -110,7 +104,8 @@ class ProfileView extends StatelessWidget {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: const Color(0xFF00D4FF),
                           borderRadius: BorderRadius.circular(20),
@@ -162,6 +157,30 @@ class ProfileView extends StatelessWidget {
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Edit Profile button ← Added here
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProfileEditView(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.edit, size: 20),
+                    label: const Text('Edit Profile'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white70, width: 1.5),
+                      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
                       ),
                     ),
                   ),
@@ -249,7 +268,7 @@ class ProfileView extends StatelessWidget {
                   _buildMissionCard(
                     title: 'The Jurassic Trail',
                     subtitle: 'Found 4/4 Fossils',
-                    imageUrl: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=400', // forest path placeholder
+                    imageUrl: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=400',
                     completed: true,
                   ),
 
@@ -258,7 +277,7 @@ class ProfileView extends StatelessWidget {
                   _buildMissionCard(
                     title: 'Solar System Scout',
                     subtitle: 'Mars Orbit reached',
-                    imageUrl: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', // mars placeholder
+                    imageUrl: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400',
                     completed: true,
                   ),
 

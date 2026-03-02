@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'AboutPage.dart';
-import 'profile_edit_view.dart';
 import 'admin_view.dart';
+import 'profile_view.dart';  // ← Added this import to connect to ProfileView
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -134,22 +134,24 @@ class SettingsView extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // Profile & Admin tiles
+                // Profile tile – now opens ProfileView
                 _buildSettingsTile(
                   icon: Icons.person,
                   iconColor: const Color(0xFF00D4FF),
                   title: "Profile",
-                  subtitle: "View and edit your account",
+                  subtitle: "View and manage your account",
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (_) => const ProfileEditView()),
+                        builder: (context) => const ProfileView(),
+                      ),
                     );
                   },
                 ),
                 const SizedBox(height: 8),
 
+                // Admin tile
                 _buildSettingsTile(
                   icon: Icons.admin_panel_settings,
                   iconColor: const Color(0xFFFF5252),
@@ -213,8 +215,7 @@ class SettingsView extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.redAccent.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(16),
-                      border:
-                          Border.all(color: Colors.redAccent.withOpacity(0.4)),
+                      border: Border.all(color: Colors.redAccent.withOpacity(0.4)),
                     ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,

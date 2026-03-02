@@ -48,9 +48,11 @@ class AboutPage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: isDark
-                ? [const Color(0xFF2A1A5E), const Color(0xFF180F38)]
-                : [const Color(0xFF7C5CFF), const Color(0xFF5A3CCC)],
+            colors: [
+              const Color(0xFF6B48FF),    // vibrant purple (matches ProfileView top)
+              const Color(0xFF4A2B99),    // deeper cosmic purple
+              const Color(0xFF2A1A66),    // dark space purple (matches ProfileView bottom)
+            ],
           ),
         ),
         child: SafeArea(

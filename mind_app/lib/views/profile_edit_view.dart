@@ -83,8 +83,9 @@ class _ProfileEditViewState extends State<ProfileEditView> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF7C5CFF), // top - lighter purple
-              Color(0xFF5A3CCC), // bottom - deep purple-blue
+              Color(0xFF6B48FF),    // vibrant purple (matches ProfileView top)
+              Color(0xFF4A2B99),    // deeper cosmic purple
+              Color(0xFF2A1A66),    // dark space purple (matches ProfileView bottom)
             ],
           ),
         ),
