@@ -2490,13 +2490,17 @@ class _PzOutline extends CustomPainter {
 // =====================================================================
 // Single Piece Tile
 //
-// Technique: ClipPath (jigsaw shape) wraps a Stack whose single child
-// is a Positioned image. The Positioned uses negative offsets to shift
-// the full-size image so the correct region appears inside the clip.
+// Correct technique:
+//   ClipPath (jigsaw shape)
+//     └── SizedBox (canvas: cell + 2·nub square)
+//           └── Stack (clipBehavior: Clip.none  ← lets image overflow layout)
+//                 └── Positioned(left: nub - col·cell, top: nub - row·cell)
+//                       └── Image.network (rendered at cols·cell square)
 //
-// Stack(clipBehavior: Clip.none) does NOT clip overflow, so the
-// image extends beyond the stack's bounds. ClipPath then clips
-// the painted result to the jigsaw shape.
+// The Positioned shifts the FULL image so that piece (row,col) aligns
+// with the canvas's (nub,nub) origin.  Stack's Clip.none lets it paint
+// beyond the stack's own bounds.  ClipPath then clips all that painting
+// to the jigsaw bezier shape.
 // =====================================================================
 
 class _PzTile extends StatelessWidget {
@@ -2515,66 +2519,63 @@ class _PzTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sz       = cell + 2 * nub;        // canvas width/height
-    final imgPx    = cell * cols;            // full image rendered size
-    // Offset to position the image so piece (row,col) shows at (nub,nub)
-    final imgLeft  = nub - col * cell;
-    final imgTop   = nub - row * cell;
+    final sz     = cell + 2 * nub;   // canvas size
+    final imgPx  = cell * cols;      // full-image render size
+    // Shift so that pixel (col·cell, row·cell) of the image
+    // lands at (nub, nub) inside the canvas.
+    final left   = nub - col * cell;
+    final top    = nub - row * cell;
 
     return SizedBox(
       width: sz,
       height: sz,
       child: Stack(children: [
-        // ── Jigsaw-clipped image ───────────────────────────
+
+        // ── Jigsaw-clipped image ─────────────────────────────
         ClipPath(
           clipper: _PzClipper(eT, eR, eB, eL, cell, nub),
           child: SizedBox(
             width: sz,
             height: sz,
-            child: OverflowBox(
-              // Remove constraints so image can be larger than canvas
-              minWidth:  0, maxWidth:  double.infinity,
-              minHeight: 0, maxHeight: double.infinity,
-              alignment: Alignment.topLeft,
-              child: Transform.translate(
-                offset: Offset(imgLeft, imgTop),
-                child: Image.network(
-                  imageUrl,
-                  width:  imgPx,
-                  height: imgPx,
-                  fit: BoxFit.fill,
-                  gaplessPlayback: true,
-                  loadingBuilder: (_, child, progress) {
-                    if (progress == null) return child;
-                    // Tinted placeholder while loading
-                    return Container(
-                      width: imgPx, height: imgPx,
-                      color: const Color(0xFF2D1B69),
-                      child: Center(
-                        child: SizedBox(
-                          width: cell * .35, height: cell * .35,
-                          child: const CircularProgressIndicator(
-                            color: Color(0xFFFF7043), strokeWidth: 1.5),
+            child: Stack(
+              clipBehavior: Clip.none,        // ← key: image may overflow
+              children: [
+                Positioned(
+                  left:   left,
+                  top:    top,
+                  width:  imgPx,   // ← must be explicit; without this Flutter
+                  height: imgPx,   //   constrains to remaining Stack space → wrong size
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.fill,
+                    gaplessPlayback: true,
+                    loadingBuilder: (_, child, prog) {
+                      if (prog == null) return child;
+                      return Container(
+                        color: const Color(0xFF1A0A3D),
+                        child: Center(
+                          child: SizedBox(
+                            width: cell * .3, height: cell * .3,
+                            child: const CircularProgressIndicator(
+                              color: Color(0xFFFF7043), strokeWidth: 1.5),
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  errorBuilder: (_, __, ___) => Container(
-                    width: imgPx, height: imgPx,
-                    color: const Color(0xFF2D1B69),
-                    child: Center(
-                      child: Icon(Icons.broken_image,
-                          color: Colors.white24,
-                          size: cell * .3),
+                      );
+                    },
+                    errorBuilder: (_, __, ___) => Container(
+                      color: const Color(0xFF1A0A3D),
+                      child: Center(
+                        child: Icon(Icons.broken_image,
+                            color: Colors.white24, size: cell * .3)),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
 
-        // ── Jigsaw outline on top of image ─────────────────
+        // ── White jigsaw outline drawn on top ───────────────
         CustomPaint(
           size: Size(sz, sz),
           painter: _PzOutline(eT, eR, eB, eL, cell, nub),
@@ -2626,52 +2627,54 @@ class _AdminPieceGrid extends StatelessWidget {
     final sw    = MediaQuery.of(context).size.width;
     final gridW = (sw - 80).clamp(120.0, 360.0);
     final cell  = gridW / cols;
-    final nub   = cell * .22;          // tab protrusion
-    final gap   = nub * 2 + 4;        // gap wide enough so tabs don't overlap
-    final sz    = cell + 2 * nub;     // single tile canvas size
-    // Total size of the displayed area
-    final total = cols * cell + (cols - 1) * gap + 2 * nub;
+    // Nub smaller than game view so preview fits on screen
+    final nub   = cell * .20;
+    final sz    = cell + 2 * nub;   // single tile canvas size (includes tab overhang)
+
+    // The N×N grid of bodies occupies exactly gridW×gridW.
+    // Each tile canvas is sz×sz but the body sits at (nub,nub) inside it.
+    // So tile at (r,c) is Positioned at (c*cell - nub, r*cell - nub)
+    // so that its body starts at (c*cell, r*cell).
+    // Total container = gridW + 2*nub (to accommodate edge tab overhangs).
+    final total = gridW + 2 * nub;
 
     final edges = _buildEdges();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: total,
-          height: total,
-          decoration: BoxDecoration(
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: total,
+            height: total,
             color: const Color(0xFF080215),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(.06)),
-          ),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: List.generate(pieceCount, (i) {
-              final r   = i ~/ cols;
-              final c   = i % cols;
-              final e   = edges[i];
-              // Body of piece starts at (nub + c*(cell+gap), nub + r*(cell+gap))
-              // Tile canvas starts nub before that
-              final left = c * (cell + gap);
-              final top  = r * (cell + gap);
-              return Positioned(
-                left: left,
-                top:  top,
-                child: _PzTile(
-                  imageUrl: imageUrl,
-                  row: r, col: c, cols: cols,
-                  eT: e[0], eR: e[1], eB: e[2], eL: e[3],
-                  cell: cell, nub: nub,
-                ),
-              );
-            }),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: List.generate(pieceCount, (i) {
+                final r = i ~/ cols;
+                final c = i % cols;
+                final e = edges[i];
+                return Positioned(
+                  // Place tile so its body (starting at nub offset inside tile)
+                  // aligns with cell position in the grid.
+                  left: c * cell,          // tile left = c*cell (body starts at c*cell+nub inside tile, but tile's Positioned offsets by nub already)
+                  top:  r * cell,
+                  child: _PzTile(
+                    imageUrl: imageUrl,
+                    row: r, col: c, cols: cols,
+                    eT: e[0], eR: e[1], eB: e[2], eL: e[3],
+                    cell: cell, nub: nub,
+                  ),
+                );
+              }),
+            ),
           ),
         ),
 
         const SizedBox(height: 8),
         Text(
-          '$pieceCount pieces',
+          '$pieceCount pieces  •  swipe right to scroll',
           style: GoogleFonts.nunito(fontSize: 11, color: Colors.white38),
         ),
       ],

@@ -1,418 +1,437 @@
 // lib/views/puzzle_game_view.dart
 //
-// Real jigsaw puzzle game — every piece is bezier-shaped with interlocking
-// tabs (knobs) and blanks (holes), just like a physical jigsaw puzzle.
-// The admin-uploaded image is sliced into N×N pieces automatically.
+// Jigsaw puzzle game
+//
+//  ┌──────────────────────────────────┐
+//  │  AppBar  title · pieces · timer  │
+//  │  ▓▓▓▓▓▓░░░░░░  progress bar      │
+//  │                                  │
+//  │   BOARD  – N×N drop targets      │
+//  │   (jigsaw-shaped ghost slots)    │
+//  │                                  │
+//  │  ── 12 pieces left ──            │
+//  │                                  │
+//  │   TRAY  – horizontal scroll      │
+//  │   (shuffled draggable pieces)    │
+//  └──────────────────────────────────┘
+//
+// Piece rendering:  ClipPath(jigsaw) → SizedBox → Stack(Clip.none)
+//                   → Positioned(left, top, width, height)
+//                   → Image.network   (full image, shifted so this
+//                                      piece's region shows through clip)
+//
+// No ui.Image / dart:ui needed – Image.network is used directly.
 
 import 'dart:async';
 import 'dart:math';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/puzzle_model.dart';
 import '../models/user_model.dart';
 
-// =====================================================================
-//  EDGE MODEL
-// =====================================================================
-//   1  = tab   (knob protrudes outward)
-//  -1  = blank (hole indented inward)
-//   0  = flat  (border edge — no tab)
+// ─────────────────────────────────────────────────────────────────
+// EDGE MODEL
+//   1 = tab   (knob protrudes OUT)
+//  -1 = blank (hole cut IN)
+//   0 = flat  (border edge)
+// ─────────────────────────────────────────────────────────────────
 
-class _Edges {
+class _E {
   final int top, right, bottom, left;
-  const _Edges(
-      {required this.top,
-      required this.right,
-      required this.bottom,
-      required this.left});
+  const _E({required this.top, required this.right,
+            required this.bottom, required this.left});
 }
 
-/// Generates consistent edges for every piece so that adjacent pieces
-/// always have complementary shapes (tab ↔ blank).
-List<_Edges> _generateEdges(int cols, Random rng) {
+/// Deterministic edge map for a given seed – same seed → same puzzle.
+List<_E> _makeEdges(int cols, Random rng) {
   final rows = cols;
-  // hJoints[r][c] = bottom-of-(r,c) / top-of-(r+1,c) uses negated value
-  final hJoints = List.generate(
-      rows - 1, (_) => List.generate(cols, (_) => rng.nextBool() ? 1 : -1));
-  // vJoints[r][c] = right-of-(r,c) / left-of-(r,c+1) uses negated value
-  final vJoints = List.generate(
-      rows, (_) => List.generate(cols - 1, (_) => rng.nextBool() ? 1 : -1));
+  final hj = List.generate(rows - 1,
+      (_) => List.generate(cols, (_) => rng.nextBool() ? 1 : -1));
+  final vj = List.generate(rows,
+      (_) => List.generate(cols - 1, (_) => rng.nextBool() ? 1 : -1));
 
   return List.generate(rows * cols, (i) {
-    final r = i ~/ cols;
-    final c = i % cols;
-    return _Edges(
-      top: r == 0 ? 0 : -hJoints[r - 1][c],
-      bottom: r == rows - 1 ? 0 : hJoints[r][c],
-      left: c == 0 ? 0 : -vJoints[r][c - 1],
-      right: c == cols - 1 ? 0 : vJoints[r][c],
+    final r = i ~/ cols, c = i % cols;
+    return _E(
+      top:    r == 0        ? 0 : -hj[r - 1][c],
+      bottom: r == rows - 1 ? 0 :  hj[r][c],
+      left:   c == 0        ? 0 : -vj[r][c - 1],
+      right:  c == cols - 1 ? 0 :  vj[r][c],
     );
   });
 }
 
-// =====================================================================
-//  JIGSAW PATH BUILDER
-// =====================================================================
-//  The piece body fills [ox .. ox+w] × [oy .. oy+h].
-//  Tabs can protrude by [nub] beyond this rect, so the canvas widget
-//  must be (w + 2*nub) × (h + 2*nub) with ox = oy = nub.
+// ─────────────────────────────────────────────────────────────────
+// JIGSAW PATH  (bezier tabs & blanks)
+// ─────────────────────────────────────────────────────────────────
 
-Path _buildPiecePath(
-    double w, double h, _Edges e, double nub, double ox, double oy) {
-  final path = Path()..moveTo(ox, oy);
-
-  // Top   left→right    tab UP      = negative-y direction
-  _hEdge(path, ox, ox + w, oy, e.top * (-nub));
-  // Right top→bottom    tab RIGHT   = positive-x direction
-  _vEdge(path, ox + w, oy, oy + h, e.right * nub);
-  // Bottom right→left   tab DOWN    = positive-y direction
-  _hEdge(path, ox + w, ox, oy + h, e.bottom * nub);
-  // Left  bottom→top    tab LEFT    = negative-x direction
-  _vEdge(path, ox, oy + h, oy, e.left * (-nub));
-
-  return path..close();
+Path _jigsawPath(_E e, double cell, double nub) {
+  final o = nub;
+  final p = Path()..moveTo(o, o);
+  _hSeg(p, o, o + cell, o,           e.top    * (-nub)); // top    L→R
+  _vSeg(p, o + cell, o, o + cell,    e.right  *   nub ); // right  T→B
+  _hSeg(p, o + cell, o, o + cell,    e.bottom *   nub ); // bottom R→L
+  _vSeg(p, o, o + cell, o,           e.left   * (-nub)); // left   B→T
+  return p..close();
 }
 
-/// Horizontal edge from (x0,y)→(x1,y).
-/// nub>0 → tab in +y; nub<0 → tab in -y; 0 → straight line.
-void _hEdge(Path p, double x0, double x1, double y, double nub) {
-  if (nub == 0) { p.lineTo(x1, y); return; }
+void _hSeg(Path p, double x0, double x1, double y, double n) {
+  if (n == 0) { p.lineTo(x1, y); return; }
   final s = x1 > x0 ? 1.0 : -1.0;
   final w = (x1 - x0).abs();
-  final mx = x0 + s * w * 0.5;
-
-  p.lineTo(x0 + s * w * 0.28, y);
-  p.cubicTo(x0 + s * w * 0.28, y + nub * 0.6,
-            mx - s * w * 0.12, y + nub, mx, y + nub);
-  p.cubicTo(mx + s * w * 0.12, y + nub,
-            x0 + s * w * 0.72, y + nub * 0.6,
-            x0 + s * w * 0.72, y);
+  final mx = x0 + s * w * .5;
+  p.lineTo(x0 + s * w * .28, y);
+  p.cubicTo(x0 + s * w * .28, y + n * .6, mx - s * w * .12, y + n, mx, y + n);
+  p.cubicTo(mx + s * w * .12, y + n, x0 + s * w * .72, y + n * .6, x0 + s * w * .72, y);
   p.lineTo(x1, y);
 }
 
-/// Vertical edge from (x,y0)→(x,y1).
-/// nub>0 → tab in +x; nub<0 → tab in -x; 0 → straight line.
-void _vEdge(Path p, double x, double y0, double y1, double nub) {
-  if (nub == 0) { p.lineTo(x, y1); return; }
+void _vSeg(Path p, double x, double y0, double y1, double n) {
+  if (n == 0) { p.lineTo(x, y1); return; }
   final s = y1 > y0 ? 1.0 : -1.0;
   final h = (y1 - y0).abs();
-  final my = y0 + s * h * 0.5;
-
-  p.lineTo(x, y0 + s * h * 0.28);
-  p.cubicTo(x + nub * 0.6, y0 + s * h * 0.28,
-            x + nub, my - s * h * 0.12, x + nub, my);
-  p.cubicTo(x + nub, my + s * h * 0.12,
-            x + nub * 0.6, y0 + s * h * 0.72,
-            x, y0 + s * h * 0.72);
+  final my = y0 + s * h * .5;
+  p.lineTo(x, y0 + s * h * .28);
+  p.cubicTo(x + n * .6, y0 + s * h * .28, x + n, my - s * h * .12, x + n, my);
+  p.cubicTo(x + n, my + s * h * .12, x + n * .6, y0 + s * h * .72, x, y0 + s * h * .72);
   p.lineTo(x, y1);
 }
 
-// =====================================================================
-//  PIECE PAINTER  (CustomPainter)
-// =====================================================================
+// ─────────────────────────────────────────────────────────────────
+// JIGSAW CLIPPER
+// ─────────────────────────────────────────────────────────────────
 
-class _PiecePainter extends CustomPainter {
-  final ui.Image? image;
+class _JigsawClipper extends CustomClipper<Path> {
+  final _E edge;
+  final double cell, nub;
+  const _JigsawClipper(this.edge, this.cell, this.nub);
+
+  @override
+  Path getClip(Size _) => _jigsawPath(edge, cell, nub);
+
+  @override
+  bool shouldReclip(_JigsawClipper o) =>
+      o.cell != cell || o.nub != nub;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// PIECE WIDGET
+//
+// Uses ClipPath + Stack(Clip.none) + Positioned(width, height):
+//   • Positioned shifts the FULL image so this piece's region
+//     aligns with the canvas body area (nub, nub).
+//   • width/height on Positioned are MANDATORY – without them
+//     Flutter constrains child to remaining Stack space.
+//   • ClipPath clips all paint to the jigsaw bezier shape.
+// ─────────────────────────────────────────────────────────────────
+
+class _PieceTile extends StatelessWidget {
+  final String imageUrl;
   final int pieceIndex;
   final int cols;
-  final _Edges edges;
-  final double cellSize;
-  final double nub;
-  final bool isGhost;
-  final bool isHovered;
-  final bool isWrong;
-  final bool isCorrect;
+  final _E edge;
+  final double cell, nub;
+  final bool correct;
 
-  const _PiecePainter({
-    required this.image,
+  const _PieceTile({
+    required this.imageUrl,
     required this.pieceIndex,
     required this.cols,
-    required this.edges,
-    required this.cellSize,
+    required this.edge,
+    required this.cell,
     required this.nub,
-    this.isGhost = false,
-    this.isHovered = false,
-    this.isWrong = false,
-    this.isCorrect = false,
+    this.correct = false,
+    super.key,
   });
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final path =
-        _buildPiecePath(cellSize, cellSize, edges, nub, nub, nub);
+  Widget build(BuildContext context) {
+    final row    = pieceIndex ~/ cols;
+    final col    = pieceIndex % cols;
+    final sz     = cell + 2 * nub;       // canvas size
+    final imgPx  = cell * cols;          // full image rendered at this size
+    final left   = nub - col * cell;     // shift so col*cell lands at nub
+    final top    = nub - row * cell;     // shift so row*cell lands at nub
 
-    if (isGhost) {
-      _paintGhost(canvas, path);
-      return;
-    }
+    return SizedBox(
+      width: sz, height: sz,
+      child: Stack(children: [
 
-    if (image == null) return;
-    _paintPiece(canvas, path);
-  }
+        // ── Image clipped to jigsaw shape ──────────────────
+        ClipPath(
+          clipper: _JigsawClipper(edge, cell, nub),
+          child: SizedBox(
+            width: sz, height: sz,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  left:   left,
+                  top:    top,
+                  width:  imgPx,   // ← explicit size — critical
+                  height: imgPx,
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.fill,
+                    gaplessPlayback: true,
+                    loadingBuilder: (_, child, prog) {
+                      if (prog == null) return child;
+                      return Container(
+                        color: const Color(0xFF1E1040),
+                        child: Center(
+                          child: SizedBox(
+                            width: cell * .28, height: cell * .28,
+                            child: const CircularProgressIndicator(
+                              color: Color(0xFFFF7043), strokeWidth: 1.5),
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (_, __, ___) => Container(
+                      color: const Color(0xFF1E1040),
+                      child: Center(
+                        child: Icon(Icons.broken_image,
+                            color: Colors.white24, size: cell * .3)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
 
-  void _paintGhost(Canvas canvas, Path path) {
-    final fillColor = isWrong
-        ? Colors.red.withOpacity(0.18)
-        : isHovered
-            ? const Color(0xFFFF7043).withOpacity(0.16)
-            : Colors.white.withOpacity(0.04);
-
-    final strokeColor = isWrong
-        ? Colors.red.withOpacity(0.7)
-        : isHovered
-            ? const Color(0xFFFF7043).withOpacity(0.8)
-            : Colors.white.withOpacity(0.13);
-
-    canvas.drawPath(path,
-        Paint()..color = fillColor..style = PaintingStyle.fill);
-
-    // Icon hint
-    final cx = nub + cellSize / 2;
-    final cy = nub + cellSize / 2;
-    final ir = cellSize * 0.11;
-    final iconPaint = Paint()
-      ..strokeWidth = 1.8
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    if (isWrong) {
-      iconPaint.color = Colors.red.withOpacity(0.7);
-      canvas.drawLine(
-          Offset(cx - ir, cy - ir), Offset(cx + ir, cy + ir), iconPaint);
-      canvas.drawLine(
-          Offset(cx + ir, cy - ir), Offset(cx - ir, cy + ir), iconPaint);
-    } else if (isHovered) {
-      iconPaint.color = const Color(0xFFFF7043).withOpacity(0.8);
-      canvas.drawLine(Offset(cx - ir, cy), Offset(cx + ir, cy), iconPaint);
-      canvas.drawLine(Offset(cx, cy - ir), Offset(cx, cy + ir), iconPaint);
-    }
-
-    canvas.drawPath(
-        path,
-        Paint()
-          ..color = strokeColor
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.3
-          ..strokeJoin = StrokeJoin.round);
-  }
-
-  void _paintPiece(Canvas canvas, Path path) {
-    final row = pieceIndex ~/ cols;
-    final col = pieceIndex % cols;
-
-    final srcW = image!.width / cols;
-    final srcH = image!.height / cols;
-    final src = Rect.fromLTWH(col * srcW, row * srcH, srcW, srcH);
-    final dst = Rect.fromLTWH(nub, nub, cellSize, cellSize);
-
-    canvas.save();
-    canvas.clipPath(path);
-
-    // Draw image crop
-    canvas.drawImageRect(
-        image!, src, dst, Paint()..filterQuality = FilterQuality.medium);
-
-    // Subtle vignette on piece face
-    canvas.drawPath(
-      path,
-      Paint()
-        ..shader = ui.Gradient.radial(
-          Offset(nub + cellSize / 2, nub + cellSize / 2),
-          cellSize * 0.72,
-          [Colors.transparent, Colors.black.withOpacity(0.07)],
-        )
-        ..style = PaintingStyle.fill,
+        // ── Outline on top ─────────────────────────────────
+        CustomPaint(
+          size: Size(sz, sz),
+          painter: _PieceOutline(edge, cell, nub, correct: correct),
+        ),
+      ]),
     );
+  }
+}
 
-    canvas.restore();
+// ─────────────────────────────────────────────────────────────────
+// GHOST SLOT WIDGET  (empty board slot)
+// ─────────────────────────────────────────────────────────────────
 
-    // Piece outline
+class _GhostSlot extends StatelessWidget {
+  final _E edge;
+  final double cell, nub;
+  final bool hovered, wrong;
+
+  const _GhostSlot({
+    required this.edge,
+    required this.cell,
+    required this.nub,
+    this.hovered = false,
+    this.wrong   = false,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final sz = cell + 2 * nub;
+    return CustomPaint(
+      size: Size(sz, sz),
+      painter: _GhostPainter(edge, cell, nub,
+          hovered: hovered, wrong: wrong),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// PAINTERS  (outline + ghost)
+// ─────────────────────────────────────────────────────────────────
+
+class _PieceOutline extends CustomPainter {
+  final _E edge;
+  final double cell, nub;
+  final bool correct;
+  const _PieceOutline(this.edge, this.cell, this.nub, {this.correct = false});
+
+  @override
+  void paint(Canvas canvas, Size size) {
     canvas.drawPath(
-      path,
+      _jigsawPath(edge, cell, nub),
       Paint()
-        ..color = isCorrect
-            ? const Color(0xFF4CAF50).withOpacity(0.95)
-            : Colors.white.withOpacity(0.4)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = isCorrect ? 2.2 : 1.2
-        ..strokeJoin = StrokeJoin.round,
+        ..color       = correct
+            ? const Color(0xFF4CAF50).withOpacity(.95)
+            : Colors.white.withOpacity(.55)
+        ..style       = PaintingStyle.stroke
+        ..strokeWidth = correct ? 2.4 : 1.4
+        ..strokeJoin  = StrokeJoin.round,
     );
   }
 
   @override
-  bool shouldRepaint(_PiecePainter o) =>
-      o.image != image ||
-      o.isGhost != isGhost ||
-      o.isHovered != isHovered ||
-      o.isWrong != isWrong ||
-      o.isCorrect != isCorrect;
+  bool shouldRepaint(_PieceOutline o) => o.correct != correct;
 }
 
-// =====================================================================
-//  IMAGE LOADER  (network → ui.Image)
-// =====================================================================
+class _GhostPainter extends CustomPainter {
+  final _E edge;
+  final double cell, nub;
+  final bool hovered, wrong;
+  const _GhostPainter(this.edge, this.cell, this.nub,
+      {this.hovered = false, this.wrong = false});
 
-Future<ui.Image?> _loadUiImage(String url) async {
-  try {
-    final c = Completer<ui.Image>();
-    final stream = NetworkImage(url).resolve(const ImageConfiguration());
-    late ImageStreamListener listener;
-    listener = ImageStreamListener(
-      (info, _) {
-        if (!c.isCompleted) c.complete(info.image);
-        stream.removeListener(listener);
-      },
-      onError: (e, st) {
-        if (!c.isCompleted) c.completeError(e, st);
-        stream.removeListener(listener);
-      },
-    );
-    stream.addListener(listener);
-    return await c.future;
-  } catch (e) {
-    debugPrint('_loadUiImage error: $e');
-    return null;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = _jigsawPath(edge, cell, nub);
+
+    // Fill
+    final fill = wrong
+        ? Colors.red.withOpacity(.18)
+        : hovered
+            ? const Color(0xFFFF7043).withOpacity(.18)
+            : Colors.white.withOpacity(.05);
+    canvas.drawPath(path, Paint()..color = fill..style = PaintingStyle.fill);
+
+    // Centre icon
+    final cx = nub + cell / 2, cy = nub + cell / 2;
+    final ir = cell * .10;
+    final ip = Paint()
+      ..strokeWidth = 1.8
+      ..strokeCap   = StrokeCap.round
+      ..style       = PaintingStyle.stroke;
+
+    if (wrong) {
+      ip.color = Colors.red.withOpacity(.75);
+      canvas.drawLine(Offset(cx - ir, cy - ir), Offset(cx + ir, cy + ir), ip);
+      canvas.drawLine(Offset(cx + ir, cy - ir), Offset(cx - ir, cy + ir), ip);
+    } else if (hovered) {
+      ip.color = const Color(0xFFFF7043).withOpacity(.9);
+      canvas.drawLine(Offset(cx - ir, cy), Offset(cx + ir, cy), ip);
+      canvas.drawLine(Offset(cx, cy - ir), Offset(cx, cy + ir), ip);
+    }
+
+    // Outline
+    canvas.drawPath(path, Paint()
+      ..color       = wrong
+          ? Colors.red.withOpacity(.65)
+          : hovered
+              ? const Color(0xFFFF7043).withOpacity(.85)
+              : Colors.white.withOpacity(.20)
+      ..style       = PaintingStyle.stroke
+      ..strokeWidth = hovered || wrong ? 1.8 : 1.2
+      ..strokeJoin  = StrokeJoin.round);
   }
+
+  @override
+  bool shouldRepaint(_GhostPainter o) =>
+      o.hovered != hovered || o.wrong != wrong;
 }
 
-// =====================================================================
-//  PUZZLE GAME VIEW
-// =====================================================================
+// ═════════════════════════════════════════════════════════════════
+// PUZZLE GAME VIEW
+// ═════════════════════════════════════════════════════════════════
 
 class PuzzleGameView extends StatefulWidget {
   final PuzzleItem puzzle;
   final User user;
-  const PuzzleGameView(
-      {required this.puzzle, required this.user, super.key});
+  const PuzzleGameView({required this.puzzle, required this.user, super.key});
 
   @override
-  State<PuzzleGameView> createState() => _PuzzleGameViewState();
+  State<PuzzleGameView> createState() => _PuzzleGameState();
 }
 
-class _PuzzleGameViewState extends State<PuzzleGameView>
+class _PuzzleGameState extends State<PuzzleGameView>
     with TickerProviderStateMixin {
-  // ── Config ────────────────────────────────────────────────
+
+  // ── config ────────────────────────────────────────────────
   late final int _cols;
-  late final int _pieceCount;
+  late final int _total;
   final _rng = Random();
 
-  // ── Image ─────────────────────────────────────────────────
-  ui.Image? _image;
-  bool _loadingImage = true;
-  String? _imageError;
+  // ── game state ────────────────────────────────────────────
+  late List<_E>   _edges;
+  late List<int?> _board;    // board[slot] = placed pieceIndex | null
+  late List<int>  _tray;     // remaining pieces
 
-  // ── Game state ────────────────────────────────────────────
-  late List<_Edges> _edges;
-  late List<int?> _boardSlots; // boardSlots[slot] = pieceIndex | null
-  late List<int> _trayPieces; // remaining piece indices
-
-  int? _hoveredSlot;
+  int? _hovSlot;
   int? _wrongSlot;
-  int? _correctSlot;
-  Timer? _wrongTimer;
-  Timer? _correctTimer;
+  int? _okSlot;
+  Timer? _wrongT, _okT;
 
-  bool _completed = false;
-  late DateTime _startTime;
+  bool _done = false;
+  late DateTime _t0;
 
-  // ── Animations ────────────────────────────────────────────
-  late final AnimationController _completionCtrl;
+  late final AnimationController _winCtrl;
 
   // ─────────────────────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
-    _cols = widget.puzzle.cols;
-    _pieceCount = widget.puzzle.pieceCount;
-
-    _completionCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 750));
-
-    _initGame();
-    _loadImage();
+    _cols  = widget.puzzle.cols;
+    _total = widget.puzzle.pieceCount;
+    _winCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 800));
+    _reset();
   }
 
-  void _initGame() {
-    _edges = _generateEdges(_cols, _rng);
-    _boardSlots = List.filled(_pieceCount, null);
-    _trayPieces = List.generate(_pieceCount, (i) => i)..shuffle(_rng);
-    _completed = false;
-    _hoveredSlot = _wrongSlot = _correctSlot = null;
-    _startTime = DateTime.now();
-    _completionCtrl.reset();
-  }
-
-  Future<void> _loadImage() async {
-    setState(() { _loadingImage = true; _imageError = null; });
-    final img = await _loadUiImage(widget.puzzle.imageUrl);
-    if (!mounted) return;
-    setState(() {
-      _image = img;
-      _loadingImage = false;
-      if (img == null) _imageError = 'Could not load puzzle image.';
-    });
+  void _reset() {
+    _edges = _makeEdges(_cols, Random(_cols * 99991)); // stable seed
+    _board = List.filled(_total, null);
+    _tray  = List.generate(_total, (i) => i)..shuffle(_rng);
+    _done  = false;
+    _hovSlot = _wrongSlot = _okSlot = null;
+    _t0 = DateTime.now();
+    _winCtrl.reset();
   }
 
   @override
   void dispose() {
-    _wrongTimer?.cancel();
-    _correctTimer?.cancel();
-    _completionCtrl.dispose();
+    _wrongT?.cancel(); _okT?.cancel();
+    _winCtrl.dispose();
     super.dispose();
   }
 
-  // ── Helpers ───────────────────────────────────────────────
+  // ── helpers ───────────────────────────────────────────────
 
-  int get _placedCount => _boardSlots.where((s) => s != null).length;
+  int get _placed => _board.where((s) => s != null).length;
 
-  void _onPieceDropped(int pieceIndex, int slotIndex) {
-    if (_boardSlots[slotIndex] != null) return;
-    _wrongTimer?.cancel();
-    _correctTimer?.cancel();
+  void _drop(int piece, int slot) {
+    if (_board[slot] != null) return;
+    _wrongT?.cancel(); _okT?.cancel();
 
-    if (pieceIndex == slotIndex) {
+    if (piece == slot) {
+      // ✅ correct
       HapticFeedback.lightImpact();
       setState(() {
-        _boardSlots[slotIndex] = pieceIndex;
-        _trayPieces.remove(pieceIndex);
-        _hoveredSlot = null;
-        _correctSlot = slotIndex;
+        _board[slot] = piece;
+        _tray.remove(piece);
+        _hovSlot = null;
         _wrongSlot = null;
+        _okSlot = slot;
       });
-      _correctTimer = Timer(const Duration(milliseconds: 650), () {
-        if (mounted) setState(() => _correctSlot = null);
-      });
-      if (_trayPieces.isEmpty) {
+      _okT = Timer(const Duration(milliseconds: 700),
+          () { if (mounted) setState(() => _okSlot = null); });
+
+      if (_tray.isEmpty) {
         HapticFeedback.heavyImpact();
         Future.delayed(const Duration(milliseconds: 400), () {
-          if (mounted) { setState(() => _completed = true); _completionCtrl.forward(); }
+          if (mounted) {
+            setState(() => _done = true);
+            _winCtrl.forward();
+          }
         });
       }
     } else {
+      // ❌ wrong
       HapticFeedback.selectionClick();
-      setState(() { _hoveredSlot = null; _wrongSlot = slotIndex; _correctSlot = null; });
-      _wrongTimer = Timer(const Duration(milliseconds: 800), () {
-        if (mounted) setState(() => _wrongSlot = null);
+      setState(() {
+        _hovSlot = null;
+        _wrongSlot = slot;
+        _okSlot = null;
       });
+      _wrongT = Timer(const Duration(milliseconds: 800),
+          () { if (mounted) setState(() => _wrongSlot = null); });
     }
   }
 
-  void _shuffleTray() {
-    HapticFeedback.selectionClick();
-    setState(() => _trayPieces.shuffle(_rng));
-  }
-
-  void _restartGame() {
-    _wrongTimer?.cancel();
-    _correctTimer?.cancel();
-    setState(() => _initGame());
-  }
-
-  void _showExitDialog() {
-    if (_completed || _placedCount == 0) { Navigator.pop(context); return; }
+  void _exitOrPop() {
+    if (_done || _placed == 0) { Navigator.pop(context); return; }
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -424,295 +443,228 @@ class _PuzzleGameViewState extends State<PuzzleGameView>
             style: GoogleFonts.nunito(fontSize: 15, color: Colors.white70)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Keep Playing',
-                  style: GoogleFonts.nunito(
-                      color: const Color(0xFFFF7043),
-                      fontWeight: FontWeight.w700))),
+            onPressed: () => Navigator.pop(context),
+            child: Text('Keep Playing', style: GoogleFonts.nunito(
+                color: const Color(0xFFFF7043),
+                fontWeight: FontWeight.w700))),
           TextButton(
-              onPressed: () { Navigator.pop(context); Navigator.pop(context); },
-              child: Text('Leave',
-                  style: GoogleFonts.nunito(color: Colors.white38))),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: Text('Leave',
+                style: GoogleFonts.nunito(color: Colors.white38))),
         ],
       ),
     );
   }
 
-  // ── BUILD ─────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────
+  // BUILD
+  // ─────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    final screenW = MediaQuery.of(context).size.width;
-    final boardPx = (screenW - 32.0).clamp(200.0, 480.0);
-    final cellSize = boardPx / _cols;
-    final nub = cellSize * 0.26;
+    final sw       = MediaQuery.of(context).size.width;
+    final boardPx  = (sw - 24.0).clamp(180.0, 480.0);
+    final cell     = boardPx / _cols;
+    final nub      = cell * .22;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D0520),
-      appBar: _buildAppBar(),
-      body: _loadingImage
-          ? _buildLoading()
-          : _imageError != null
-              ? _buildError()
-              : _completed
-                  ? _buildCompletionScreen()
-                  : _buildGameBody(cellSize, nub, boardPx),
+      appBar: _appBar(),
+      body: _done
+          ? _winScreen()
+          : _gameBody(cell, nub, boardPx),
     );
   }
 
-  AppBar _buildAppBar() => AppBar(
-        backgroundColor: const Color(0xFF1E1040),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            onPressed: _showExitDialog),
-        title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(widget.puzzle.title,
-              style: GoogleFonts.fredoka(fontSize: 18, color: Colors.white),
-              overflow: TextOverflow.ellipsis),
-          Text('$_placedCount / $_pieceCount pieces',
-              style: GoogleFonts.nunito(fontSize: 11, color: Colors.white54)),
-        ]),
-        actions: [
-          if (_trayPieces.length > 1)
-            IconButton(
-                onPressed: _shuffleTray,
-                icon: const Icon(Icons.shuffle_rounded, color: Colors.white54),
-                tooltip: 'Shuffle tray'),
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: _TimerWidget(startTime: _startTime, running: !_completed),
-          ),
-        ],
-      );
+  // ── AppBar ────────────────────────────────────────────────
 
-  Widget _buildLoading() => Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const CircularProgressIndicator(
-              color: Color(0xFFFF7043), strokeWidth: 3),
-          const SizedBox(height: 20),
-          Text('Loading puzzle…',
-              style: GoogleFonts.fredoka(
-                  fontSize: 18, color: Colors.white54)),
-        ]),
-      );
+  AppBar _appBar() => AppBar(
+    backgroundColor: const Color(0xFF1E1040),
+    foregroundColor: Colors.white,
+    elevation: 0,
+    leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new_rounded),
+        onPressed: _exitOrPop),
+    title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(widget.puzzle.title,
+          style: GoogleFonts.fredoka(fontSize: 18, color: Colors.white),
+          overflow: TextOverflow.ellipsis),
+      Text('$_placed / $_total pieces placed',
+          style: GoogleFonts.nunito(fontSize: 11, color: Colors.white54)),
+    ]),
+    actions: [
+      if (_tray.length > 1)
+        IconButton(
+          icon: const Icon(Icons.shuffle_rounded, color: Colors.white54),
+          tooltip: 'Shuffle tray',
+          onPressed: () {
+            HapticFeedback.selectionClick();
+            setState(() => _tray.shuffle(_rng));
+          }),
+      Padding(
+        padding: const EdgeInsets.only(right: 12),
+        child: _Timer(start: _t0, running: !_done)),
+    ],
+  );
 
-  Widget _buildError() => Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const Text('😢', style: TextStyle(fontSize: 56)),
-          const SizedBox(height: 14),
-          Text(_imageError!,
-              style: GoogleFonts.nunito(
-                  fontSize: 15, color: Colors.white54),
-              textAlign: TextAlign.center),
-          const SizedBox(height: 22),
-          ElevatedButton.icon(
-              onPressed: _loadImage,
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text('Retry',
-                  style: GoogleFonts.fredoka(fontSize: 16)),
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF7043),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)))),
-        ]),
-      );
+  // ─────────────────────────────────────────────────────────
+  // GAME BODY
+  // ─────────────────────────────────────────────────────────
 
-  // ── Game body ──────────────────────────────────────────────
-
-  Widget _buildGameBody(
-      double cellSize, double nub, double boardPx) {
+  Widget _gameBody(double cell, double nub, double boardPx) {
     return Column(children: [
+
       // Progress bar
       LinearProgressIndicator(
-        value: _placedCount / _pieceCount,
-        backgroundColor: Colors.white12,
-        valueColor:
-            const AlwaysStoppedAnimation(Color(0xFFFF7043)),
-        minHeight: 4,
-      ),
+        value: _placed / _total,
+        backgroundColor: Colors.white10,
+        valueColor: const AlwaysStoppedAnimation(Color(0xFFFF7043)),
+        minHeight: 5),
+
       const SizedBox(height: 14),
 
-      // Board
-      Center(child: _buildBoard(cellSize, nub, boardPx)),
+      // ── Board ─────────────────────────────────────────────
+      Center(child: _buildBoard(cell, nub, boardPx)),
 
-      const SizedBox(height: 8),
+      const SizedBox(height: 10),
 
-      // Tray label
+      // ── Divider label ─────────────────────────────────────
       Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 18),
         child: Row(children: [
           const Expanded(child: Divider(color: Colors.white12)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Text(
-              _trayPieces.isEmpty
+              _tray.isEmpty
                   ? '🎉  All placed!'
-                  : '${_trayPieces.length} left — drag onto the board',
-              style: GoogleFonts.nunito(
-                  fontSize: 11, color: Colors.white38),
-            ),
-          ),
+                  : '${_tray.length} piece${_tray.length == 1 ? '' : 's'} left  —  drag to the board',
+              style: GoogleFonts.nunito(fontSize: 11, color: Colors.white38))),
           const Expanded(child: Divider(color: Colors.white12)),
-        ]),
-      ),
+        ])),
+
       const SizedBox(height: 6),
 
-      // Tray
-      Expanded(child: _buildTray(cellSize, nub)),
+      // ── Tray ──────────────────────────────────────────────
+      Expanded(child: _buildTray(cell, nub)),
     ]);
   }
 
-  // ── Board ──────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────
+  // BOARD  — N×N grid of drop targets
+  // ─────────────────────────────────────────────────────────
 
-  Widget _buildBoard(
-      double cellSize, double nub, double boardPx) {
+  Widget _buildBoard(double cell, double nub, double boardPx) {
     return Container(
-      width: boardPx,
+      width:  boardPx,
       height: boardPx,
       decoration: BoxDecoration(
         color: const Color(0xFF160830),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.07)),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.55),
-              blurRadius: 26,
-              offset: const Offset(0, 10)),
-        ],
+        border: Border.all(color: Colors.white.withOpacity(.07)),
+        boxShadow: [BoxShadow(
+            color: Colors.black.withOpacity(.55),
+            blurRadius: 28, offset: const Offset(0, 10))],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: Stack(
           clipBehavior: Clip.none,
-          children: List.generate(_pieceCount, (slot) {
-            final row = slot ~/ _cols;
-            final col = slot % _cols;
+          children: List.generate(_total, (slot) {
+            final r = slot ~/ _cols, c = slot % _cols;
             return Positioned(
-              left: col * cellSize,
-              top: row * cellSize,
+              left: c * cell, top: r * cell,
               child: SizedBox(
-                width: cellSize,
-                height: cellSize,
-                child: _buildSlot(slot, cellSize, nub),
-              ),
-            );
+                width: cell, height: cell,
+                child: _boardSlot(slot, cell, nub)));
           }),
         ),
       ),
     );
   }
 
-  Widget _buildSlot(int slot, double cellSize, double nub) {
-    final placed = _boardSlots[slot];
+  Widget _boardSlot(int slot, double cell, double nub) {
+    final placed = _board[slot];
 
-    // Filled slot — just show the piece (no drag target needed)
+    // ── Filled — show placed piece
     if (placed != null) {
       return OverflowBox(
-        maxWidth: cellSize + 2 * nub,
-        maxHeight: cellSize + 2 * nub,
+        maxWidth: cell + 2 * nub, maxHeight: cell + 2 * nub,
         alignment: Alignment.center,
-        child: _pieceCanvas(
-            pieceIndex: placed,
-            cellSize: cellSize,
-            nub: nub,
-            isCorrect: _correctSlot == slot),
+        child: _PieceTile(
+          imageUrl:    widget.puzzle.imageUrl,
+          pieceIndex:  placed,
+          cols:        _cols,
+          edge:        _edges[placed],
+          cell:        cell,
+          nub:         nub,
+          correct:     _okSlot == slot,
+        ),
       );
     }
 
-    // Empty slot — drag target
+    // ── Empty — drag target
     return DragTarget<int>(
       onWillAcceptWithDetails: (d) {
-        setState(() => _hoveredSlot = slot);
+        setState(() => _hovSlot = slot);
         return true;
       },
-      onLeave: (_) => setState(() => _hoveredSlot = null),
-      onAcceptWithDetails: (d) => _onPieceDropped(d.data, slot),
+      onLeave: (_) => setState(() => _hovSlot = null),
+      onAcceptWithDetails: (d) => _drop(d.data, slot),
       builder: (_, __, ___) => OverflowBox(
-        maxWidth: cellSize + 2 * nub,
-        maxHeight: cellSize + 2 * nub,
+        maxWidth: cell + 2 * nub, maxHeight: cell + 2 * nub,
         alignment: Alignment.center,
-        child: _ghostCanvas(slot: slot, cellSize: cellSize, nub: nub),
+        child: _GhostSlot(
+          edge:    _edges[slot],
+          cell:    cell,
+          nub:     nub,
+          hovered: _hovSlot   == slot,
+          wrong:   _wrongSlot == slot,
+        ),
       ),
     );
   }
 
-  // ── Tray ───────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────
+  // TRAY  — horizontal scroll of draggable pieces
+  // ─────────────────────────────────────────────────────────
 
-  Widget _buildTray(double cellSize, double nub) {
-    if (_trayPieces.isEmpty) {
+  Widget _buildTray(double cell, double nub) {
+    if (_tray.isEmpty) {
       return const Center(
           child: Text('🎉', style: TextStyle(fontSize: 52)));
     }
 
-    final trayCell =
-        (cellSize * 0.80).clamp(44.0, 95.0);
-    final trayNub = trayCell * 0.26;
-    final pieceW = trayCell + 2 * trayNub;
-    final vPad = max(4.0, (90.0 - pieceW) / 2);
+    final tc   = (cell * .76).clamp(42.0, 95.0);
+    final tn   = tc * .22;
+    final pxH  = tc + 2 * tn;
+    final vPad = max(6.0, (100.0 - pxH) / 2);
 
-    return ListView.builder(
-      scrollDirection: Axis.horizontal,
-      padding: EdgeInsets.fromLTRB(14, vPad, 14, vPad),
-      itemCount: _trayPieces.length,
-      itemBuilder: (_, i) => Padding(
-        padding: const EdgeInsets.only(right: 10),
-        child: _draggablePiece(_trayPieces[i], trayCell, trayNub),
-      ),
+    return Container(
+      color: const Color(0xFF080215),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.fromLTRB(14, vPad, 14, vPad),
+        itemCount: _tray.length,
+        itemBuilder: (_, i) => Padding(
+          padding: const EdgeInsets.only(right: 10),
+          child: _draggable(_tray[i], tc, tn))),
     );
   }
 
-  // ── Widget factories ───────────────────────────────────────
-
-  Widget _pieceCanvas({
-    required int pieceIndex,
-    required double cellSize,
-    required double nub,
-    bool isCorrect = false,
-  }) {
-    final s = cellSize + 2 * nub;
-    return CustomPaint(
-      size: Size(s, s),
-      painter: _PiecePainter(
-        image: _image,
-        pieceIndex: pieceIndex,
-        cols: _cols,
-        edges: _edges[pieceIndex],
-        cellSize: cellSize,
-        nub: nub,
-        isCorrect: isCorrect,
-      ),
+  Widget _draggable(int pieceIndex, double cell, double nub) {
+    final sz   = cell + 2 * nub;
+    final face = _PieceTile(
+      imageUrl:   widget.puzzle.imageUrl,
+      pieceIndex: pieceIndex,
+      cols:       _cols,
+      edge:       _edges[pieceIndex],
+      cell:       cell,
+      nub:        nub,
     );
-  }
-
-  Widget _ghostCanvas({
-    required int slot,
-    required double cellSize,
-    required double nub,
-  }) {
-    final s = cellSize + 2 * nub;
-    return CustomPaint(
-      size: Size(s, s),
-      painter: _PiecePainter(
-        image: null,
-        pieceIndex: slot,
-        cols: _cols,
-        edges: _edges[slot],
-        cellSize: cellSize,
-        nub: nub,
-        isGhost: true,
-        isHovered: _hoveredSlot == slot,
-        isWrong: _wrongSlot == slot,
-      ),
-    );
-  }
-
-  Widget _draggablePiece(int pieceIndex, double cellSize, double nub) {
-    final s = cellSize + 2 * nub;
-    final piece =
-        _pieceCanvas(pieceIndex: pieceIndex, cellSize: cellSize, nub: nub);
 
     return Draggable<int>(
       data: pieceIndex,
@@ -721,215 +673,180 @@ class _PuzzleGameViewState extends State<PuzzleGameView>
         child: Transform.scale(
           scale: 1.12,
           child: Container(
-            width: s,
-            height: s,
+            width: sz, height: sz,
             decoration: BoxDecoration(boxShadow: [
-              BoxShadow(
-                  color: const Color(0xFFFF7043).withOpacity(0.6),
-                  blurRadius: 24,
-                  spreadRadius: 4),
+              BoxShadow(color: const Color(0xFFFF7043).withOpacity(.65),
+                  blurRadius: 28, spreadRadius: 4),
             ]),
-            child: piece,
-          ),
-        ),
-      ),
-      childWhenDragging: Opacity(opacity: 0.18, child: piece),
+            child: face))),
+      childWhenDragging: Opacity(opacity: .15, child: face),
       child: MouseRegion(
         cursor: SystemMouseCursors.grab,
         child: Container(
-          width: s,
-          height: s,
+          width: sz, height: sz,
           decoration: BoxDecoration(boxShadow: [
-            BoxShadow(
-                color: Colors.black.withOpacity(0.38),
-                blurRadius: 8,
-                offset: const Offset(0, 4)),
+            BoxShadow(color: Colors.black.withOpacity(.45),
+                blurRadius: 10, offset: const Offset(0, 5)),
           ]),
-          child: piece,
-        ),
-      ),
+          child: face)),
     );
   }
 
-  // ── Completion screen ──────────────────────────────────────
+  // ─────────────────────────────────────────────────────────
+  // WIN SCREEN
+  // ─────────────────────────────────────────────────────────
 
-  Widget _buildCompletionScreen() {
-    final elapsed = DateTime.now().difference(_startTime);
-    final min = elapsed.inMinutes.toString().padLeft(2, '0');
-    final sec = (elapsed.inSeconds % 60).toString().padLeft(2, '0');
-    final screenW = MediaQuery.of(context).size.width;
-    final previewSz = (screenW - 80).clamp(160.0, 280.0);
+  Widget _winScreen() {
+    final elapsed = DateTime.now().difference(_t0);
+    final m  = elapsed.inMinutes.toString().padLeft(2, '0');
+    final s  = (elapsed.inSeconds % 60).toString().padLeft(2, '0');
+    final sw = MediaQuery.of(context).size.width;
+    final ps = (sw - 80).clamp(180.0, 300.0);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 22),
-      child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 700),
-              curve: Curves.elasticOut,
-              builder: (_, v, child) =>
-                  Transform.scale(scale: v, child: child),
-              child:
-                  const Text('🎉', style: TextStyle(fontSize: 80)),
-            ),
-            const SizedBox(height: 14),
-            Text('Puzzle Complete!',
-                style: GoogleFonts.fredoka(
-                    fontSize: 34, color: Colors.white)),
-            const SizedBox(height: 6),
-            Text('"${widget.puzzle.title}"',
-                style: GoogleFonts.nunito(
-                    fontSize: 15, color: Colors.white60),
-                textAlign: TextAlign.center),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFD700).withOpacity(0.12),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                    color: const Color(0xFFFFD700).withOpacity(0.4)),
-              ),
-              child: Text(
-                '⏱  $min:$sec   •   🧩  ${widget.puzzle.pieceCount} pcs   •   ${widget.puzzle.difficulty}',
-                style: GoogleFonts.fredoka(
-                    fontSize: 15,
-                    color: const Color(0xFFFFD700)),
-              ),
-            ),
-            const SizedBox(height: 28),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                      color: const Color(0xFFFF7043).withOpacity(0.5),
-                      blurRadius: 30,
-                      spreadRadius: 2)
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(18),
-                child: Image.network(
-                  widget.puzzle.imageUrl,
-                  width: previewSz,
-                  height: previewSz,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    width: previewSz,
-                    height: previewSz,
-                    color: const Color(0xFF2D1B69),
-                    child: const Center(
-                        child: Text('🧩',
-                            style: TextStyle(fontSize: 72))),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _ActionBtn(
-                  label: 'Play Again',
-                  icon: Icons.refresh_rounded,
-                  color: const Color(0xFFFF7043),
-                  onTap: _restartGame),
-              const SizedBox(width: 14),
-              _ActionBtn(
-                  label: 'More Puzzles',
-                  icon: Icons.list_rounded,
-                  color: const Color(0xFF1E1040),
-                  borderColor: Colors.white24,
-                  onTap: () => Navigator.pop(context)),
-            ]),
-            const SizedBox(height: 20),
-          ]),
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+
+        // Bouncing trophy
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 750),
+          curve: Curves.elasticOut,
+          builder: (_, v, child) => Transform.scale(scale: v, child: child),
+          child: const Text('🎉', style: TextStyle(fontSize: 84))),
+
+        const SizedBox(height: 14),
+        Text('Puzzle Complete!',
+            style: GoogleFonts.fredoka(fontSize: 34, color: Colors.white)),
+        const SizedBox(height: 6),
+        Text('"${widget.puzzle.title}"',
+            style: GoogleFonts.nunito(fontSize: 15, color: Colors.white60),
+            textAlign: TextAlign.center),
+        const SizedBox(height: 14),
+
+        // Stats badge
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFD700).withOpacity(.12),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+                color: const Color(0xFFFFD700).withOpacity(.4))),
+          child: Text(
+            '⏱  $m:$s   •   🧩  $_total pcs   •   ${widget.puzzle.difficulty}',
+            style: GoogleFonts.fredoka(
+                fontSize: 15, color: const Color(0xFFFFD700)))),
+
+        const SizedBox(height: 30),
+
+        // Completed image
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [BoxShadow(
+                color: const Color(0xFFFF7043).withOpacity(.55),
+                blurRadius: 32, spreadRadius: 2)]),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.network(
+              widget.puzzle.imageUrl,
+              width: ps, height: ps, fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                width: ps, height: ps,
+                color: const Color(0xFF2D1B69),
+                child: const Center(
+                    child: Text('🧩',
+                        style: TextStyle(fontSize: 72))))))),
+
+        const SizedBox(height: 32),
+
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          _Btn(
+            label: 'Play Again',
+            icon:  Icons.refresh_rounded,
+            color: const Color(0xFFFF7043),
+            onTap: () => setState(_reset)),
+          const SizedBox(width: 14),
+          _Btn(
+            label:  'More Puzzles',
+            icon:   Icons.list_rounded,
+            color:  const Color(0xFF1E1040),
+            border: Colors.white24,
+            onTap:  () => Navigator.pop(context)),
+        ]),
+
+        const SizedBox(height: 20),
+      ]),
     );
   }
 }
 
-// =====================================================================
-//  TIMER WIDGET
-// =====================================================================
+// ─────────────────────────────────────────────────────────────────
+// TIMER
+// ─────────────────────────────────────────────────────────────────
 
-class _TimerWidget extends StatefulWidget {
-  final DateTime startTime;
+class _Timer extends StatefulWidget {
+  final DateTime start;
   final bool running;
-  const _TimerWidget({required this.startTime, required this.running});
-
-  @override
-  State<_TimerWidget> createState() => _TimerWidgetState();
+  const _Timer({required this.start, required this.running});
+  @override State<_Timer> createState() => _TimerState();
 }
 
-class _TimerWidgetState extends State<_TimerWidget> {
+class _TimerState extends State<_Timer> {
   late Timer _t;
-  Duration _elapsed = Duration.zero;
+  Duration _e = Duration.zero;
 
   @override
   void initState() {
     super.initState();
     _t = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (widget.running && mounted) {
-        setState(
-            () => _elapsed = DateTime.now().difference(widget.startTime));
-      }
+      if (widget.running && mounted)
+        setState(() => _e = DateTime.now().difference(widget.start));
     });
   }
 
-  @override
-  void dispose() { _t.cancel(); super.dispose(); }
+  @override void dispose() { _t.cancel(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
-    final m = _elapsed.inMinutes.toString().padLeft(2, '0');
-    final s = (_elapsed.inSeconds % 60).toString().padLeft(2, '0');
+    final m = _e.inMinutes.toString().padLeft(2, '0');
+    final s = (_e.inSeconds % 60).toString().padLeft(2, '0');
     return Row(mainAxisSize: MainAxisSize.min, children: [
       const Icon(Icons.timer_outlined, color: Colors.white38, size: 14),
       const SizedBox(width: 3),
       Text('$m:$s',
-          style: GoogleFonts.fredoka(
-              fontSize: 15, color: Colors.white54)),
+          style: GoogleFonts.fredoka(fontSize: 15, color: Colors.white54)),
     ]);
   }
 }
 
-// =====================================================================
-//  ACTION BUTTON
-// =====================================================================
+// ─────────────────────────────────────────────────────────────────
+// ACTION BUTTON
+// ─────────────────────────────────────────────────────────────────
 
-class _ActionBtn extends StatelessWidget {
+class _Btn extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
-  final Color? borderColor;
+  final Color? border;
   final VoidCallback onTap;
 
-  const _ActionBtn(
-      {required this.label,
-      required this.icon,
-      required this.color,
-      required this.onTap,
-      this.borderColor});
+  const _Btn({required this.label, required this.icon,
+      required this.color, required this.onTap, this.border});
 
   @override
   Widget build(BuildContext context) => ElevatedButton.icon(
-        onPressed: onTap,
-        icon: Icon(icon, size: 18),
-        label: Text(label, style: GoogleFonts.fredoka(fontSize: 15)),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          padding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: borderColor != null
-                ? BorderSide(color: borderColor!)
-                : BorderSide.none,
-          ),
-          elevation: 4,
-        ),
-      );
+    onPressed: onTap,
+    icon: Icon(icon, size: 18),
+    label: Text(label, style: GoogleFonts.fredoka(fontSize: 15)),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: color,
+      foregroundColor: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: border != null
+            ? BorderSide(color: border!)
+            : BorderSide.none)));
 }
