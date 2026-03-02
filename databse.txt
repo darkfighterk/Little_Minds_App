@@ -107,3 +107,32 @@ CREATE TABLE IF NOT EXISTS puzzles (
     difficulty  VARCHAR(20)  NOT NULL DEFAULT 'Easy',  -- Easy / Medium / Hard
     created_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ─────────────────────────────────────────────────────────────────────
+-- Stories (created via admin panel)
+-- ─────────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS stories (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    title       VARCHAR(200)  NOT NULL,
+    author      VARCHAR(100)  NOT NULL DEFAULT 'Little Minds Team',
+    description TEXT,
+    cover_url   VARCHAR(500)  NOT NULL DEFAULT '',
+    cover_emoji VARCHAR(20)   NOT NULL DEFAULT '📖',
+    category    VARCHAR(100)  NOT NULL DEFAULT 'General',
+    difficulty  VARCHAR(20)   NOT NULL DEFAULT 'Easy',   -- Easy / Medium / Hard
+    age_range   VARCHAR(20)   NOT NULL DEFAULT '4-8',
+    created_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Individual pages that belong to a story
+CREATE TABLE IF NOT EXISTS story_pages (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    story_id    INT           NOT NULL,
+    page_number INT           NOT NULL,
+    title       VARCHAR(200)  NOT NULL DEFAULT '',
+    body        TEXT          NOT NULL,
+    image_url   VARCHAR(500)  NOT NULL DEFAULT '',
+    UNIQUE KEY  uq_story_page (story_id, page_number),
+    FOREIGN KEY (story_id) REFERENCES stories(id) ON DELETE CASCADE
+);

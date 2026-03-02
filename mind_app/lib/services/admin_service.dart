@@ -267,4 +267,95 @@ class AdminService {
       return false;
     }
   }
+
+  // ── STORIES ──────────────────────────────────────────────────────────
+
+  /// Returns all stories from the DB.
+  Future<List<Map<String, dynamic>>> getStories() async {
+    try {
+      final resp = await http
+          .get(Uri.parse('$baseUrl/admin/stories'), headers: _headers)
+          .timeout(const Duration(seconds: 10));
+      if (resp.statusCode == 200) {
+        final body = jsonDecode(resp.body);
+        final data = body['data'] as List<dynamic>? ?? [];
+        return data.cast<Map<String, dynamic>>();
+      }
+    } catch (e) {
+      print('AdminService.getStories error: $e');
+    }
+    return [];
+  }
+
+  /// Creates a story with its pages in one call.
+  /// Returns the new story ID, or null on failure.
+  Future<int?> createStory({
+    required String title,
+    required String author,
+    required String description,
+    required String coverUrl,
+    required String category,
+    required String difficulty,
+    required String ageRange,
+    required String coverEmoji,
+    required List<Map<String, dynamic>> pages,
+  }) async {
+    try {
+      final payload = jsonEncode({
+        'title':       title,
+        'author':      author,
+        'description': description,
+        'cover_url':   coverUrl,
+        'category':    category,
+        'difficulty':  difficulty,
+        'age_range':   ageRange,
+        'cover_emoji': coverEmoji,
+        'pages':       pages,
+      });
+      final resp = await http
+          .post(
+            Uri.parse('$baseUrl/admin/stories'),
+            headers: _headers,
+            body: payload,
+          )
+          .timeout(const Duration(seconds: 30));
+      if (resp.statusCode == 201) {
+        final body = jsonDecode(resp.body);
+        return (body['data']['id'] as num?)?.toInt();
+      }
+      print('AdminService.createStory HTTP ${resp.statusCode}: ${resp.body}');
+    } catch (e) {
+      print('AdminService.createStory error: $e');
+    }
+    return null;
+  }
+
+  /// Deletes a story and all its pages by ID. Returns true on success.
+  Future<bool> deleteStory(int id) async {
+    try {
+      final resp = await http
+          .delete(Uri.parse('$baseUrl/admin/stories?id=$id'), headers: _headers)
+          .timeout(const Duration(seconds: 10));
+      return resp.statusCode == 200;
+    } catch (e) {
+      print('AdminService.deleteStory error: $e');
+      return false;
+    }
+  }
+
+  /// Returns a single story with all its pages.
+  Future<Map<String, dynamic>?> getStory(int id) async {
+    try {
+      final resp = await http
+          .get(Uri.parse('$baseUrl/admin/stories/$id'), headers: _headers)
+          .timeout(const Duration(seconds: 10));
+      if (resp.statusCode == 200) {
+        final body = jsonDecode(resp.body);
+        return body['data'] as Map<String, dynamic>?;
+      }
+    } catch (e) {
+      print('AdminService.getStory error: $e');
+    }
+    return null;
+  }
 }

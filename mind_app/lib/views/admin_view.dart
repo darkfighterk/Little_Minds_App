@@ -162,7 +162,7 @@ class AdminView extends StatefulWidget {
   State<AdminView> createState() => _AdminModeState();
 }
 
-enum _AdminMode { quiz, puzzle }
+enum _AdminMode { quiz, puzzle, story }
 
 class _AdminModeState extends State<AdminView> {
   _AdminMode _mode = _AdminMode.quiz;
@@ -176,7 +176,11 @@ class _AdminModeState extends State<AdminView> {
         foregroundColor: Colors.white,
         elevation: 0,
         title: Text(
-          _mode == _AdminMode.quiz ? 'Quiz Creator' : 'Puzzle Creator',
+          _mode == _AdminMode.quiz
+              ? 'Quiz Creator'
+              : _mode == _AdminMode.puzzle
+                  ? 'Puzzle Creator'
+                  : 'Story Creator',
           style: GoogleFonts.fredoka(fontSize: 22, color: Colors.white),
         ),
         leading: IconButton(
@@ -200,13 +204,21 @@ class _AdminModeState extends State<AdminView> {
                 active: _mode == _AdminMode.puzzle,
                 onTap: () => setState(() => _mode = _AdminMode.puzzle),
               ),
+              const SizedBox(width: 10),
+              _TabChip(
+                label: '📖  Stories',
+                active: _mode == _AdminMode.story,
+                onTap: () => setState(() => _mode = _AdminMode.story),
+              ),
             ]),
           ),
         ),
       ),
       body: _mode == _AdminMode.quiz
           ? const _QuizWizard()
-          : const _PuzzleWizard(),
+          : _mode == _AdminMode.puzzle
+              ? const _PuzzleWizard()
+              : const _StoryWizard(),
     );
   }
 }
@@ -2678,6 +2690,598 @@ class _AdminPieceGrid extends StatelessWidget {
           style: GoogleFonts.nunito(fontSize: 11, color: Colors.white38),
         ),
       ],
+    );
+  }
+}
+// =====================================================================
+// STORY WIZARD
+// Steps: 0 = Story Info   1 = Pages   2 = Review & Publish
+// =====================================================================
+
+class _StoryWizard extends StatefulWidget {
+  const _StoryWizard();
+  @override
+  State<_StoryWizard> createState() => _StoryWizardState();
+}
+
+class _StoryPageDraft {
+  final TextEditingController titleCtrl = TextEditingController();
+  final TextEditingController bodyCtrl  = TextEditingController();
+  XFile?  imageFile;
+  String? uploadedImageUrl;
+
+  void dispose() {
+    titleCtrl.dispose();
+    bodyCtrl.dispose();
+  }
+}
+
+class _StoryWizardState extends State<_StoryWizard> {
+  final _svc = AdminService();
+
+  // ── Step 0 controllers ──────────────────────────────────────────────
+  final _titleCtrl      = TextEditingController();
+  final _authorCtrl     = TextEditingController();
+  final _descCtrl       = TextEditingController();
+  final _categoryCtrl   = TextEditingController();
+  final _ageRangeCtrl   = TextEditingController(text: '4-8');
+  String _difficulty    = 'Easy';
+  String _coverEmoji    = '📖';
+  XFile?  _coverFile;
+  String? _coverUrl;
+
+  // ── Step 1 pages ────────────────────────────────────────────────────
+  final List<_StoryPageDraft> _pages = [_StoryPageDraft()];
+
+  int  _step      = 0;
+  bool _loading   = false;
+  bool _published = false;
+  int? _createdStoryId;
+
+  final _picker = ImagePicker();
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _authorCtrl.dispose();
+    _descCtrl.dispose();
+    _categoryCtrl.dispose();
+    _ageRangeCtrl.dispose();
+    for (final p in _pages) p.dispose();
+    super.dispose();
+  }
+
+  // ── helpers ─────────────────────────────────────────────────────────
+
+  void _snack(String msg, {bool error = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg),
+      backgroundColor: error ? _red : _green,
+    ));
+  }
+
+  Future<String?> _pickAndUpload(_StoryPageDraft? page) async {
+    final f = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (f == null) return null;
+    setState(() {
+      if (page == null) { _coverFile = f; } else { page.imageFile = f; }
+    });
+    setState(() => _loading = true);
+    final url = await _svc.uploadImage(f);
+    setState(() => _loading = false);
+    if (url == null) { _snack('Image upload failed', error: true); return null; }
+    setState(() {
+      if (page == null) { _coverUrl = url; } else { page.uploadedImageUrl = url; }
+    });
+    return url;
+  }
+
+  // ── STEP 2 — publish ─────────────────────────────────────────────────
+  Future<void> _publish() async {
+    setState(() => _loading = true);
+
+    try {
+      // Upload cover image if picked but not yet uploaded
+      if (_coverFile != null && _coverUrl == null) {
+        final url = await _svc.uploadImage(_coverFile!);
+        if (url != null) setState(() => _coverUrl = url);
+      }
+
+      // Upload any page images that haven't been uploaded yet
+      for (final p in _pages) {
+        if (p.imageFile != null && p.uploadedImageUrl == null) {
+          final url = await _svc.uploadImage(p.imageFile!);
+          if (url != null) p.uploadedImageUrl = url;
+        }
+      }
+
+      final validPages = _pages
+          .where((p) => p.bodyCtrl.text.trim().isNotEmpty)
+          .toList();
+
+      if (validPages.isEmpty) {
+        _snack('At least one page with content is required', error: true);
+        setState(() => _loading = false);
+        return;
+      }
+
+      final id = await _svc.createStory(
+        title:       _titleCtrl.text.trim(),
+        author:      _authorCtrl.text.trim(),
+        description: _descCtrl.text.trim(),
+        coverUrl:    _coverUrl ?? '',
+        category:    _categoryCtrl.text.trim().isEmpty ? 'General' : _categoryCtrl.text.trim(),
+        difficulty:  _difficulty,
+        ageRange:    _ageRangeCtrl.text.trim(),
+        coverEmoji:  _coverEmoji,
+        pages: validPages
+            .asMap()
+            .entries
+            .map((e) => {
+                  'page_number': e.key + 1,
+                  'title':       e.value.titleCtrl.text.trim(),
+                  'body':        e.value.bodyCtrl.text.trim(),
+                  'image_url':   e.value.uploadedImageUrl ?? '',
+                })
+            .toList(),
+      );
+
+      setState(() => _loading = false);
+
+      if (id != null) {
+        setState(() { _published = true; _createdStoryId = id; });
+      } else {
+        _snack('Server rejected the story. Check that the backend is running and the stories table exists.', error: true);
+      }
+    } catch (e) {
+      setState(() => _loading = false);
+      _snack('Publish error: $e', error: true);
+    }
+  }
+
+  // ── validation helpers ───────────────────────────────────────────────
+  bool get _step0Valid =>
+      _titleCtrl.text.trim().isNotEmpty && _authorCtrl.text.trim().isNotEmpty;
+
+  bool get _step1Valid =>
+      _pages.isNotEmpty &&
+      _pages.first.bodyCtrl.text.trim().isNotEmpty;
+
+  // ── build ─────────────────────────────────────────────────────────────
+  @override
+  Widget build(BuildContext context) {
+    if (_published) return _buildSuccess();
+
+    return Stack(children: [
+      SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _StepIndicator(current: _step, labels: const ['Story Info', 'Pages', 'Publish']),
+          const SizedBox(height: 24),
+          if (_step == 0) _buildStep0(),
+          if (_step == 1) _buildStep1(),
+          if (_step == 2) _buildStep2(),
+        ]),
+      ),
+      // bottom nav
+      Positioned(
+        bottom: 0, left: 0, right: 0,
+        child: Container(
+          color: _bg,
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+          child: Row(children: [
+            if (_step > 0)
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => setState(() => _step--),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white54,
+                    side: const BorderSide(color: Colors.white24),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: const Text('Back'),
+                ),
+              ),
+            if (_step > 0) const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed: _loading
+                    ? null
+                    : () {
+                        if (_step == 0) {
+                          if (!_step0Valid) { _snack('Title and Author are required', error: true); return; }
+                          setState(() => _step = 1);
+                        } else if (_step == 1) {
+                          if (!_step1Valid) { _snack('At least one page needs content', error: true); return; }
+                          setState(() => _step = 2);
+                        } else {
+                          _publish();
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _accent,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                child: _loading
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : Text(_step == 2 ? '🚀 Publish Story' : 'Next →',
+                        style: GoogleFonts.fredoka(fontSize: 16)),
+              ),
+            ),
+          ]),
+        ),
+      ),
+    ]);
+  }
+
+  // ── STEP 0 — Story Info ───────────────────────────────────────────────
+  Widget _buildStep0() {
+    const emojis = ['📖', '🐉', '🚀', '🌲', '🐠', '🤖', '🦕', '🦄', '⭐', '🌊'];
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _SectionHeader(icon: Icons.auto_stories_rounded, label: 'Story Details'),
+      const SizedBox(height: 16),
+
+      // Cover image
+      GestureDetector(
+        onTap: () => _pickAndUpload(null),
+        child: Container(
+          width: double.infinity,
+          height: 160,
+          decoration: BoxDecoration(
+            color: _card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white12),
+          ),
+          child: _coverFile != null || _coverUrl != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(_coverUrl ?? '', fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.white38, size: 48)),
+                )
+              : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  const Icon(Icons.add_photo_alternate_rounded, color: Colors.white38, size: 48),
+                  const SizedBox(height: 8),
+                  Text('Tap to add cover image (optional)',
+                      style: GoogleFonts.nunito(fontSize: 13, color: Colors.white38)),
+                ]),
+        ),
+      ),
+      const SizedBox(height: 16),
+
+      // Emoji picker
+      Text('Cover Emoji', style: GoogleFonts.nunito(fontSize: 13, color: Colors.white54)),
+      const SizedBox(height: 8),
+      Wrap(
+        spacing: 8,
+        children: emojis.map((e) => GestureDetector(
+          onTap: () => setState(() => _coverEmoji = e),
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: _coverEmoji == e ? _accent : _card,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _coverEmoji == e ? _accent : Colors.white12),
+            ),
+            child: Text(e, style: const TextStyle(fontSize: 22)),
+          ),
+        )).toList(),
+      ),
+      const SizedBox(height: 16),
+
+      _AdminTextField(controller: _titleCtrl,   label: 'Story Title *',  hint: 'e.g. The Dragon\'s Secret'),
+      const SizedBox(height: 12),
+      _AdminTextField(controller: _authorCtrl,  label: 'Author *',       hint: 'e.g. Little Minds Team'),
+      const SizedBox(height: 12),
+      _AdminTextField(controller: _descCtrl,    label: 'Description',    hint: 'Short blurb shown on the card', maxLines: 3),
+      const SizedBox(height: 12),
+      _AdminTextField(controller: _categoryCtrl, label: 'Category',       hint: 'e.g. Adventure, Science, Fantasy'),
+      const SizedBox(height: 12),
+      _AdminTextField(controller: _ageRangeCtrl, label: 'Age Range',      hint: 'e.g. 4-8'),
+      const SizedBox(height: 16),
+
+      // Difficulty
+      Text('Difficulty', style: GoogleFonts.nunito(fontSize: 13, color: Colors.white54)),
+      const SizedBox(height: 8),
+      Row(children: ['Easy', 'Medium', 'Hard'].map((d) => Padding(
+        padding: const EdgeInsets.only(right: 10),
+        child: GestureDetector(
+          onTap: () => setState(() => _difficulty = d),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            decoration: BoxDecoration(
+              color: _difficulty == d ? _accent : _card,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: _difficulty == d ? _accent : Colors.white12),
+            ),
+            child: Text(d, style: GoogleFonts.nunito(color: Colors.white, fontWeight: FontWeight.w700)),
+          ),
+        ),
+      )).toList()),
+    ]);
+  }
+
+  // ── STEP 1 — Pages ───────────────────────────────────────────────────
+  Widget _buildStep1() {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _SectionHeader(icon: Icons.menu_book_rounded, label: 'Story Pages'),
+      const SizedBox(height: 4),
+      Text('Add at least one page. Each page can have text and an optional image.',
+          style: GoogleFonts.nunito(fontSize: 13, color: Colors.white54)),
+      const SizedBox(height: 16),
+
+      ...List.generate(_pages.length, (i) => _buildPageCard(i)),
+
+      const SizedBox(height: 12),
+      SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: () => setState(() => _pages.add(_StoryPageDraft())),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: _gold,
+            side: const BorderSide(color: _gold, width: 1.5),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          icon: const Icon(Icons.add_rounded),
+          label: Text('Add Page', style: GoogleFonts.fredoka(fontSize: 16)),
+        ),
+      ),
+    ]);
+  }
+
+  Widget _buildPageCard(int i) {
+    final p = _pages[i];
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(color: _accent, borderRadius: BorderRadius.circular(20)),
+            child: Text('Page ${i + 1}', style: GoogleFonts.fredoka(color: Colors.white, fontSize: 14)),
+          ),
+          const Spacer(),
+          if (_pages.length > 1)
+            IconButton(
+              icon: const Icon(Icons.delete_outline_rounded, color: _red, size: 20),
+              onPressed: () => setState(() { p.dispose(); _pages.removeAt(i); }),
+            ),
+        ]),
+        const SizedBox(height: 12),
+        _AdminTextField(controller: p.titleCtrl, label: 'Page Title (optional)', hint: 'e.g. Into the Forest'),
+        const SizedBox(height: 10),
+        _AdminTextField(controller: p.bodyCtrl,  label: 'Page Content *', hint: 'Write the story text for this page...', maxLines: 5),
+        const SizedBox(height: 12),
+        // Page image
+        GestureDetector(
+          onTap: () => _pickAndUpload(p),
+          child: Container(
+            width: double.infinity,
+            height: 110,
+            decoration: BoxDecoration(
+              color: const Color(0xFF150831),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white12),
+            ),
+            child: p.uploadedImageUrl != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(p.uploadedImageUrl!, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.white38, size: 36)),
+                  )
+                : p.imageFile != null
+                    ? Center(child: Text('⏳ Uploading…', style: GoogleFonts.nunito(color: Colors.white38)))
+                    : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        const Icon(Icons.image_rounded, color: Colors.white24, size: 36),
+                        const SizedBox(height: 6),
+                        Text('Tap to add illustration (optional)',
+                            style: GoogleFonts.nunito(fontSize: 12, color: Colors.white38)),
+                      ]),
+          ),
+        ),
+      ]),
+    );
+  }
+
+  // ── STEP 2 — Review & Publish ─────────────────────────────────────────
+  Widget _buildStep2() {
+    final validPages = _pages.where((p) => p.bodyCtrl.text.trim().isNotEmpty).toList();
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _SectionHeader(icon: Icons.preview_rounded, label: 'Review & Publish'),
+      const SizedBox(height: 16),
+      _ReviewRow(label: 'Title',       value: _titleCtrl.text),
+      _ReviewRow(label: 'Author',      value: _authorCtrl.text),
+      _ReviewRow(label: 'Category',    value: _categoryCtrl.text.isEmpty ? 'General' : _categoryCtrl.text),
+      _ReviewRow(label: 'Difficulty',  value: _difficulty),
+      _ReviewRow(label: 'Age Range',   value: _ageRangeCtrl.text),
+      _ReviewRow(label: 'Pages',       value: '${validPages.length}'),
+      if (_descCtrl.text.isNotEmpty) _ReviewRow(label: 'Description', value: _descCtrl.text),
+      const SizedBox(height: 20),
+      Text('Pages Preview', style: GoogleFonts.fredoka(fontSize: 16, color: Colors.white70)),
+      const SizedBox(height: 10),
+      ...validPages.asMap().entries.map((e) => Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(color: _card, borderRadius: BorderRadius.circular(12)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Page ${e.key + 1}${e.value.titleCtrl.text.isNotEmpty ? " — ${e.value.titleCtrl.text}" : ""}',
+              style: GoogleFonts.fredoka(color: _gold, fontSize: 14)),
+          const SizedBox(height: 6),
+          Text(e.value.bodyCtrl.text, style: GoogleFonts.nunito(color: Colors.white70, fontSize: 13), maxLines: 3, overflow: TextOverflow.ellipsis),
+        ]),
+      )),
+    ]);
+  }
+
+  Widget _buildSuccess() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          const Text('🎉', style: TextStyle(fontSize: 72)),
+          const SizedBox(height: 16),
+          Text('Story Published!', style: GoogleFonts.fredoka(fontSize: 28, color: Colors.white)),
+          const SizedBox(height: 8),
+          Text('Story ID: $_createdStoryId',
+              style: GoogleFonts.nunito(fontSize: 14, color: Colors.white54)),
+          const SizedBox(height: 32),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                _titleCtrl.clear(); _authorCtrl.clear(); _descCtrl.clear();
+                _categoryCtrl.clear(); _ageRangeCtrl.text = '4-8';
+                _difficulty = 'Easy'; _coverEmoji = '📖';
+                _coverFile = null; _coverUrl = null;
+                for (final p in _pages) p.dispose();
+                _pages
+                  ..clear()
+                  ..add(_StoryPageDraft());
+                _step = 0; _published = false; _createdStoryId = null;
+              });
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _accent,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            child: Text('Create Another Story', style: GoogleFonts.fredoka(fontSize: 16)),
+          ),
+        ]),
+      ),
+    );
+  }
+}
+
+// ── Shared small widgets used by _StoryWizard ────────────────────────────
+
+class _StepIndicator extends StatelessWidget {
+  final int current;
+  final List<String> labels;
+  const _StepIndicator({required this.current, required this.labels});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: List.generate(labels.length * 2 - 1, (i) {
+        if (i.isOdd) {
+          return Expanded(
+            child: Container(height: 2, color: i ~/ 2 < current ? _accent : Colors.white12),
+          );
+        }
+        final idx = i ~/ 2;
+        final done = idx < current;
+        final active = idx == current;
+        return Column(children: [
+          Container(
+            width: 28, height: 28,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: done ? _accent : active ? _accent.withOpacity(0.3) : _card,
+              border: Border.all(color: done || active ? _accent : Colors.white24, width: 2),
+            ),
+            child: Center(
+              child: done
+                  ? const Icon(Icons.check, size: 14, color: Colors.white)
+                  : Text('${idx + 1}',
+                      style: GoogleFonts.fredoka(fontSize: 13,
+                          color: active ? Colors.white : Colors.white38)),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(labels[idx],
+              style: GoogleFonts.nunito(
+                  fontSize: 10,
+                  color: active || done ? Colors.white : Colors.white38,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.normal)),
+        ]);
+      }),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _SectionHeader({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(children: [
+      Icon(icon, color: _accent, size: 20),
+      const SizedBox(width: 8),
+      Text(label, style: GoogleFonts.fredoka(fontSize: 18, color: Colors.white)),
+    ]);
+  }
+}
+
+class _AdminTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final String hint;
+  final int maxLines;
+  const _AdminTextField({
+    required this.controller,
+    required this.label,
+    required this.hint,
+    this.maxLines = 1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(label, style: GoogleFonts.nunito(fontSize: 13, color: Colors.white54)),
+      const SizedBox(height: 6),
+      TextField(
+        controller: controller,
+        maxLines: maxLines,
+        style: GoogleFonts.nunito(color: Colors.white, fontSize: 14),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: GoogleFonts.nunito(color: Colors.white24, fontSize: 13),
+          filled: true,
+          fillColor: const Color(0xFF150831),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: _accent, width: 1.5)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        ),
+      ),
+    ]);
+  }
+}
+
+class _ReviewRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _ReviewRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        SizedBox(
+          width: 100,
+          child: Text(label, style: GoogleFonts.nunito(fontSize: 13, color: Colors.white38)),
+        ),
+        Expanded(
+          child: Text(value,
+              style: GoogleFonts.nunito(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w700)),
+        ),
+      ]),
     );
   }
 }

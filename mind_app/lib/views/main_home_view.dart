@@ -6,6 +6,7 @@ import '../models/user_model.dart';
 import 'home_view.dart';
 import 'bottom_nav_bar.dart';
 import 'puzzles_list_view.dart';
+import 'story_time_page.dart';
 
 class HomePage extends StatefulWidget {
   final User user;
@@ -223,10 +224,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             onTap: () => _showComingSoon('Notebook 📝'),
           ),
           _buildBigButton(
-            title: 'coming soon 1',
+            title: 'Story Time',
             icon: Icons.menu_book_rounded,
             accentColor: const Color(0xFFFFB74D),
-            onTap: () => _showComingSoon('Stories 📖✨'),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => StoryTimePage(user: widget.user),
+              ),
+            ),
           ),
           _buildBigButton(
             title: 'coming soon2',
