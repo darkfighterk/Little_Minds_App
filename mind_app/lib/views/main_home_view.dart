@@ -1,3 +1,9 @@
+// lib/views/main_home_view.dart
+//
+// Changes from original:
+//   • Added import for DrawingPadView
+//   • "coming soon2" button replaced with "Drawing Pad" button
+
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,6 +13,7 @@ import 'home_view.dart';
 import 'bottom_nav_bar.dart';
 import 'puzzles_list_view.dart';
 import 'story_time_page.dart';
+import 'drawing_pad_view.dart'; // ← NEW
 
 class HomePage extends StatefulWidget {
   final User user;
@@ -212,9 +219,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             accentColor: const Color(0xFF66BB6A),
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => const TextFromImagePage(),
-              ),
+              MaterialPageRoute(builder: (_) => const TextFromImagePage()),
             ),
           ),
           _buildBigButton(
@@ -234,12 +239,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
             ),
           ),
+          // ── NEW: Drawing Pad ──────────────────────────────────────────────
           _buildBigButton(
-            title: 'coming soon2',
-            icon: Icons.sports_esports_rounded,
-            accentColor: const Color(0xFFEC407A),
-            onTap: () => _showComingSoon('Fun Games 🎮'),
+            title: 'Drawing Pad',
+            icon: Icons.brush_rounded,
+            accentColor: const Color(0xFFAB47BC),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DrawingPadView()),
+            ),
           ),
+          // ─────────────────────────────────────────────────────────────────
           _buildBigButton(
             title: 'Puzzles',
             icon: Icons.extension_rounded,
