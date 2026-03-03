@@ -94,3 +94,19 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
     created_at    TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (level_id) REFERENCES quiz_levels(id) ON DELETE CASCADE
 );
+
+
+
+CREATE TABLE `puzzles` (
+  `id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `grid_rows` int(11) NOT NULL,
+  `grid_cols` int(11) NOT NULL,
+  `grid_data` text NOT NULL,
+  `across_clues` text NOT NULL,
+  `down_clues` text NOT NULL,
+  `timer_minutes` int(11) NOT NULL DEFAULT 15,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `category` varchar(100) DEFAULT 'General',
+  `difficulty` varchar(50) DEFAULT 'Medium'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
