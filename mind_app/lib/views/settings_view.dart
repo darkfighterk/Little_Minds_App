@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'AboutPage.dart';
 import 'admin_view.dart';
-import 'profile_view.dart';  // ← Added this import to connect to ProfileView
+import 'profile_view.dart';
+import 'login_view.dart';           // ← ADD THIS (adjust path if needed)
+import '../services/game_service.dart';  // ← ADD THIS for clearSession
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -134,7 +136,7 @@ class SettingsView extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // Profile tile – now opens ProfileView
+                // Profile tile
                 _buildSettingsTile(
                   icon: Icons.person,
                   iconColor: const Color(0xFF00D4FF),
@@ -205,10 +207,45 @@ class SettingsView extends StatelessWidget {
 
                 const SizedBox(height: 40),
 
-                // Sign out button
+                // ── Logout button ───────────────────────────────────────────────
                 GestureDetector(
-                  onTap: () {
-                    // TODO: Show confirm dialog → sign out logic
+                  onTap: () async {
+                    final bool? confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Sign Out'),
+                        content: const Text('Are you sure you want to sign out?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text(
+                              'Sign Out',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirmed == true) {
+                      // Clear session data
+                      await GameService.clearSession();
+
+                      // Navigate to login screen and remove all previous routes
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginView(),
+                          ),
+                          (route) => false,
+                        );
+                      }
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16),

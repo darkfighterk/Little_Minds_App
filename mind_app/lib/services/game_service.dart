@@ -31,6 +31,22 @@ class GameService {
     await prefs.setString(_tokenKey, token);
   }
 
+  // ── Clear all session data (logout) ────────────────────────────
+  static Future<void> clearSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_userIdKey);
+    await prefs.remove(_tokenKey);
+
+    // Optional: clear cached progress too (recommended for clean logout)
+    final subjects = ['science', 'biology', 'history'];
+    for (final subject in subjects) {
+      await prefs.remove('cache_stars_$subject');
+      await prefs.remove('cache_levels_$subject');
+    }
+
+    print('👋 Session cleared (logout)');
+  }
+
   static Future<int?> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_userIdKey);
