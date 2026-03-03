@@ -72,17 +72,11 @@ class ProfileView extends StatelessWidget {
                 children: [
                   const SizedBox(height: 16),
 
-                  // Settings & Share icons row
+                  // Settings & Share icons row - Share icon removed
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                     
-                      IconButton(
-                        icon: const Icon(Icons.share, color: Colors.white),
-                        onPressed: () {
-                          // TODO: implement share
-                        },
-                      ),
+                      // Share icon removed
                     ],
                   ),
 
