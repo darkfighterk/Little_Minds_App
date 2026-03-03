@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mind_app/views/puzzle_list_screen.dart';
 import 'package:mind_app/views/text_to_image.dart';
 import '../models/user_model.dart';
 import 'home_view.dart';
@@ -216,10 +217,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
           _buildBigButton(
-            title: 'Notebook',
-            icon: Icons.edit_note_rounded,
-            accentColor: const Color(0xFF42A5F5),
-            onTap: () => _showComingSoon('Notebook 📝'),
+            title: 'Text to Image',
+            icon: Icons.image_rounded,
+            accentColor: const Color(0xFF66BB6A),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const PuzzleListScreen(),
+              ),
+            ),
           ),
           _buildBigButton(
             title: 'coming soon 1',

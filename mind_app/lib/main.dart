@@ -4,6 +4,7 @@ import 'views/onboarding_view.dart';
 import 'views/login_view.dart';
 import 'views/sign_up_view.dart';
 import 'views/text_to_image.dart';
+import 'views/puzzle_list_screen.dart';
 
 void main() {
   runApp(const MindApp());

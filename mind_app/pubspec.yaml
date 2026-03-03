@@ -12,48 +12,47 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # UI & Theming
-  google_fonts: ^6.2.1 # ← used for Lexend (no need to bundle .ttf files)
+  # ── UI & Theming ────────────────────────────────────────────────────────────
+  google_fonts: ^6.2.1
   flutter_svg: ^2.0.10+1
+  cupertino_icons: ^1.0.8
+  material_symbols_icons: ^4.2781.2
 
-  # State management (choose one – provider is simpler to start with)
-  provider: ^6.1.2
-  # riverpod: ^2.5.1
-  # flutter_riverpod: ^2.5.1
+  # ── State Management ────────────────────────────────────────────────────────
+  provider: ^6.1.5+1          # ← only one provider entry (latest)
 
-  # Networking & Storage
+  # ── Networking & API ────────────────────────────────────────────────────────
   http: ^1.6.0
+  google_generative_ai: ^0.4.7
+
+  # ── Storage & Files ─────────────────────────────────────────────────────────
   sqflite: ^2.3.3+1
   path: ^1.9.0
   shared_preferences: ^2.3.0
   path_provider: ^2.1.5
+  file_picker: ^8.0.0
+  file_selector: ^0.9.0
+  open_file: ^3.2.1
+  share_plus: ^8.0.1
 
-
-  ##text file need 
-  #image_picker: ^0.8.7+5               # camera/gallery
-  google_mlkit_text_recognition: ^0.7.0 # OCR
-  #path_provider: ^2.0.14               # save files
-  pdf: ^3.10.0                         # generate PDF
-  open_file: ^3.2.1   
-  file_picker: ^8.0.0   
-  file_selector: ^0.9.0    
-  share_plus: ^8.0.1  
-  #ntl: ^0.18.1
-
-  # Images & Media
+  # ── Images & Media ──────────────────────────────────────────────────────────
   cached_network_image: ^3.4.0
   image_picker: ^1.1.2
 
-  # Utilities
+  # ── PDF & Text ──────────────────────────────────────────────────────────────
+  pdf: ^3.10.0
+  google_mlkit_text_recognition: ^0.7.0   # OCR / text recognition
+
+  # ── Internationalization & Utilities ────────────────────────────────────────
   intl: ^0.19.0
-  cupertino_icons: ^1.0.8
-  material_symbols_icons: ^4.2781.2 # modern Material Symbols icons
-  google_generative_ai: ^0.4.7
+  json_annotation: ^4.9.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  build_runner: ^2.4.0
+  json_serializable: ^6.8.0
 
 flutter:
   generate: true
@@ -65,11 +64,9 @@ flutter:
     - assets/illustrations/
     - assets/images/
     - assets/images/mindie.png
-    # Categories section (image backgrounds)
+    # Category backgrounds
     - assets/images/category_biology_heart.png
     - assets/images/category_history_ruins.png
     - assets/images/category_engineering_gears.png
-    # add more images here as needed
-    # - assets/models/             # add later if using 3D models (.glb, etc.)
-
-  # ar_flutter_plugin added to main dependencies above
+    # Add more as needed
+    # - assets/models/   # for future AR/3D models
