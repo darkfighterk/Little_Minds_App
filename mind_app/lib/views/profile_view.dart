@@ -7,6 +7,26 @@ class ProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // ── Added AppBar with back button ───────────────────────────────
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF6B48FF), // matches gradient top color
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);  // ← Goes back to SettingsView
+          },
+        ),
+        title: const Text(
+          'Profile',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: Stack(
         children: [
           // Background design - purple space theme for kids
@@ -56,12 +76,7 @@ class ProfileView extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.settings, color: Colors.white),
-                        onPressed: () {
-                          // TODO: open settings page
-                        },
-                      ),
+                     
                       IconButton(
                         icon: const Icon(Icons.share, color: Colors.white),
                         onPressed: () {
