@@ -201,27 +201,35 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
       child: Column(
         children: [
-          Row(
+Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Choose Your',
-                    style: GoogleFonts.fredoka(
-                      fontSize: 28,
-                      color: Colors.white,
+              // --- ADDED: BACK BUTTON ---
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 28),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              // --------------------------
+              Expanded( // Added Expanded to ensure text doesn't overflow
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Choose Your',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 28,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Adventure!',
-                    style: GoogleFonts.fredoka(
-                      fontSize: 28,
-                      color: Color(0xFFFFD700),
+                    Text(
+                      'Adventure!',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 28,
+                        color: const Color(0xFFFFD700),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               AnimatedBuilder(
                 animation: _floatController,
@@ -248,7 +256,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                       Text(
                         '$totalStars Stars',
                         style: GoogleFonts.fredoka(
-                          color: Color(0xFFFFD700),
+                          color: const Color(0xFFFFD700),
                         ),
                       ),
                     ],
