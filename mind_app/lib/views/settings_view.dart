@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'AboutPage.dart';
+import 'admin_view.dart';
+import 'profile_view.dart';
+import 'login_view.dart';           // ← ADD THIS (adjust path if needed)
+import '../services/game_service.dart';  // ← ADD THIS for clearSession
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -29,7 +34,12 @@ class SettingsView extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.help_outline, color: Colors.white),
             onPressed: () {
-              // TODO: Open help modal / page
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AboutPage(),
+                ),
+              );
             },
           ),
         ],
@@ -64,7 +74,7 @@ class SettingsView extends StatelessWidget {
                         radius: 50,
                         backgroundImage: const NetworkImage(
                           'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-                        ), // cute bird / character placeholder
+                        ),
                       ),
                     ),
                     Positioned(
@@ -73,7 +83,7 @@ class SettingsView extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: const BoxDecoration(
-                          color: Color(0xFFFFD700), // gold/yellow sparkle
+                          color: Color(0xFFFFD700),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -126,30 +136,41 @@ class SettingsView extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // Profile & Admin tiles (new)
+                // Profile tile
                 _buildSettingsTile(
                   icon: Icons.person,
                   iconColor: const Color(0xFF00D4FF),
                   title: "Profile",
-                  subtitle: "View and edit your account",
+                  subtitle: "View and manage your account",
                   onTap: () {
-                    // TODO: Navigate to profile screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileView(),
+                      ),
+                    );
                   },
                 ),
                 const SizedBox(height: 8),
 
+                // Admin tile
                 _buildSettingsTile(
                   icon: Icons.admin_panel_settings,
                   iconColor: const Color(0xFFFF5252),
                   title: "Admin",
                   subtitle: "Management & controls",
                   onTap: () {
-                    // TODO: Navigate to admin dashboard (maybe with auth check)
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AdminGateView(),
+                      ),
+                    );
                   },
                 ),
                 const SizedBox(height: 24),
 
-                // Remaining original settings
+                // Remaining settings
                 _buildSettingsTile(
                   icon: Icons.translate,
                   iconColor: const Color(0xFF00D4FF),
@@ -165,9 +186,11 @@ class SettingsView extends StatelessWidget {
                   icon: Icons.palette,
                   iconColor: const Color(0xFFFF80AB),
                   title: "Appearance",
-                  subtitle: isDark ? "Dark Mode, Purple Theme" : "Light Mode, Purple Theme",
+                  subtitle: isDark
+                      ? "Dark Mode, Purple Theme"
+                      : "Light Mode, Purple Theme",
                   onTap: () {
-                    // TODO: Open theme / appearance selector (light/dark/toggle)
+                    // TODO: Open theme / appearance selector
                   },
                 ),
                 const SizedBox(height: 8),
@@ -184,10 +207,45 @@ class SettingsView extends StatelessWidget {
 
                 const SizedBox(height: 40),
 
-                // Sign out button
+                // ── Logout button ───────────────────────────────────────────────
                 GestureDetector(
-                  onTap: () {
-                    // TODO: Show confirm dialog → sign out logic
+                  onTap: () async {
+                    final bool? confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Sign Out'),
+                        content: const Text('Are you sure you want to sign out?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text(
+                              'Sign Out',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirmed == true) {
+                      // Clear session data
+                      await GameService.clearSession();
+
+                      // Navigate to login screen and remove all previous routes
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginView(),
+                          ),
+                          (route) => false,
+                        );
+                      }
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -214,7 +272,7 @@ class SettingsView extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 80), // extra bottom space
+                const SizedBox(height: 80),
               ],
             ),
           ),

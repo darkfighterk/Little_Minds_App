@@ -11,8 +11,6 @@ class CategoryFilterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primary = Color(0xFFAB47BC);
-
     return Scaffold(
       appBar: AppBar(
         title: Text("$categoryName Adventures",
