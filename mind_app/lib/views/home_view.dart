@@ -9,13 +9,11 @@ import '../services/game_service.dart';
 import '../services/admin_service.dart';
 import 'level_map_view.dart';
 import 'bottom_nav_bar.dart';
-// Note: ChatScreen import එක දැන් මෙතනට අවශ්‍ය නැහැ මොකද බොත්තම වෙනම තියෙන නිසා.
 import 'chat_screen.dart';
 import 'puzzles_list_view.dart';
 
 class HomeView extends StatefulWidget {
   final User user;
-
   const HomeView({required this.user, super.key});
 
   @override
@@ -27,7 +25,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   final AdminService _adminService = AdminService();
 
   List<Subject> _adminSubjects = [];
-
   late AnimationController _floatController;
 
   final Map<String, double> _progress = {};
@@ -37,7 +34,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-
     _floatController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
@@ -46,7 +42,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     for (final s in GameData.subjects) {
       _totalLevelCounts[s.id] = s.levels.length;
     }
-
     _loadAdminSubjects();
   }
 
@@ -69,7 +64,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         .toList();
 
     if (!mounted) return;
-
     setState(() => _adminSubjects = newSubjects);
 
     for (final subject in newSubjects) {
@@ -77,24 +71,18 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       if (!mounted) return;
       setState(() => _totalLevelCounts[subject.id] = levels.length);
     }
-
     await _loadProgress();
   }
 
   Future<void> _loadProgress() async {
     final allSubjects = [...GameData.subjects, ..._adminSubjects];
-
     for (final subject in allSubjects) {
       final result = await _gameService.fetchProgress(subject.id);
-
       final totalLevels =
           _totalLevelCounts[subject.id] ?? subject.levels.length;
-
       final progressRatio =
           totalLevels == 0 ? 0.0 : result.completedLevels.length / totalLevels;
-
       if (!mounted) return;
-
       setState(() {
         _progress[subject.id] = progressRatio.clamp(0.0, 1.0);
         _stars[subject.id] = result.stars;
@@ -111,8 +99,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // මයින්ඩ් බොට්ගේ FloatingActionButton එක මෙතනින් ඉවත් කළා.
-      // එය දැන් ප්‍රධාන Navigation පේජ් එකේ (Scaffold) ඇත.
       body: _buildBody(),
       bottomNavigationBar: const BottomNavBar(
         primaryColor: Color(0xFFFFD700),
@@ -120,8 +106,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       ),
     );
   }
-
-  // _buildChatButton function එක සම්පූර්ණයෙන්ම ඉවත් කරන ලදී.
 
   Widget _buildBody() {
     return Container(
@@ -147,6 +131,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
+  // ── Header ────────────────────────────────────────────────────────────────
+
   Widget _buildHeader() {
     final totalStars = _stars.values.fold(0, (a, b) => a + b);
 
@@ -154,16 +140,18 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
       child: Column(
         children: [
-Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // --- ADDED: BACK BUTTON ---
+              // Back button
               IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 28),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                    color: Colors.white, size: 28),
                 onPressed: () => Navigator.of(context).pop(),
               ),
-              // --------------------------
-              Expanded( // Added Expanded to ensure text doesn't overflow
+
+              // Title
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -174,12 +162,6 @@ Row(
                         color: Colors.white,
                       ),
                     ),
-                  ),
-                  Text(
-                    'Adventure!',
-                    style: GoogleFonts.fredoka(
-                      fontSize: 28,
-                      color: const Color(0xFFFFD700),
                     Text(
                       'Adventure!',
                       style: GoogleFonts.fredoka(
@@ -190,6 +172,8 @@ Row(
                   ],
                 ),
               ),
+
+              // Stars badge
               AnimatedBuilder(
                 animation: _floatController,
                 builder: (_, child) => Transform.translate(
@@ -197,10 +181,8 @@ Row(
                   child: child,
                 ),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(30),
@@ -229,6 +211,8 @@ Row(
       ),
     );
   }
+
+  // ── Subject grid ──────────────────────────────────────────────────────────
 
   Widget _buildSubjectGrid() {
     return RefreshIndicator(
@@ -262,14 +246,12 @@ Row(
             const SizedBox(height: 14),
             _PuzzlesCard(
               floatController: _floatController,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PuzzlesListView(user: widget.user),
-                  ),
-                );
-              },
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PuzzlesListView(user: widget.user),
+                ),
+              ),
             ),
           ],
         ),
@@ -281,27 +263,22 @@ Row(
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => LevelMapView(
-          subject: subject,
-          user: widget.user,
-        ),
+        builder: (_) => LevelMapView(subject: subject, user: widget.user),
       ),
     );
-
-    if (mounted) {
-      await _loadProgress();
-    }
+    if (mounted) await _loadProgress();
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Puzzles card
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _PuzzlesCard extends StatelessWidget {
   final AnimationController floatController;
   final VoidCallback onTap;
 
-  const _PuzzlesCard({
-    required this.floatController,
-    required this.onTap,
-  });
+  const _PuzzlesCard({required this.floatController, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -368,11 +345,8 @@ class _PuzzlesCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
+              const Icon(Icons.arrow_forward_ios_rounded,
+                  color: Colors.white, size: 20),
             ],
           ),
         ),
@@ -380,6 +354,10 @@ class _PuzzlesCard extends StatelessWidget {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Subject card
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _SubjectCard extends StatelessWidget {
   final Subject subject;
@@ -412,10 +390,7 @@ class _SubjectCard extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Text(
-                subject.emoji,
-                style: const TextStyle(fontSize: 36),
-              ),
+              Text(subject.emoji, style: const TextStyle(fontSize: 36)),
               const SizedBox(height: 12),
               Text(
                 subject.name,
@@ -425,9 +400,7 @@ class _SubjectCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              LinearProgressIndicator(
-                value: progress,
-              ),
+              LinearProgressIndicator(value: progress),
             ],
           ),
         ),
