@@ -13,6 +13,7 @@ import 'drawing_pad_view.dart';
 import 'puzzle_list_screen.dart'; // ← Crossword public list
 import 'create_puzzle_screen.dart'; // ← AdminGateScreen (crossword admin)
 import 'admin_view.dart'; // ← AdminGateView (quiz admin)
+import 'package:mind_app/widgets/mindie_button.dart';
 
 class HomePage extends StatefulWidget {
   final User user;
@@ -95,6 +96,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         primaryColor: primaryAccent,
         isDark: true,
       ),
+      floatingActionButton: const MindieButton(),
     );
   }
 
