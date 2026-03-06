@@ -99,6 +99,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  // ── Header (unchanged except Settings icon added top-right) ───────────────
+
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
@@ -150,6 +152,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ],
                 ),
               ),
+              // ── Settings icon → admin panel ──────────────────────────
+              IconButton(
+                onPressed: _showSettingsSheet,
+                icon: const Icon(Icons.settings_rounded,
+                    color: Colors.white54, size: 26),
+                tooltip: 'Settings',
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -194,6 +203,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  // ── Grid (all original buttons kept + Crossword added) ────────────────────
+
   Widget _buildMainButtonsGrid() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -204,6 +215,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         children: [
+          // ── original buttons (unchanged) ─────────────────────────────
           _buildBigButton(
             title: 'Quiz Arena',
             icon: Icons.quiz_rounded,
@@ -314,12 +326,91 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  // ── Settings bottom sheet → admin gates ───────────────────────────────────
+
+  void _showSettingsSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1A1D27),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text('Settings',
+                  style:
+                      GoogleFonts.fredoka(fontSize: 24, color: Colors.white)),
+              const SizedBox(height: 4),
+              Text('Admin tools',
+                  style:
+                      GoogleFonts.nunito(fontSize: 13, color: Colors.white38)),
+              const SizedBox(height: 20),
+
+              // Crossword Admin
+              _SettingsTile(
+                icon: Icons.grid_4x4_rounded,
+                iconColor: const Color(0xFF6C63FF),
+                title: 'Crossword Admin',
+                subtitle: 'Create & manage crossword puzzles',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminGateScreen()),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+
+              // Quiz Admin
+              _SettingsTile(
+                icon: Icons.quiz_rounded,
+                iconColor: const Color(0xFF66BB6A),
+                title: 'Quiz Admin',
+                subtitle: 'Create & manage quiz subjects and levels',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminGateView()),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showComingSoon(String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$feature coming soon!')),
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Unchanged helper widgets
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _GlowOrb extends StatelessWidget {
   final double size;
