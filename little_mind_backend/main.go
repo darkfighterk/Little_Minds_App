@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -20,7 +19,7 @@ import (
 )
 
 // =====================================================================
-// Data Models
+// Data Models — Auth / Courses / Progress
 // =====================================================================
 
 type User struct {
@@ -60,31 +59,10 @@ type Response struct {
 	Error   string      `json:"error,omitempty"`
 }
 
-type Cell struct {
-	IsBlack  bool   `json:"isBlack"`
-	Number   *int   `json:"number,omitempty"`
-	Solution string `json:"solution"`
-}
+// =====================================================================
+// Data Models — AI Chat
+// =====================================================================
 
-type Clue struct {
-	Number int    `json:"number"`
-	Text   string `json:"text"`
-}
-
-type Puzzle struct {
-	ID           int      `json:"id"`
-	Title        string   `json:"title"`
-	Category     string   `json:"category"`
-	Difficulty   string   `json:"difficulty"`
-	Rows         int      `json:"rows"`
-	Cols         int      `json:"cols"`
-	GridData     [][]Cell `json:"gridData"`
-	AcrossClues  []Clue   `json:"acrossClues"`
-	DownClues    []Clue   `json:"downClues"`
-	TimerMinutes int      `json:"timerMinutes"`
-}
-
-// AI Chat models
 type ChatRequest struct {
 	Message string `json:"message"`
 }
@@ -107,7 +85,10 @@ type GroqResponse struct {
 	} `json:"choices"`
 }
 
-// Admin quiz models
+// =====================================================================
+// Data Models — Admin Quiz (subjects / levels / questions)
+// =====================================================================
+
 type AdminSubject struct {
 	ID            string `json:"id"`
 	Name          string `json:"name"`
@@ -154,8 +135,11 @@ type FullQuizLevel struct {
 	Questions []AdminQuestion `json:"questions"`
 }
 
-// Puzzle Collection (jigsaw style)
-type PuzzleCollection struct {
+// =====================================================================
+// Data Models — Jigsaw Puzzles
+// =====================================================================
+
+type JigsawPuzzle struct {
 	ID         int    `json:"id"`
 	Title      string `json:"title"`
 	ImageURL   string `json:"image_url"`
@@ -165,7 +149,39 @@ type PuzzleCollection struct {
 	CreatedAt  string `json:"created_at,omitempty"`
 }
 
-// Stories
+// =====================================================================
+// Data Models — Crossword Puzzles  (table: crossword_puzzles)
+// =====================================================================
+
+type CrosswordCell struct {
+	IsBlack  bool   `json:"isBlack"`
+	Number   *int   `json:"number,omitempty"`
+	Solution string `json:"solution"`
+}
+
+type CrosswordClue struct {
+	Number int    `json:"number"`
+	Text   string `json:"text"`
+}
+
+type CrosswordPuzzle struct {
+	ID           int               `json:"id"`
+	Title        string            `json:"title"`
+	Category     string            `json:"category"`
+	Difficulty   string            `json:"difficulty"`
+	Rows         int               `json:"rows"`
+	Cols         int               `json:"cols"`
+	GridData     [][]CrosswordCell `json:"gridData"`
+	AcrossClues  []CrosswordClue   `json:"acrossClues"`
+	DownClues    []CrosswordClue   `json:"downClues"`
+	TimerMinutes int               `json:"timerMinutes"`
+	CreatedAt    string            `json:"created_at,omitempty"`
+}
+
+// =====================================================================
+// Data Models — Stories
+// =====================================================================
+
 type Story struct {
 	ID          int         `json:"id"`
 	Title       string      `json:"title"`
@@ -190,16 +206,11 @@ type StoryPage struct {
 	ImageURL   string `json:"image_url"`
 }
 
-type CreateStoryRequest struct {
-	Story
-	Pages []StoryPage `json:"pages"`
-}
-
 // =====================================================================
 // Globals
 // =====================================================================
 
-var jwtSecret = []byte("my_secret_key") // CHANGE THIS in production
+var jwtSecret = []byte("my_secret_key")
 var db *sql.DB
 
 const adminSecret = "LittleMind@Admin2024"
@@ -211,26 +222,58 @@ const adminSecret = "LittleMind@Admin2024"
 func main() {
 	envErr := godotenv.Load()
 	if envErr != nil {
-		log.Println("Warning: .env file not found, using system env vars...")
+		log.Println("Warning: .env file not found, checking system environment variables...")
 	}
 
 	var err error
 	db, err = sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/little_mind_db?parseTime=true")
 	if err != nil {
-		log.Fatal("Failed to open database:", err)
+		log.Fatal("Failed to open database connection:", err)
 	}
 	defer db.Close()
 
 	if err = db.Ping(); err != nil {
-		log.Fatal("Cannot reach database:", err)
+		log.Fatal("Cannot reach the database server:", err)
 	}
-	log.Println("✅ Database connected successfully")
+	log.Println("✅ Database connected successfully (little_mind_db)")
+
+	// ── Auto-migrate: ensure crossword_puzzles table + all columns exist ─
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS crossword_puzzles (
+			id            INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+			title         VARCHAR(255) NOT NULL,
+			created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+	`)
+	if err != nil {
+		log.Fatal("Failed to create crossword_puzzles table:", err)
+	}
+	// Add each column only if it doesn't already exist (safe to run every boot)
+	crosswordAlters := []string{
+		`ALTER TABLE crossword_puzzles ADD COLUMN IF NOT EXISTS category      VARCHAR(100) NOT NULL DEFAULT 'General'`,
+		`ALTER TABLE crossword_puzzles ADD COLUMN IF NOT EXISTS difficulty    VARCHAR(50)  NOT NULL DEFAULT 'Medium'`,
+		`ALTER TABLE crossword_puzzles ADD COLUMN IF NOT EXISTS grid_rows     INT          NOT NULL DEFAULT 10`,
+		`ALTER TABLE crossword_puzzles ADD COLUMN IF NOT EXISTS grid_cols     INT          NOT NULL DEFAULT 10`,
+		`ALTER TABLE crossword_puzzles ADD COLUMN IF NOT EXISTS grid_data     LONGTEXT`,
+		`ALTER TABLE crossword_puzzles ADD COLUMN IF NOT EXISTS across_clues  TEXT`,
+		`ALTER TABLE crossword_puzzles ADD COLUMN IF NOT EXISTS down_clues    TEXT`,
+		`ALTER TABLE crossword_puzzles ADD COLUMN IF NOT EXISTS timer_minutes INT          NOT NULL DEFAULT 10`,
+	}
+	for _, alter := range crosswordAlters {
+		if _, alterErr := db.Exec(alter); alterErr != nil {
+			log.Printf("Warning: crossword alter skipped: %v", alterErr)
+		}
+	}
+	log.Println("✅ crossword_puzzles table ready")
 
 	if err := os.MkdirAll("./uploads", 0755); err != nil {
 		log.Fatal("Cannot create uploads directory:", err)
 	}
 
-	// Routes
+	// ── Static files ─────────────────────────────────────────────────
+	http.Handle("/uploads/", enableCORSHandler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads")))))
+
+	// ── Auth & core ──────────────────────────────────────────────────
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/register", enableCORS(registerHandler))
 	http.HandleFunc("/login", enableCORS(loginHandler))
@@ -238,33 +281,28 @@ func main() {
 	http.HandleFunc("/progress", enableCORS(requireAuth(progressHandler)))
 	http.HandleFunc("/chat", enableCORS(aiChatHandler))
 
-	http.Handle("/uploads/", enableCORSHandler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads")))))
-
-	// Admin
+	// ── Admin — upload / subjects / levels / questions / quiz ────────
+	http.HandleFunc("/admin/upload", enableCORS(requireAdmin(adminUploadHandler)))
 	http.HandleFunc("/admin/subjects", enableCORS(requireAdmin(adminSubjectsHandler)))
 	http.HandleFunc("/admin/levels", enableCORS(requireAdmin(adminLevelsHandler)))
 	http.HandleFunc("/admin/questions", enableCORS(requireAdmin(adminQuestionsHandler)))
-	http.HandleFunc("/admin/upload", enableCORS(requireAdmin(adminUploadHandler)))
 	http.HandleFunc("/admin/quiz", enableCORS(requireAdmin(adminFullQuizHandler)))
 
-	// Puzzle collections (jigsaw)
-	http.HandleFunc("/admin/puzzles", enableCORS(requireAdmin(adminPuzzlesHandler)))
-	http.HandleFunc("/puzzles", enableCORS(puzzlesPublicHandler))
-	http.HandleFunc("/puzzles/", enableCORS(puzzlePublicDetailHandler))
+	// ── Jigsaw Puzzles ───────────────────────────────────────────────
+	http.HandleFunc("/admin/puzzles", enableCORS(requireAdmin(adminJigsawPuzzlesHandler)))
+	http.HandleFunc("/puzzles", enableCORS(jigsawPuzzlesPublicHandler))
 
-	// Stories
+	// ── Crossword Puzzles ────────────────────────────────────────────
+	http.HandleFunc("/admin/crosswords", enableCORS(requireAdmin(adminCrosswordsHandler)))
+	http.HandleFunc("/admin/crosswords/", enableCORS(requireAdmin(adminCrosswordDetailHandler)))
+	http.HandleFunc("/crosswords", enableCORS(crosswordsPublicHandler))
+	http.HandleFunc("/crosswords/", enableCORS(crosswordPublicDetailHandler))
+
+	// ── Stories ──────────────────────────────────────────────────────
 	http.HandleFunc("/admin/stories", enableCORS(requireAdmin(adminStoriesHandler)))
 	http.HandleFunc("/admin/stories/", enableCORS(requireAdmin(adminStoryDetailHandler)))
 	http.HandleFunc("/stories", enableCORS(storiesPublicHandler))
 	http.HandleFunc("/stories/", enableCORS(storyPublicDetailHandler))
-
-	// Crosswords — admin routes (key protected)
-	http.HandleFunc("/admin/crosswords", enableCORS(requireAdmin(adminCrosswordsHandler)))
-	http.HandleFunc("/admin/crosswords/", enableCORS(requireAdmin(adminCrosswordDetailHandler)))
-
-	// Crosswords — public routes
-	http.HandleFunc("/crosswords", enableCORS(crosswordsPublicList))
-	http.HandleFunc("/crosswords/", enableCORS(crosswordsPublicDetail))
 
 	log.Println("🚀 Server started at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -277,7 +315,7 @@ func main() {
 func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, PATCH")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Authorization, X-Admin-Key")
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
@@ -343,37 +381,16 @@ func requireAdmin(next http.HandlerFunc) http.HandlerFunc {
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(Response{
-		Message: "Little Mind API is running",
+		Message: "Little Mind API v3.0.0",
 		Data: map[string]interface{}{
-			"version": "2.3",
-			"endpoints": []string{
-				"POST /register",
-				"POST /login",
-				"GET  /courses",
-				"GET/POST /progress (JWT)",
-				"POST /chat",
-				"GET  /uploads/<filename>",
-				// Admin
-				"GET/POST /admin/subjects",
-				"GET/POST /admin/levels",
-				"GET/POST /admin/questions",
-				"POST /admin/upload",
-				"GET  /admin/quiz?subject_id=X",
-				"GET/POST/DELETE /admin/puzzles",
-				"GET/POST/GET-detail /admin/stories",
-				"GET/POST/DELETE /admin/crosswords",
-				"GET/PUT/DELETE /admin/crosswords/:id",
-				// Public
-				"GET /puzzles",
-				"GET /stories", "GET /stories/",
-				"GET /crosswords", "GET /crosswords/",
-			},
+			"version":  "3.0.0",
+			"database": "little_mind_db",
 		},
 	})
 }
 
 // =====================================================================
-// Auth Handlers
+// Auth
 // =====================================================================
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
@@ -411,10 +428,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(Response{Error: "Security processing error"})
 		return
 	}
-	result, err := db.Exec(
-		"INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
-		user.Name, user.Email, string(hashed),
-	)
+	result, err := db.Exec("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", user.Name, user.Email, string(hashed))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(Response{Error: "Registration failed"})
@@ -438,9 +452,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var user User
 	json.NewDecoder(r.Body).Decode(&user)
 	var dbUser User
-	err := db.QueryRow(
-		"SELECT id, name, email, password FROM users WHERE email = ?", user.Email,
-	).Scan(&dbUser.ID, &dbUser.Name, &dbUser.Email, &dbUser.Password)
+	err := db.QueryRow("SELECT id, name, email, password FROM users WHERE email = ?", user.Email).
+		Scan(&dbUser.ID, &dbUser.Name, &dbUser.Email, &dbUser.Password)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(Response{Error: "Invalid credentials"})
@@ -474,16 +487,13 @@ func coursesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
 		return
 	}
 	category := r.URL.Query().Get("category")
 	var rows *sql.Rows
 	var err error
 	if category != "" {
-		rows, err = db.Query(
-			"SELECT id, title, category, description, imageUrl, instructor FROM courses WHERE category = ?", category,
-		)
+		rows, err = db.Query("SELECT id, title, category, description, imageUrl, instructor FROM courses WHERE category = ?", category)
 	} else {
 		rows, err = db.Query("SELECT id, title, category, description, imageUrl, instructor FROM courses")
 	}
@@ -496,9 +506,7 @@ func coursesHandler(w http.ResponseWriter, r *http.Request) {
 	courses := []Course{}
 	for rows.Next() {
 		var c Course
-		if err := rows.Scan(&c.ID, &c.Title, &c.Category, &c.Description, &c.ImageURL, &c.Instructor); err != nil {
-			continue
-		}
+		rows.Scan(&c.ID, &c.Title, &c.Category, &c.Description, &c.ImageURL, &c.Instructor)
 		courses = append(courses, c)
 	}
 	json.NewEncoder(w).Encode(Response{Message: "Courses retrieved successfully", Data: courses})
@@ -517,7 +525,6 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		saveLevelResultHandler(w, r)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
 	}
 }
 
@@ -532,7 +539,6 @@ func getProgressHandler(w http.ResponseWriter, r *http.Request) {
 	if subjectID != "" {
 		progress, err := fetchSubjectProgress(userIDStr, subjectID)
 		if err != nil {
-			log.Println("getProgressHandler error:", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(Response{Error: "Database error"})
 			return
@@ -545,7 +551,6 @@ func getProgressHandler(w http.ResponseWriter, r *http.Request) {
 	for _, sid := range subjects {
 		progress, err := fetchSubjectProgress(userIDStr, sid)
 		if err != nil {
-			log.Printf("getProgressHandler: error fetching %s: %v", sid, err)
 			continue
 		}
 		allProgress = append(allProgress, *progress)
@@ -601,41 +606,18 @@ func saveLevelResultHandler(w http.ResponseWriter, r *http.Request) {
 		    total_questions = VALUES(total_questions),
 		    completed_at    = CURRENT_TIMESTAMP
 	`, result.UserID, result.SubjectID, result.LevelNumber,
-		result.StarsEarned, result.QuizScore, result.TotalQuestions,
-	)
+		result.StarsEarned, result.QuizScore, result.TotalQuestions)
 	if err != nil {
-		log.Println("saveLevelResultHandler: upsert completions error:", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(Response{Error: "Failed to save level result"})
 		return
 	}
 	var totalStars int
-	err = db.QueryRow(`
-		SELECT COALESCE(SUM(stars_earned), 0)
-		FROM user_level_completions
-		WHERE user_id = ? AND subject_id = ?
-	`, result.UserID, result.SubjectID).Scan(&totalStars)
-	if err != nil {
-		log.Println("saveLevelResultHandler: sum stars error:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(Response{Error: "Failed to compute total stars"})
-		return
-	}
-	_, err = db.Exec(`
-		INSERT INTO user_subject_progress (user_id, subject_id, total_stars)
-		VALUES (?, ?, ?)
-		ON DUPLICATE KEY UPDATE
-		    total_stars = VALUES(total_stars),
-		    updated_at  = CURRENT_TIMESTAMP
-	`, result.UserID, result.SubjectID, totalStars)
-	if err != nil {
-		log.Println("saveLevelResultHandler: upsert progress error:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(Response{Error: "Failed to update subject progress"})
-		return
-	}
-	log.Printf("✅ Progress saved: user=%d subject=%s level=%d stars=%d total=%d",
-		result.UserID, result.SubjectID, result.LevelNumber, result.StarsEarned, totalStars)
+	db.QueryRow(`SELECT COALESCE(SUM(stars_earned), 0) FROM user_level_completions WHERE user_id = ? AND subject_id = ?`,
+		result.UserID, result.SubjectID).Scan(&totalStars)
+	db.Exec(`INSERT INTO user_subject_progress (user_id, subject_id, total_stars) VALUES (?, ?, ?)
+		ON DUPLICATE KEY UPDATE total_stars = VALUES(total_stars), updated_at = CURRENT_TIMESTAMP`,
+		result.UserID, result.SubjectID, totalStars)
 	json.NewEncoder(w).Encode(Response{
 		Message: "Progress saved successfully",
 		Data: map[string]interface{}{
@@ -652,16 +634,13 @@ func saveLevelResultHandler(w http.ResponseWriter, r *http.Request) {
 func adminUploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(Response{Error: "POST required"})
 		return
 	}
-
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(Response{Error: "Image too large (max 10 MB)"})
 		return
 	}
-
 	file, header, err := r.FormFile("image")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -669,7 +648,6 @@ func adminUploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-
 	ext := strings.ToLower(filepath.Ext(header.Filename))
 	allowed := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".gif": true, ".webp": true}
 	if !allowed[ext] {
@@ -677,7 +655,6 @@ func adminUploadHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(Response{Error: "Only jpg, png, gif, webp allowed"})
 		return
 	}
-
 	filename := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
 	dst, err := os.Create("./uploads/" + filename)
 	if err != nil {
@@ -687,13 +664,11 @@ func adminUploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer dst.Close()
 	io.Copy(dst, file)
-
 	host := r.Host
 	if host == "" {
 		host = "localhost:8080"
 	}
 	imageURL := fmt.Sprintf("http://%s/uploads/%s", host, filename)
-	log.Printf("✅ Image uploaded: %s → %s", filename, imageURL)
 	json.NewEncoder(w).Encode(Response{
 		Message: "Image uploaded successfully",
 		Data:    map[string]string{"url": imageURL},
@@ -707,9 +682,7 @@ func adminUploadHandler(w http.ResponseWriter, r *http.Request) {
 func adminSubjectsHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		rows, err := db.Query(
-			"SELECT id, name, emoji, gradient_start, gradient_end FROM quiz_subjects ORDER BY id",
-		)
+		rows, err := db.Query("SELECT id, name, emoji, gradient_start, gradient_end FROM quiz_subjects ORDER BY id")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(Response{Error: "Database error"})
@@ -740,14 +713,11 @@ func adminSubjectsHandler(w http.ResponseWriter, r *http.Request) {
 		if s.GradientEnd == "" {
 			s.GradientEnd = "#0288D1"
 		}
-		_, err := db.Exec(
-			"INSERT INTO quiz_subjects (id, name, emoji, gradient_start, gradient_end) VALUES (?, ?, ?, ?, ?)",
-			s.ID, s.Name, s.Emoji, s.GradientStart, s.GradientEnd,
-		)
+		_, err := db.Exec("INSERT INTO quiz_subjects (id, name, emoji, gradient_start, gradient_end) VALUES (?, ?, ?, ?, ?)",
+			s.ID, s.Name, s.Emoji, s.GradientStart, s.GradientEnd)
 		if err != nil {
-			log.Println("adminSubjectsHandler insert:", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(Response{Error: "Failed to create subject (ID may already exist)"})
+			json.NewEncoder(w).Encode(Response{Error: "Failed to create subject"})
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
@@ -755,7 +725,6 @@ func adminSubjectsHandler(w http.ResponseWriter, r *http.Request) {
 
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
 	}
 }
 
@@ -772,12 +741,10 @@ func adminLevelsHandler(w http.ResponseWriter, r *http.Request) {
 		if subjectID != "" {
 			rows, err = db.Query(
 				"SELECT id, subject_id, level_number, title, icon, stars_required FROM quiz_levels WHERE subject_id = ? ORDER BY level_number",
-				subjectID,
-			)
+				subjectID)
 		} else {
 			rows, err = db.Query(
-				"SELECT id, subject_id, level_number, title, icon, stars_required FROM quiz_levels ORDER BY subject_id, level_number",
-			)
+				"SELECT id, subject_id, level_number, title, icon, stars_required FROM quiz_levels ORDER BY subject_id, level_number")
 		}
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -810,12 +777,10 @@ func adminLevelsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		result, err := db.Exec(
 			"INSERT INTO quiz_levels (subject_id, level_number, title, icon, stars_required) VALUES (?, ?, ?, ?, ?)",
-			l.SubjectID, l.LevelNumber, l.Title, l.Icon, l.StarsRequired,
-		)
+			l.SubjectID, l.LevelNumber, l.Title, l.Icon, l.StarsRequired)
 		if err != nil {
-			log.Println("adminLevelsHandler insert:", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(Response{Error: "Failed to create level (level number may already exist for this subject)"})
+			json.NewEncoder(w).Encode(Response{Error: "Failed to create level"})
 			return
 		}
 		id, _ := result.LastInsertId()
@@ -825,12 +790,11 @@ func adminLevelsHandler(w http.ResponseWriter, r *http.Request) {
 
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
 	}
 }
 
 // =====================================================================
-// Admin — Questions (batch)
+// Admin — Questions
 // =====================================================================
 
 func adminQuestionsHandler(w http.ResponseWriter, r *http.Request) {
@@ -845,9 +809,7 @@ func adminQuestionsHandler(w http.ResponseWriter, r *http.Request) {
 		rows, err := db.Query(
 			`SELECT id, level_id, question_text, COALESCE(image_url,''), option_a, option_b, option_c, option_d,
 			        correct_index, COALESCE(fun_fact,''), sort_order
-			 FROM quiz_questions WHERE level_id = ? ORDER BY sort_order`,
-			levelIDStr,
-		)
+			 FROM quiz_questions WHERE level_id = ? ORDER BY sort_order`, levelIDStr)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(Response{Error: "Database error"})
@@ -873,17 +835,15 @@ func adminQuestionsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if req.LevelID == 0 || len(req.Questions) == 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(Response{Error: "level_id and at least one question are required"})
+			json.NewEncoder(w).Encode(Response{Error: "level_id and questions are required"})
 			return
 		}
-
 		tx, err := db.Begin()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(Response{Error: "Transaction error"})
 			return
 		}
-
 		for i, q := range req.Questions {
 			if q.OptionA == "" || q.OptionB == "" || q.OptionC == "" || q.OptionD == "" {
 				tx.Rollback()
@@ -892,37 +852,28 @@ func adminQuestionsHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			_, err := tx.Exec(
-				`INSERT INTO quiz_questions
-				 (level_id, question_text, image_url, option_a, option_b, option_c, option_d,
-				  correct_index, fun_fact, sort_order)
+				`INSERT INTO quiz_questions (level_id, question_text, image_url, option_a, option_b, option_c, option_d, correct_index, fun_fact, sort_order)
 				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-				req.LevelID, q.QuestionText, q.ImageURL,
-				q.OptionA, q.OptionB, q.OptionC, q.OptionD,
-				q.CorrectIndex, q.FunFact, i,
-			)
+				req.LevelID, q.QuestionText, q.ImageURL, q.OptionA, q.OptionB, q.OptionC, q.OptionD, q.CorrectIndex, q.FunFact, i)
 			if err != nil {
 				tx.Rollback()
-				log.Printf("adminQuestionsHandler insert q%d: %v", i+1, err)
 				w.WriteHeader(http.StatusInternalServerError)
 				json.NewEncoder(w).Encode(Response{Error: "Failed to save questions"})
 				return
 			}
 		}
-
 		if err := tx.Commit(); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(Response{Error: "Commit failed"})
 			return
 		}
-		log.Printf("✅ Saved %d questions for level %d", len(req.Questions), req.LevelID)
 		json.NewEncoder(w).Encode(Response{
-			Message: fmt.Sprintf("%d questions saved successfully", len(req.Questions)),
+			Message: fmt.Sprintf("%d questions saved", len(req.Questions)),
 			Data:    map[string]int{"level_id": req.LevelID, "count": len(req.Questions)},
 		})
 
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
 	}
 }
 
@@ -941,38 +892,30 @@ func adminFullQuizHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(Response{Error: "subject_id is required"})
 		return
 	}
-
 	var subject AdminSubject
-	err := db.QueryRow(
-		"SELECT id, name, emoji, gradient_start, gradient_end FROM quiz_subjects WHERE id = ?", subjectID,
-	).Scan(&subject.ID, &subject.Name, &subject.Emoji, &subject.GradientStart, &subject.GradientEnd)
+	err := db.QueryRow("SELECT id, name, emoji, gradient_start, gradient_end FROM quiz_subjects WHERE id = ?", subjectID).
+		Scan(&subject.ID, &subject.Name, &subject.Emoji, &subject.GradientStart, &subject.GradientEnd)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(Response{Error: "Subject not found"})
 		return
 	}
-
 	levelRows, err := db.Query(
 		"SELECT id, subject_id, level_number, title, icon, stars_required FROM quiz_levels WHERE subject_id = ? ORDER BY level_number",
-		subjectID,
-	)
+		subjectID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(Response{Error: "Database error"})
 		return
 	}
 	defer levelRows.Close()
-
 	result := FullQuizSubject{AdminSubject: subject, Levels: []FullQuizLevel{}}
 	for levelRows.Next() {
 		var l AdminLevel
 		levelRows.Scan(&l.ID, &l.SubjectID, &l.LevelNumber, &l.Title, &l.Icon, &l.StarsRequired)
-
 		qRows, err := db.Query(
 			`SELECT id, level_id, question_text, COALESCE(image_url,''), option_a, option_b, option_c, option_d,
 			        correct_index, COALESCE(fun_fact,''), sort_order
-			 FROM quiz_questions WHERE level_id = ? ORDER BY sort_order`, l.ID,
-		)
+			 FROM quiz_questions WHERE level_id = ? ORDER BY sort_order`, l.ID)
 		if err != nil {
 			continue
 		}
@@ -987,12 +930,11 @@ func adminFullQuizHandler(w http.ResponseWriter, r *http.Request) {
 		qRows.Close()
 		result.Levels = append(result.Levels, FullQuizLevel{AdminLevel: l, Questions: questions})
 	}
-
 	json.NewEncoder(w).Encode(Response{Message: "Quiz retrieved", Data: result})
 }
 
 // =====================================================================
-// AI Chat (Groq)
+// AI Chat
 // =====================================================================
 
 func aiChatHandler(w http.ResponseWriter, r *http.Request) {
@@ -1000,93 +942,73 @@ func aiChatHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-
 	var req ChatRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(Response{Error: "Invalid request"})
 		return
 	}
-
 	apiKey := os.Getenv("GROQ_API_KEY")
 	if apiKey == "" {
-		log.Println("❌ GROQ_API_KEY not set")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(Response{Error: "AI service configuration error"})
 		return
 	}
-
 	groqBody := GroqRequest{
 		Model: "llama-3.3-70b-versatile",
 		Messages: []GroqMessage{
-			{
-				Role:    "system",
-				Content: "Your name is Mindie. You are a friendly and encouraging AI buddy for the 'Little Minds' educational app. Your goal is to help kids learn and stay curious. Respond warmly and creatively in English, Sinhala, or Singlish.",
-			},
+			{Role: "system", Content: "Your name is Mindie. You are a friendly and encouraging AI buddy for the 'Little Minds' educational app. Your goal is to help kids learn and stay curious. Respond warmly and creatively in English, Sinhala, or Singlish."},
 			{Role: "user", Content: req.Message},
 		},
 	}
-
 	bodyBytes, _ := json.Marshal(groqBody)
 	apiReq, _ := http.NewRequest("POST", "https://api.groq.com/openai/v1/chat/completions", strings.NewReader(string(bodyBytes)))
-
 	apiReq.Header.Set("Authorization", "Bearer "+apiKey)
 	apiReq.Header.Set("Content-Type", "application/json")
-
 	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Do(apiReq)
 	if err != nil {
-		log.Printf("❌ AI Service Error: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(Response{Error: "AI service is temporarily unavailable"})
 		return
 	}
 	defer resp.Body.Close()
-
 	var groqResp GroqResponse
 	if err := json.NewDecoder(resp.Body).Decode(&groqResp); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(Response{Error: "Failed to parse AI response"})
 		return
 	}
-
 	if len(groqResp.Choices) > 0 {
-		json.NewEncoder(w).Encode(map[string]string{
-			"reply": groqResp.Choices[0].Message.Content,
-		})
+		json.NewEncoder(w).Encode(map[string]string{"reply": groqResp.Choices[0].Message.Content})
 	} else {
-		json.NewEncoder(w).Encode(map[string]string{
-			"reply": "Mindie is thinking hard! Please try again in a moment. 🦄",
-		})
+		json.NewEncoder(w).Encode(map[string]string{"reply": "Mindie is thinking hard! Please try again in a moment. 🦄"})
 	}
 }
 
 // =====================================================================
-// Admin — Puzzle Collections (jigsaw)
+// Admin — Jigsaw Puzzles  (table: puzzles)
 // =====================================================================
 
-func adminPuzzlesHandler(w http.ResponseWriter, r *http.Request) {
+func adminJigsawPuzzlesHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		rows, err := db.Query(
-			"SELECT id, title, image_url, piece_count, category, difficulty, created_at FROM puzzles ORDER BY id DESC",
-		)
+		rows, err := db.Query("SELECT id, title, image_url, piece_count, category, difficulty, created_at FROM puzzles ORDER BY id DESC")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(Response{Error: "Database error"})
 			return
 		}
 		defer rows.Close()
-		puzzles := []PuzzleCollection{}
+		puzzles := []JigsawPuzzle{}
 		for rows.Next() {
-			var p PuzzleCollection
+			var p JigsawPuzzle
 			rows.Scan(&p.ID, &p.Title, &p.ImageURL, &p.PieceCount, &p.Category, &p.Difficulty, &p.CreatedAt)
 			puzzles = append(puzzles, p)
 		}
-		json.NewEncoder(w).Encode(Response{Message: "Puzzles retrieved", Data: puzzles})
+		json.NewEncoder(w).Encode(Response{Message: "Jigsaw puzzles retrieved", Data: puzzles})
 
 	case http.MethodPost:
-		var p PuzzleCollection
+		var p JigsawPuzzle
 		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(Response{Error: "Invalid request body"})
@@ -1106,12 +1028,9 @@ func adminPuzzlesHandler(w http.ResponseWriter, r *http.Request) {
 		if p.Difficulty == "" {
 			p.Difficulty = "Medium"
 		}
-		result, err := db.Exec(
-			"INSERT INTO puzzles (title, image_url, piece_count, category, difficulty) VALUES (?, ?, ?, ?, ?)",
-			p.Title, p.ImageURL, p.PieceCount, p.Category, p.Difficulty,
-		)
+		result, err := db.Exec("INSERT INTO puzzles (title, image_url, piece_count, category, difficulty) VALUES (?, ?, ?, ?, ?)",
+			p.Title, p.ImageURL, p.PieceCount, p.Category, p.Difficulty)
 		if err != nil {
-			log.Println("adminPuzzlesHandler insert:", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(Response{Error: "Failed to create puzzle"})
 			return
@@ -1119,7 +1038,7 @@ func adminPuzzlesHandler(w http.ResponseWriter, r *http.Request) {
 		id, _ := result.LastInsertId()
 		p.ID = int(id)
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(Response{Message: "Puzzle created", Data: p})
+		json.NewEncoder(w).Encode(Response{Message: "Jigsaw puzzle created", Data: p})
 
 	case http.MethodDelete:
 		idStr := r.URL.Query().Get("id")
@@ -1128,39 +1047,31 @@ func adminPuzzlesHandler(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(Response{Error: "id is required"})
 			return
 		}
-		_, err := db.Exec("DELETE FROM puzzles WHERE id = ?", idStr)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(Response{Error: "Failed to delete puzzle"})
-			return
-		}
+		db.Exec("DELETE FROM puzzles WHERE id = ?", idStr)
 		json.NewEncoder(w).Encode(Response{Message: "Puzzle deleted"})
 
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
 	}
 }
 
-func puzzlesPublicHandler(w http.ResponseWriter, r *http.Request) {
+// =====================================================================
+// Public — Jigsaw Puzzles
+// =====================================================================
+
+func jigsawPuzzlesPublicHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
 		return
 	}
 	category := r.URL.Query().Get("category")
 	var rows *sql.Rows
 	var err error
 	if category != "" {
-		rows, err = db.Query(
-			"SELECT id, title, image_url, piece_count, category, difficulty, created_at FROM puzzles WHERE category = ? ORDER BY id DESC",
-			category,
-		)
+		rows, err = db.Query("SELECT id, title, image_url, piece_count, category, difficulty, created_at FROM puzzles WHERE category = ? ORDER BY id DESC", category)
 	} else {
-		rows, err = db.Query(
-			"SELECT id, title, image_url, piece_count, category, difficulty, created_at FROM puzzles ORDER BY id DESC",
-		)
+		rows, err = db.Query("SELECT id, title, image_url, piece_count, category, difficulty, created_at FROM puzzles ORDER BY id DESC")
 	}
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -1168,77 +1079,263 @@ func puzzlesPublicHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer rows.Close()
-	puzzles := []PuzzleCollection{}
+	puzzles := []JigsawPuzzle{}
 	for rows.Next() {
-		var p PuzzleCollection
+		var p JigsawPuzzle
 		rows.Scan(&p.ID, &p.Title, &p.ImageURL, &p.PieceCount, &p.Category, &p.Difficulty, &p.CreatedAt)
 		puzzles = append(puzzles, p)
 	}
-	json.NewEncoder(w).Encode(Response{Message: "Puzzles retrieved", Data: puzzles})
+	json.NewEncoder(w).Encode(Response{Message: "Jigsaw puzzles retrieved", Data: puzzles})
 }
 
 // =====================================================================
-// Public — Single Jigsaw Puzzle by ID
+// Admin — Crossword Puzzles  (table: crossword_puzzles)
+// GET    /admin/crosswords            list all
+// POST   /admin/crosswords            create
+// GET    /admin/crosswords/{id}       get one with full data
+// PUT    /admin/crosswords/{id}       update
+// DELETE /admin/crosswords/{id}       delete
 // =====================================================================
 
-func puzzlePublicDetailHandler(w http.ResponseWriter, r *http.Request) {
+func adminCrosswordsHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		rows, err := db.Query(
+			`SELECT id, title, category, difficulty, grid_rows, grid_cols, timer_minutes, created_at
+			 FROM crossword_puzzles ORDER BY id DESC`)
+		if err != nil {
+			log.Println("adminCrosswordsHandler GET error:", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(Response{Error: "Database error: " + err.Error()})
+			return
+		}
+		defer rows.Close()
+		puzzles := []map[string]interface{}{}
+		for rows.Next() {
+			var id, gridRows, gridCols, timerMinutes int
+			var title, category, difficulty, createdAt string
+			rows.Scan(&id, &title, &category, &difficulty, &gridRows, &gridCols, &timerMinutes, &createdAt)
+			puzzles = append(puzzles, map[string]interface{}{
+				"id":           id,
+				"title":        title,
+				"category":     category,
+				"difficulty":   difficulty,
+				"rows":         gridRows,
+				"cols":         gridCols,
+				"timerMinutes": timerMinutes,
+				"created_at":   createdAt,
+			})
+		}
+		json.NewEncoder(w).Encode(Response{Message: "Crosswords retrieved", Data: puzzles})
+
+	case http.MethodPost:
+		var p CrosswordPuzzle
+		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(Response{Error: "Invalid request body"})
+			return
+		}
+		if p.Title == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(Response{Error: "title is required"})
+			return
+		}
+		if p.Category == "" {
+			p.Category = "General"
+		}
+		if p.Difficulty == "" {
+			p.Difficulty = "Medium"
+		}
+		if p.Rows == 0 {
+			p.Rows = 10
+		}
+		if p.Cols == 0 {
+			p.Cols = 10
+		}
+		if p.TimerMinutes == 0 {
+			p.TimerMinutes = 10
+		}
+		gridBytes, _ := json.Marshal(p.GridData)
+		acrossBytes, _ := json.Marshal(p.AcrossClues)
+		downBytes, _ := json.Marshal(p.DownClues)
+		result, err := db.Exec(
+			`INSERT INTO crossword_puzzles (title, category, difficulty, grid_rows, grid_cols, grid_data, across_clues, down_clues, timer_minutes)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			p.Title, p.Category, p.Difficulty, p.Rows, p.Cols,
+			string(gridBytes), string(acrossBytes), string(downBytes), p.TimerMinutes)
+		if err != nil {
+			log.Println("adminCrosswordsHandler insert:", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(Response{Error: "Failed to create crossword"})
+			return
+		}
+		id, _ := result.LastInsertId()
+		p.ID = int(id)
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(Response{Message: "Crossword created", Data: map[string]interface{}{
+			"id": p.ID, "title": p.Title,
+		}})
+
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func adminCrosswordDetailHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/admin/crosswords/")
+	if idStr == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(Response{Error: "id required"})
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		p, err := fetchCrossword(idStr)
+		if err == sql.ErrNoRows {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(Response{Error: "Crossword not found"})
+			return
+		}
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(Response{Error: "Database error"})
+			return
+		}
+		json.NewEncoder(w).Encode(Response{Message: "Crossword retrieved", Data: p})
+
+	case http.MethodPut:
+		var p CrosswordPuzzle
+		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(Response{Error: "Invalid request body"})
+			return
+		}
+		gridBytes, _ := json.Marshal(p.GridData)
+		acrossBytes, _ := json.Marshal(p.AcrossClues)
+		downBytes, _ := json.Marshal(p.DownClues)
+		_, err := db.Exec(
+			`UPDATE crossword_puzzles SET title=?, category=?, difficulty=?, grid_rows=?, grid_cols=?,
+			 grid_data=?, across_clues=?, down_clues=?, timer_minutes=? WHERE id=?`,
+			p.Title, p.Category, p.Difficulty, p.Rows, p.Cols,
+			string(gridBytes), string(acrossBytes), string(downBytes), p.TimerMinutes, idStr)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(Response{Error: "Failed to update crossword"})
+			return
+		}
+		json.NewEncoder(w).Encode(Response{Message: "Crossword updated"})
+
+	case http.MethodDelete:
+		db.Exec("DELETE FROM crossword_puzzles WHERE id = ?", idStr)
+		json.NewEncoder(w).Encode(Response{Message: "Crossword deleted"})
+
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func fetchCrossword(id string) (*CrosswordPuzzle, error) {
+	var p CrosswordPuzzle
+	var gridJSON, acrossJSON, downJSON string
+	err := db.QueryRow(
+		`SELECT id, title, category, difficulty, grid_rows, grid_cols, grid_data, across_clues, down_clues, timer_minutes
+		 FROM crossword_puzzles WHERE id=?`, id,
+	).Scan(&p.ID, &p.Title, &p.Category, &p.Difficulty, &p.Rows, &p.Cols,
+		&gridJSON, &acrossJSON, &downJSON, &p.TimerMinutes)
+	if err != nil {
+		return nil, err
+	}
+	if gridJSON == "" || gridJSON == "null" {
+		gridJSON = "[]"
+	}
+	if acrossJSON == "" || acrossJSON == "null" {
+		acrossJSON = "[]"
+	}
+	if downJSON == "" || downJSON == "null" {
+		downJSON = "[]"
+	}
+	json.Unmarshal([]byte(gridJSON), &p.GridData)
+	json.Unmarshal([]byte(acrossJSON), &p.AcrossClues)
+	json.Unmarshal([]byte(downJSON), &p.DownClues)
+	return &p, nil
+}
+
+// =====================================================================
+// Public — Crosswords
+// =====================================================================
+
+func crosswordsPublicHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
 		return
 	}
-
-	idStr := strings.TrimPrefix(r.URL.Path, "/puzzles/")
-	if idStr == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{Error: "puzzle id required"})
-		return
+	category := r.URL.Query().Get("category")
+	difficulty := r.URL.Query().Get("difficulty")
+	query := `SELECT id, title, category, difficulty, grid_rows, grid_cols, timer_minutes FROM crossword_puzzles`
+	args := []interface{}{}
+	where := []string{}
+	if category != "" {
+		where = append(where, "category = ?")
+		args = append(args, category)
 	}
-	id, err := strconv.Atoi(idStr)
+	if difficulty != "" {
+		where = append(where, "difficulty = ?")
+		args = append(args, difficulty)
+	}
+	if len(where) > 0 {
+		query += " WHERE " + strings.Join(where, " AND ")
+	}
+	query += " ORDER BY id DESC"
+	rows, err := db.Query(query, args...)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{Error: "Invalid puzzle ID"})
-		return
-	}
-
-	var p Puzzle
-	var gridJSON, acrossJSON, downJSON string
-
-	err = db.QueryRow(
-		`SELECT id, title, COALESCE(category,'General'), COALESCE(difficulty,'Medium'),
-		        grid_rows, grid_cols, grid_data, across_clues, down_clues, timer_minutes
-		 FROM puzzles WHERE id = ?`, id,
-	).Scan(&p.ID, &p.Title, &p.Category, &p.Difficulty,
-		&p.Rows, &p.Cols, &gridJSON, &acrossJSON, &downJSON, &p.TimerMinutes)
-
-	if err == sql.ErrNoRows {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(Response{Error: "Puzzle not found"})
-		return
-	}
-	if err != nil {
-		log.Println("puzzlePublicDetailHandler error:", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(Response{Error: "Database error"})
 		return
 	}
+	defer rows.Close()
+	puzzles := []map[string]interface{}{}
+	for rows.Next() {
+		var id, gridRows, gridCols, timerMinutes int
+		var title, category, difficulty string
+		rows.Scan(&id, &title, &category, &difficulty, &gridRows, &gridCols, &timerMinutes)
+		puzzles = append(puzzles, map[string]interface{}{
+			"id": id, "title": title, "category": category, "difficulty": difficulty,
+			"rows": gridRows, "cols": gridCols, "timerMinutes": timerMinutes,
+		})
+	}
+	json.NewEncoder(w).Encode(Response{Message: "Crosswords retrieved", Data: puzzles})
+}
 
-	if gridJSON != "" {
-		json.Unmarshal([]byte(gridJSON), &p.GridData)
+func crosswordPublicDetailHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
-	if acrossJSON != "" {
-		json.Unmarshal([]byte(acrossJSON), &p.AcrossClues)
+	idStr := strings.TrimPrefix(r.URL.Path, "/crosswords/")
+	if idStr == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(Response{Error: "id required"})
+		return
 	}
-	if downJSON != "" {
-		json.Unmarshal([]byte(downJSON), &p.DownClues)
+	p, err := fetchCrossword(idStr)
+	if err == sql.ErrNoRows {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(Response{Error: "Crossword not found"})
+		return
 	}
-
-	json.NewEncoder(w).Encode(Response{Message: "Puzzle retrieved", Data: p})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(Response{Error: "Database error"})
+		return
+	}
+	json.NewEncoder(w).Encode(Response{Message: "Crossword retrieved", Data: p})
 }
 
 // =====================================================================
-// Stories — Admin
+// Admin — Stories
 // =====================================================================
 
 func adminStoriesHandler(w http.ResponseWriter, r *http.Request) {
@@ -1247,13 +1344,9 @@ func adminStoriesHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		rows, err := db.Query(
 			`SELECT s.id, s.title, s.author, s.description, s.cover_url, s.cover_emoji,
-			        s.category, s.difficulty, s.age_range, s.created_at,
-			        COUNT(p.id) AS page_count
-			 FROM stories s
-			 LEFT JOIN story_pages p ON p.story_id = s.id
-			 GROUP BY s.id
-			 ORDER BY s.id DESC`,
-		)
+			        s.category, s.difficulty, s.age_range, s.created_at, COUNT(p.id) AS page_count
+			 FROM stories s LEFT JOIN story_pages p ON p.story_id = s.id
+			 GROUP BY s.id ORDER BY s.id DESC`)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(Response{Error: "Database error"})
@@ -1303,29 +1396,23 @@ func adminStoriesHandler(w http.ResponseWriter, r *http.Request) {
 		if req.CoverEmoji == "" {
 			req.CoverEmoji = "📖"
 		}
-
 		tx, err := db.Begin()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(Response{Error: "Transaction error"})
 			return
 		}
-
 		result, err := tx.Exec(
 			`INSERT INTO stories (title, author, description, cover_url, cover_emoji, category, difficulty, age_range)
 			 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 			req.Title, req.Author, req.Description, req.CoverURL,
-			req.CoverEmoji, req.Category, req.Difficulty, req.AgeRange,
-		)
+			req.CoverEmoji, req.Category, req.Difficulty, req.AgeRange)
 		if err != nil {
 			tx.Rollback()
-			log.Println("adminStoriesHandler insert story:", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(Response{Error: "Failed to create story"})
 			return
 		}
 		storyID, _ := result.LastInsertId()
-
 		for i, p := range req.Pages {
 			if p.Body == "" {
 				continue
@@ -1335,49 +1422,30 @@ func adminStoriesHandler(w http.ResponseWriter, r *http.Request) {
 				pageNum = i + 1
 			}
 			_, err := tx.Exec(
-				`INSERT INTO story_pages (story_id, page_number, title, body, image_url)
-				 VALUES (?, ?, ?, ?, ?)`,
-				storyID, pageNum, p.Title, p.Body, p.ImageURL,
-			)
+				`INSERT INTO story_pages (story_id, page_number, title, body, image_url) VALUES (?, ?, ?, ?, ?)`,
+				storyID, pageNum, p.Title, p.Body, p.ImageURL)
 			if err != nil {
 				tx.Rollback()
-				log.Printf("adminStoriesHandler insert page %d: %v", i+1, err)
 				w.WriteHeader(http.StatusInternalServerError)
 				json.NewEncoder(w).Encode(Response{Error: fmt.Sprintf("Failed to save page %d", i+1)})
 				return
 			}
 		}
-
-		if err := tx.Commit(); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(Response{Error: "Commit failed"})
-			return
-		}
-		log.Printf("✅ Story created: id=%d title=%q pages=%d", storyID, req.Title, len(req.Pages))
+		tx.Commit()
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(Response{
-			Message: "Story created",
-			Data:    map[string]interface{}{"id": storyID, "title": req.Title},
-		})
+		json.NewEncoder(w).Encode(Response{Message: "Story created", Data: map[string]interface{}{"id": storyID, "title": req.Title}})
 
 	case http.MethodDelete:
 		idStr := r.URL.Query().Get("id")
 		if idStr == "" {
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(Response{Error: "id is required"})
 			return
 		}
-		_, err := db.Exec("DELETE FROM stories WHERE id = ?", idStr)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(Response{Error: "Failed to delete story"})
-			return
-		}
+		db.Exec("DELETE FROM stories WHERE id = ?", idStr)
 		json.NewEncoder(w).Encode(Response{Message: "Story deleted"})
 
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
 	}
 }
 
@@ -1388,11 +1456,6 @@ func adminStoryDetailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	idStr := strings.TrimPrefix(r.URL.Path, "/admin/stories/")
-	if idStr == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{Error: "story id required"})
-		return
-	}
 	var s Story
 	err := db.QueryRow(
 		`SELECT id, title, author, description, cover_url, cover_emoji, category, difficulty, age_range, created_at
@@ -1405,9 +1468,7 @@ func adminStoryDetailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rows, err := db.Query(
-		`SELECT id, story_id, page_number, title, body, COALESCE(image_url,'')
-		 FROM story_pages WHERE story_id = ? ORDER BY page_number`, s.ID,
-	)
+		`SELECT id, story_id, page_number, title, body, COALESCE(image_url,'') FROM story_pages WHERE story_id = ? ORDER BY page_number`, s.ID)
 	if err == nil {
 		defer rows.Close()
 		for rows.Next() {
@@ -1419,25 +1480,17 @@ func adminStoryDetailHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(Response{Message: "Story retrieved", Data: s})
 }
 
-// =====================================================================
-// Stories — Public
-// =====================================================================
-
 func storiesPublicHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
 		return
 	}
 	category := r.URL.Query().Get("category")
 	difficulty := r.URL.Query().Get("difficulty")
-
 	query := `SELECT s.id, s.title, s.author, s.description, s.cover_url, s.cover_emoji,
-	                 s.category, s.difficulty, s.age_range, s.created_at,
-	                 COUNT(p.id) AS page_count
-	          FROM stories s
-	          LEFT JOIN story_pages p ON p.story_id = s.id`
+	                 s.category, s.difficulty, s.age_range, s.created_at, COUNT(p.id) AS page_count
+	          FROM stories s LEFT JOIN story_pages p ON p.story_id = s.id`
 	args := []interface{}{}
 	where := []string{}
 	if category != "" {
@@ -1452,11 +1505,9 @@ func storiesPublicHandler(w http.ResponseWriter, r *http.Request) {
 		query += " WHERE " + strings.Join(where, " AND ")
 	}
 	query += " GROUP BY s.id ORDER BY s.id DESC"
-
 	rows, err := db.Query(query, args...)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(Response{Error: "Database error"})
 		return
 	}
 	defer rows.Close()
@@ -1477,11 +1528,6 @@ func storyPublicDetailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	idStr := strings.TrimPrefix(r.URL.Path, "/stories/")
-	if idStr == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{Error: "story id required"})
-		return
-	}
 	var s Story
 	err := db.QueryRow(
 		`SELECT id, title, author, description, cover_url, cover_emoji, category, difficulty, age_range, created_at
@@ -1494,9 +1540,7 @@ func storyPublicDetailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rows, err := db.Query(
-		`SELECT id, story_id, page_number, title, body, COALESCE(image_url,'')
-		 FROM story_pages WHERE story_id = ? ORDER BY page_number`, s.ID,
-	)
+		`SELECT id, story_id, page_number, title, body, COALESCE(image_url,'') FROM story_pages WHERE story_id = ? ORDER BY page_number`, s.ID)
 	if err == nil {
 		defer rows.Close()
 		for rows.Next() {
@@ -1506,334 +1550,4 @@ func storyPublicDetailHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	json.NewEncoder(w).Encode(Response{Message: "Story retrieved", Data: s})
-}
-
-// =====================================================================
-// Crosswords — Public List
-// =====================================================================
-
-func crosswordsPublicList(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
-		return
-	}
-
-	category := r.URL.Query().Get("category")
-	query := `SELECT id, title, COALESCE(category,'General'), COALESCE(difficulty,'Medium'), grid_rows, grid_cols, timer_minutes
-              FROM puzzles WHERE grid_data IS NOT NULL`
-	args := []interface{}{}
-	if category != "" {
-		query += " AND category = ?"
-		args = append(args, category)
-	}
-	query += " ORDER BY id DESC"
-
-	rows, err := db.Query(query, args...)
-	if err != nil {
-		log.Println("crosswordsPublicList error:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(Response{Error: "Database error"})
-		return
-	}
-	defer rows.Close()
-
-	type Summary struct {
-		ID           int    `json:"id"`
-		Title        string `json:"title"`
-		Category     string `json:"category"`
-		Difficulty   string `json:"difficulty"`
-		Rows         int    `json:"rows"`
-		Cols         int    `json:"cols"`
-		TimerMinutes int    `json:"timerMinutes"`
-	}
-
-	var puzzles []Summary
-	for rows.Next() {
-		var p Summary
-		rows.Scan(&p.ID, &p.Title, &p.Category, &p.Difficulty, &p.Rows, &p.Cols, &p.TimerMinutes)
-		puzzles = append(puzzles, p)
-	}
-	if puzzles == nil {
-		puzzles = []Summary{}
-	}
-
-	json.NewEncoder(w).Encode(Response{Message: "Crosswords retrieved", Data: puzzles})
-}
-
-// =====================================================================
-// Crosswords — Public Detail
-// =====================================================================
-
-func crosswordsPublicDetail(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	idStr := strings.TrimPrefix(r.URL.Path, "/crosswords/")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{Error: "Invalid crossword ID"})
-		return
-	}
-
-	var p Puzzle
-	var gridJSON, acrossJSON, downJSON string
-
-	err = db.QueryRow(
-		`SELECT id, title, COALESCE(category,'General'), COALESCE(difficulty,'Medium'),
-		        grid_rows, grid_cols, grid_data, across_clues, down_clues, timer_minutes
-         FROM puzzles WHERE id = ? AND grid_data IS NOT NULL`,
-		id,
-	).Scan(&p.ID, &p.Title, &p.Category, &p.Difficulty, &p.Rows, &p.Cols,
-		&gridJSON, &acrossJSON, &downJSON, &p.TimerMinutes)
-
-	if err == sql.ErrNoRows {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(Response{Error: "Crossword not found"})
-		return
-	}
-	if err != nil {
-		log.Println("crosswordsPublicDetail error:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(Response{Error: err.Error()})
-		return
-	}
-
-	if gridJSON != "" {
-		json.Unmarshal([]byte(gridJSON), &p.GridData)
-	}
-	if acrossJSON != "" {
-		json.Unmarshal([]byte(acrossJSON), &p.AcrossClues)
-	}
-	if downJSON != "" {
-		json.Unmarshal([]byte(downJSON), &p.DownClues)
-	}
-
-	json.NewEncoder(w).Encode(Response{Message: "Crossword retrieved", Data: p})
-}
-
-// =====================================================================
-// Crosswords — Admin (GET list, POST create, DELETE)
-// =====================================================================
-
-func adminCrosswordsHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	switch r.Method {
-	case http.MethodGet:
-		category := r.URL.Query().Get("category")
-		query := `SELECT id, title, COALESCE(category,'General'), COALESCE(difficulty,'Medium'), grid_rows, grid_cols, timer_minutes
-                  FROM puzzles WHERE grid_data IS NOT NULL`
-		args := []interface{}{}
-		if category != "" {
-			query += " AND category = ?"
-			args = append(args, category)
-		}
-		query += " ORDER BY id DESC"
-
-		rows, err := db.Query(query, args...)
-		if err != nil {
-			log.Println("adminCrosswordsHandler GET error:", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(Response{Error: "Database error"})
-			return
-		}
-		defer rows.Close()
-
-		type Summary struct {
-			ID           int    `json:"id"`
-			Title        string `json:"title"`
-			Category     string `json:"category"`
-			Difficulty   string `json:"difficulty"`
-			Rows         int    `json:"rows"`
-			Cols         int    `json:"cols"`
-			TimerMinutes int    `json:"timerMinutes"`
-		}
-		var puzzleList []Summary
-		for rows.Next() {
-			var p Summary
-			rows.Scan(&p.ID, &p.Title, &p.Category, &p.Difficulty, &p.Rows, &p.Cols, &p.TimerMinutes)
-			puzzleList = append(puzzleList, p)
-		}
-		if puzzleList == nil {
-			puzzleList = []Summary{}
-		}
-		json.NewEncoder(w).Encode(Response{Message: "Crosswords retrieved", Data: puzzleList})
-
-	case http.MethodPost:
-		var p Puzzle
-		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(Response{Error: "Invalid JSON"})
-			return
-		}
-
-		if p.Title == "" || p.Rows <= 0 || p.Cols <= 0 || len(p.GridData) == 0 {
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(Response{Error: "title, rows, cols and gridData are required"})
-			return
-		}
-
-		if p.Category == "" {
-			p.Category = "General"
-		}
-		if p.Difficulty == "" {
-			p.Difficulty = "Medium"
-		}
-		if p.TimerMinutes == 0 {
-			p.TimerMinutes = 10
-		}
-
-		gridBytes, _ := json.Marshal(p.GridData)
-		acrossBytes, _ := json.Marshal(p.AcrossClues)
-		downBytes, _ := json.Marshal(p.DownClues)
-
-		result, err := db.Exec(
-			`INSERT INTO puzzles
-             (title, category, difficulty, grid_rows, grid_cols, grid_data, across_clues, down_clues, timer_minutes)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			p.Title, p.Category, p.Difficulty, p.Rows, p.Cols,
-			string(gridBytes), string(acrossBytes), string(downBytes),
-			p.TimerMinutes,
-		)
-		if err != nil {
-			log.Println("adminCrosswordsHandler POST error:", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(Response{Error: "Failed to create crossword: " + err.Error()})
-			return
-		}
-
-		id, _ := result.LastInsertId()
-		p.ID = int(id)
-
-		log.Printf("✅ Crossword created: id=%d title=%q rows=%d cols=%d", p.ID, p.Title, p.Rows, p.Cols)
-		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(Response{
-			Message: "Crossword created successfully",
-			Data:    p,
-		})
-
-	case http.MethodDelete:
-		idStr := r.URL.Query().Get("id")
-		if idStr == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(Response{Error: "id query param is required"})
-			return
-		}
-		_, err := db.Exec("DELETE FROM puzzles WHERE id = ?", idStr)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(Response{Error: "Failed to delete crossword"})
-			return
-		}
-		log.Printf("🗑️  Crossword deleted: id=%s", idStr)
-		json.NewEncoder(w).Encode(Response{Message: "Crossword deleted"})
-
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
-	}
-}
-
-// =====================================================================
-// Crosswords — Admin Detail (GET + PUT + DELETE by ID)
-// =====================================================================
-
-func adminCrosswordDetailHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	idStr := strings.TrimPrefix(r.URL.Path, "/admin/crosswords/")
-	id, err := strconv.Atoi(idStr)
-	if err != nil || id <= 0 {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(Response{Error: "Invalid crossword ID"})
-		return
-	}
-
-	switch r.Method {
-	case http.MethodGet:
-		var p Puzzle
-		var gridJSON, acrossJSON, downJSON string
-		err = db.QueryRow(
-			`SELECT id, title, COALESCE(category,'General'), COALESCE(difficulty,'Medium'),
-			        grid_rows, grid_cols, grid_data, across_clues, down_clues, timer_minutes
-             FROM puzzles WHERE id = ?`, id,
-		).Scan(&p.ID, &p.Title, &p.Category, &p.Difficulty, &p.Rows, &p.Cols,
-			&gridJSON, &acrossJSON, &downJSON, &p.TimerMinutes)
-		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(Response{Error: "Crossword not found"})
-			return
-		}
-		if err != nil {
-			log.Println("adminCrosswordDetailHandler GET error:", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(Response{Error: err.Error()})
-			return
-		}
-		json.Unmarshal([]byte(gridJSON), &p.GridData)
-		json.Unmarshal([]byte(acrossJSON), &p.AcrossClues)
-		json.Unmarshal([]byte(downJSON), &p.DownClues)
-		json.NewEncoder(w).Encode(Response{Message: "Crossword retrieved", Data: p})
-
-	case http.MethodPut:
-		var p Puzzle
-		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(Response{Error: "Invalid JSON"})
-			return
-		}
-		if p.Title == "" || p.Rows <= 0 || p.Cols <= 0 || len(p.GridData) == 0 {
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(Response{Error: "title, rows, cols and gridData are required"})
-			return
-		}
-		if p.Category == "" {
-			p.Category = "General"
-		}
-		if p.Difficulty == "" {
-			p.Difficulty = "Medium"
-		}
-		gridBytes, _ := json.Marshal(p.GridData)
-		acrossBytes, _ := json.Marshal(p.AcrossClues)
-		downBytes, _ := json.Marshal(p.DownClues)
-
-		_, err = db.Exec(
-			`UPDATE puzzles
-             SET title=?, category=?, difficulty=?, grid_rows=?, grid_cols=?,
-                 grid_data=?, across_clues=?, down_clues=?, timer_minutes=?
-             WHERE id=?`,
-			p.Title, p.Category, p.Difficulty, p.Rows, p.Cols,
-			string(gridBytes), string(acrossBytes), string(downBytes),
-			p.TimerMinutes, id,
-		)
-		if err != nil {
-			log.Println("adminCrosswordDetailHandler PUT error:", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(Response{Error: "Failed to update crossword"})
-			return
-		}
-		p.ID = id
-		log.Printf("✅ Crossword updated: id=%d", id)
-		json.NewEncoder(w).Encode(Response{Message: "Crossword updated", Data: p})
-
-	case http.MethodDelete:
-		_, err = db.Exec("DELETE FROM puzzles WHERE id = ?", id)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(Response{Error: "Failed to delete crossword"})
-			return
-		}
-		log.Printf("🗑️  Crossword deleted: id=%d", id)
-		json.NewEncoder(w).Encode(Response{Message: "Crossword deleted"})
-
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(Response{Error: "Method not allowed"})
-	}
 }

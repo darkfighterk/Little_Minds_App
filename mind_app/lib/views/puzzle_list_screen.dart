@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
-import 'admin_gate_screen.dart';
-import 'play_puzzle_screen.dart';
+import 'create_puzzle_screen.dart'; // AdminGateScreen
+import 'play_puzzle_screen.dart'; // PlayPuzzleScreen
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Theme — matches create_puzzle_screen.dart
+// Theme
 // ─────────────────────────────────────────────────────────────────────────────
-
 const _bg = Color(0xFF0F1117);
 const _surface = Color(0xFF1A1D27);
 const _surfaceHigh = Color(0xFF23273A);
@@ -18,6 +18,10 @@ const _textPrimary = Color(0xFFF0F0F5);
 const _textSecondary = Color(0xFF9395A5);
 const _border = Color(0xFF2E3248);
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Puzzle List Screen
+// ─────────────────────────────────────────────────────────────────────────────
+
 class PuzzleListScreen extends StatefulWidget {
   const PuzzleListScreen({super.key});
 
@@ -26,10 +30,14 @@ class PuzzleListScreen extends StatefulWidget {
 }
 
 class _PuzzleListScreenState extends State<PuzzleListScreen> {
-  late Future<List<Map<String, dynamic>>> _puzzlesFuture;
-  String _search = '';
-  String _filterCategory = 'All';
-  String _filterDifficulty = 'All';
+  List<dynamic> _puzzles = [];
+  List<dynamic> _filtered = [];
+  bool _loading = true;
+  String? _error;
+
+  final _searchCtrl = TextEditingController();
+  String _selectedCategory = 'All';
+  String _selectedDifficulty = 'All';
 
   static const _categories = [
     'All',
@@ -47,29 +55,63 @@ class _PuzzleListScreenState extends State<PuzzleListScreen> {
   void initState() {
     super.initState();
     _load();
+    _searchCtrl.addListener(_applyFilters);
   }
 
-  void _load() {
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  // ── Data ──────────────────────────────────────────────────────────────────
+
+  Future<void> _load() async {
     setState(() {
-      _puzzlesFuture = ApiService().adminGetCrosswords('LittleMind@Admin2024');
+      _loading = true;
+      _error = null;
+    });
+    try {
+      // ✅ PUBLIC endpoint — no admin key needed
+      final data = await ApiService().getCrosswords();
+      if (!mounted) return;
+      setState(() {
+        _puzzles = data;
+        _loading = false;
+      });
+      _applyFilters();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = 'Could not load puzzles. Check your connection and try again.';
+      });
+    }
+  }
+
+  void _applyFilters() {
+    final query = _searchCtrl.text.toLowerCase();
+    setState(() {
+      _filtered = _puzzles.where((p) {
+        final title = (p['title'] ?? '').toString().toLowerCase();
+        final cat = (p['category'] ?? '').toString();
+        final diff = (p['difficulty'] ?? '').toString();
+        return (query.isEmpty || title.contains(query)) &&
+            (_selectedCategory == 'All' || cat == _selectedCategory) &&
+            (_selectedDifficulty == 'All' || diff == _selectedDifficulty);
+      }).toList();
     });
   }
 
-  List<Map<String, dynamic>> _filtered(List<Map<String, dynamic>> all) {
-    return all.where((p) {
-      final title = (p['title'] ?? '').toString().toLowerCase();
-      final cat = (p['category'] ?? '').toString();
-      final diff = (p['difficulty'] ?? '').toString();
-      final matchSearch =
-          _search.isEmpty || title.contains(_search.toLowerCase());
-      final matchCat = _filterCategory == 'All' || cat == _filterCategory;
-      final matchDiff = _filterDifficulty == 'All' || diff == _filterDifficulty;
-      return matchSearch && matchCat && matchDiff;
-    }).toList();
+  void _goToAdmin({int? editId}) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AdminGateScreen()),
+    ).then((_) => _load());
   }
 
-  Color _diffColor(String? d) {
-    switch (d) {
+  Color _difficultyColor(String diff) {
+    switch (diff) {
       case 'Easy':
         return _success;
       case 'Hard':
@@ -79,236 +121,223 @@ class _PuzzleListScreenState extends State<PuzzleListScreen> {
     }
   }
 
+  // ── Build ─────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bg,
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          SliverAppBar(
-            backgroundColor: _surface,
-            surfaceTintColor: Colors.transparent,
-            pinned: true,
-            expandedHeight: 120,
-            elevation: 0,
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              title: Row(
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [_accent, Color(0xFFBB5CF6)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.grid_4x4_rounded,
-                        color: Colors.white, size: 16),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'Crosswords',
-                    style: TextStyle(
-                      color: _textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF1A1D27), Color(0xFF12141E)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
-                child: Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 48, right: 20),
-                    child: IconButton(
-                      onPressed: _load,
-                      icon: const Icon(Icons.refresh_rounded,
-                          color: _textSecondary, size: 20),
-                      tooltip: 'Refresh',
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(1),
-              child: Container(height: 1, color: _border),
-            ),
+      appBar: AppBar(
+        backgroundColor: _surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: _textSecondary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Crossword Puzzles',
+          style: TextStyle(
+              color: _textPrimary, fontSize: 18, fontWeight: FontWeight.w600),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.admin_panel_settings_rounded,
+                color: _accentSoft),
+            tooltip: 'Admin',
+            onPressed: () => _goToAdmin(),
           ),
         ],
-        body: FutureBuilder<List<Map<String, dynamic>>>(
-          future: _puzzlesFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator(color: _accent),
-              );
-            }
-            if (snapshot.hasError) {
-              return _ErrorState(
-                message: snapshot.error.toString(),
-                onRetry: _load,
-              );
-            }
-
-            final all = snapshot.data ?? [];
-            final filtered = _filtered(all);
-
-            return CustomScrollView(
-              slivers: [
-                // Search + filters
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    child: Column(
-                      children: [
-                        // Search bar
-                        Container(
-                          decoration: BoxDecoration(
-                            color: _surface,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: _border),
-                          ),
-                          child: TextField(
-                            onChanged: (v) => setState(() => _search = v),
-                            style: const TextStyle(
-                                color: _textPrimary, fontSize: 14),
-                            decoration: const InputDecoration(
-                              hintText: 'Search puzzles…',
-                              hintStyle: TextStyle(
-                                  color: _textSecondary, fontSize: 14),
-                              prefixIcon: Icon(Icons.search_rounded,
-                                  color: _textSecondary, size: 18),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 12),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        // Filter chips row
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              ..._categories.map((cat) => _FilterChip(
-                                    label: cat,
-                                    selected: _filterCategory == cat,
-                                    onTap: () =>
-                                        setState(() => _filterCategory = cat),
-                                  )),
-                              const SizedBox(width: 8),
-                              Container(width: 1, height: 20, color: _border),
-                              const SizedBox(width: 8),
-                              ..._difficulties.map((d) => _FilterChip(
-                                    label: d,
-                                    selected: _filterDifficulty == d,
-                                    color: d == 'Easy'
-                                        ? _success
-                                        : d == 'Hard'
-                                            ? _danger
-                                            : null,
-                                    onTap: () =>
-                                        setState(() => _filterDifficulty = d),
-                                  )),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        // Stats bar
-                        Row(
-                          children: [
-                            Text(
-                              '${filtered.length} puzzle${filtered.length == 1 ? '' : 's'}',
-                              style: const TextStyle(
-                                  color: _textSecondary, fontSize: 12),
-                            ),
-                            const Spacer(),
-                            if (all.isNotEmpty)
-                              Text(
-                                '${all.length} total',
-                                style: const TextStyle(
-                                    color: _textSecondary, fontSize: 12),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // List or empty state
-                if (filtered.isEmpty)
-                  SliverFillRemaining(
-                    child: _EmptyState(
-                      hasFilters: _search.isNotEmpty ||
-                          _filterCategory != 'All' ||
-                          _filterDifficulty != 'All',
-                      onClear: () => setState(() {
-                        _search = '';
-                        _filterCategory = 'All';
-                        _filterDifficulty = 'All';
-                      }),
-                    ),
-                  )
-                else
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _PuzzleCard(
-                          puzzle: filtered[index],
-                          diffColor: _diffColor(filtered[index]['difficulty']),
-                          onPlay: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => PlayPuzzleScreen(
-                                  puzzleId: filtered[index]['id']),
-                            ),
-                          ),
-                          onEdit: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => AdminGateScreen(
-                                editId: filtered[index]['id'],
-                              ),
-                            ),
-                          ).then((_) => _load()),
-                        ),
-                        childCount: filtered.length,
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          },
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: _border),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const AdminGateScreen(),
-          ),
-        ).then((_) => _load()),
+        onPressed: () => _goToAdmin(),
         backgroundColor: _accent,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text(
-          'New Puzzle',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        label: const Text('New Puzzle',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+      ),
+      body: Column(
+        children: [
+          _buildSearchAndFilters(),
+          Expanded(child: _buildBody()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchAndFilters() {
+    return Container(
+      color: _surface,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Column(
+        children: [
+          // Search bar
+          TextField(
+            controller: _searchCtrl,
+            style: const TextStyle(color: _textPrimary, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: 'Search puzzles…',
+              hintStyle: const TextStyle(color: _textSecondary, fontSize: 14),
+              prefixIcon: const Icon(Icons.search_rounded,
+                  color: _textSecondary, size: 20),
+              suffixIcon: _searchCtrl.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.close_rounded,
+                          color: _textSecondary, size: 18),
+                      onPressed: () {
+                        _searchCtrl.clear();
+                        _applyFilters();
+                      },
+                    )
+                  : null,
+              filled: true,
+              fillColor: _bg,
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: _border)),
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: _border)),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: _accent, width: 1.5)),
+            ),
+          ),
+          const SizedBox(height: 10),
+          // Filter chips
+          SizedBox(
+            height: 32,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                ..._categories.map((c) => _FilterChip(
+                      label: c,
+                      active: _selectedCategory == c,
+                      onTap: () {
+                        setState(() => _selectedCategory = c);
+                        _applyFilters();
+                      },
+                    )),
+                const SizedBox(width: 8),
+                Container(width: 1, height: 24, color: _border),
+                const SizedBox(width: 8),
+                ..._difficulties.map((d) => _FilterChip(
+                      label: d,
+                      active: _selectedDifficulty == d,
+                      color: d == 'Easy'
+                          ? _success
+                          : d == 'Hard'
+                              ? _danger
+                              : null,
+                      onTap: () {
+                        setState(() => _selectedDifficulty = d);
+                        _applyFilters();
+                      },
+                    )),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator(color: _accent));
+    }
+    if (_error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.wifi_off_rounded,
+                  color: _textSecondary, size: 56),
+              const SizedBox(height: 16),
+              Text(_error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: _textSecondary, fontSize: 14)),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _load,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _accent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (_filtered.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('🧩', style: TextStyle(fontSize: 56)),
+              const SizedBox(height: 16),
+              Text(
+                _puzzles.isEmpty
+                    ? 'No puzzles yet.\nTap "+ New Puzzle" to create one!'
+                    : 'No puzzles match your filters.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: _textSecondary, fontSize: 14),
+              ),
+              if (_puzzles.isEmpty) ...[
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () => _goToAdmin(),
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('Create First Puzzle'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _accent,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _load,
+      color: _accent,
+      backgroundColor: _surface,
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+        itemCount: _filtered.length,
+        itemBuilder: (_, i) => _PuzzleCard(
+          puzzle: _filtered[i],
+          onPlay: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PlayPuzzleScreen(
+                puzzleId: _filtered[i]['id'] as int,
+              ),
+            ),
+          ),
+          onEdit: () => _goToAdmin(editId: _filtered[i]['id'] as int?),
+          difficultyColor:
+              _difficultyColor((_filtered[i]['difficulty'] ?? '').toString()),
         ),
       ),
     );
@@ -321,15 +350,15 @@ class _PuzzleListScreenState extends State<PuzzleListScreen> {
 
 class _PuzzleCard extends StatelessWidget {
   final Map<String, dynamic> puzzle;
-  final Color diffColor;
   final VoidCallback onPlay;
   final VoidCallback onEdit;
+  final Color difficultyColor;
 
   const _PuzzleCard({
     required this.puzzle,
-    required this.diffColor,
     required this.onPlay,
     required this.onEdit,
+    required this.difficultyColor,
   });
 
   @override
@@ -337,191 +366,117 @@ class _PuzzleCard extends StatelessWidget {
     final title = puzzle['title'] ?? 'Untitled';
     final category = puzzle['category'] ?? 'General';
     final difficulty = puzzle['difficulty'] ?? 'Medium';
-    final rows = puzzle['rows'] ?? 0;
-    final cols = puzzle['cols'] ?? 0;
-    final timer = puzzle['timerMinutes'] ?? 0;
+    // Backend may return 'rows'/'cols' or 'grid_rows'/'grid_cols'
+    final rows = puzzle['rows'] ?? puzzle['grid_rows'] ?? '?';
+    final cols = puzzle['cols'] ?? puzzle['grid_cols'] ?? '?';
+    final timer = puzzle['timerMinutes'] ?? puzzle['timer_minutes'] ?? 10;
     final id = puzzle['id'];
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: _surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _border),
       ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: onPlay,
-          borderRadius: BorderRadius.circular(16),
-          splashColor: _accent.withOpacity(0.08),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Grid preview icon
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: _accent.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _accent.withOpacity(0.2)),
-                      ),
-                      child: const Icon(Icons.grid_on_rounded,
-                          color: _accentSoft, size: 22),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: const TextStyle(
-                              color: _textPrimary,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              _MiniChip(label: category, color: _accentSoft),
-                              const SizedBox(width: 6),
-                              _MiniChip(label: difficulty, color: diffColor),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Edit button
-                    IconButton(
-                      icon: const Icon(Icons.edit_rounded, size: 16),
-                      color: _textSecondary,
-                      onPressed: onEdit,
-                      style: IconButton.styleFrom(
-                        backgroundColor: _surfaceHigh,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.all(8),
-                        minimumSize: const Size(32, 32),
-                      ),
-                    ),
-                  ],
+                Expanded(
+                  child: Text(title,
+                      style: const TextStyle(
+                          color: _textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600)),
                 ),
-                const SizedBox(height: 12),
-                const Divider(height: 1, color: _border),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    _StatItem(
-                        icon: Icons.grid_4x4_rounded, label: '${rows}×$cols'),
-                    const SizedBox(width: 16),
-                    _StatItem(icon: Icons.timer_rounded, label: '$timer min'),
-                    const SizedBox(width: 16),
-                    _StatItem(icon: Icons.tag_rounded, label: '#$id'),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: _accent,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.play_arrow_rounded,
-                              color: Colors.white, size: 14),
-                          SizedBox(width: 4),
-                          Text(
-                            'Play',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                IconButton(
+                  icon: const Icon(Icons.edit_rounded,
+                      color: _textSecondary, size: 18),
+                  onPressed: onEdit,
+                  style: IconButton.styleFrom(
+                    backgroundColor: _surfaceHigh,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.all(6),
+                    minimumSize: const Size(32, 32),
+                  ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                _Tag(label: category, color: _accentSoft),
+                _Tag(label: difficulty, color: difficultyColor, filled: true),
+                _Tag(label: '${rows}×$cols grid', color: _textSecondary),
+                _Tag(label: '⏱ $timer min', color: _textSecondary),
+                if (id != null) _Tag(label: '#$id', color: _border),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: onPlay,
+                icon: const Icon(Icons.play_arrow_rounded,
+                    size: 18, color: Colors.white),
+                label: const Text('Play',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.w600)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _accent,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  elevation: 0,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Small helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _MiniChip extends StatelessWidget {
+class _Tag extends StatelessWidget {
   final String label;
   final Color color;
-
-  const _MiniChip({required this.label, required this.color});
+  final bool filled;
+  const _Tag({required this.label, required this.color, this.filled = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.25)),
+        color: filled ? color.withOpacity(0.15) : _surfaceHigh,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: filled ? color.withOpacity(0.4) : _border),
       ),
-      child: Text(
-        label,
-        style:
-            TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w500),
-      ),
-    );
-  }
-}
-
-class _StatItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _StatItem({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 12, color: _textSecondary),
-        const SizedBox(width: 4),
-        Text(label,
-            style: const TextStyle(color: _textSecondary, fontSize: 11)),
-      ],
+      child: Text(label,
+          style: TextStyle(
+              color: filled ? color : _textSecondary,
+              fontSize: 11,
+              fontWeight: FontWeight.w500)),
     );
   }
 }
 
 class _FilterChip extends StatelessWidget {
   final String label;
-  final bool selected;
-  final Color? color;
+  final bool active;
   final VoidCallback onTap;
-
+  final Color? color;
   const _FilterChip({
     required this.label,
-    required this.selected,
+    required this.active,
     required this.onTap,
     this.color,
   });
@@ -533,141 +488,19 @@ class _FilterChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        margin: const EdgeInsets.only(right: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? c.withOpacity(0.18) : _surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: selected ? c.withOpacity(0.5) : _border,
-          ),
+          color: active ? c.withOpacity(0.15) : _surfaceHigh,
+          borderRadius: BorderRadius.circular(20),
+          border:
+              Border.all(color: active ? c : _border, width: active ? 1.5 : 1),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? c : _textSecondary,
-            fontSize: 12,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ErrorState extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _ErrorState({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: _danger.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child:
-                  const Icon(Icons.wifi_off_rounded, color: _danger, size: 30),
-            ),
-            const SizedBox(height: 16),
-            const Text('Connection Error',
-                style: TextStyle(
-                    color: _textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600)),
-            const SizedBox(height: 6),
-            Text(
-              message.length > 80 ? '${message.substring(0, 80)}…' : message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: _textSecondary, fontSize: 12),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded, size: 16),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _accent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  final bool hasFilters;
-  final VoidCallback onClear;
-
-  const _EmptyState({required this.hasFilters, required this.onClear});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: _accent.withOpacity(0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                hasFilters
-                    ? Icons.filter_list_off_rounded
-                    : Icons.grid_off_rounded,
-                color: _textSecondary,
-                size: 32,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              hasFilters ? 'No matches' : 'No puzzles yet',
-              style: const TextStyle(
-                  color: _textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              hasFilters
-                  ? 'Try adjusting your filters'
-                  : 'Tap "New Puzzle" to create your first crossword',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: _textSecondary, fontSize: 13),
-            ),
-            if (hasFilters) ...[
-              const SizedBox(height: 20),
-              TextButton.icon(
-                onPressed: onClear,
-                icon: const Icon(Icons.close_rounded, size: 14),
-                label: const Text('Clear filters'),
-                style: TextButton.styleFrom(foregroundColor: _accentSoft),
-              ),
-            ],
-          ],
-        ),
+        child: Text(label,
+            style: TextStyle(
+                color: active ? c : _textSecondary,
+                fontSize: 12,
+                fontWeight: active ? FontWeight.w600 : FontWeight.w400)),
       ),
     );
   }

@@ -1,11 +1,18 @@
+// lib/views/main_home_view.dart
+
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mind_app/views/puzzle_list_screen.dart';
 import 'package:mind_app/views/text_to_image.dart';
 import '../models/user_model.dart';
 import 'home_view.dart';
 import 'bottom_nav_bar.dart';
+import 'puzzles_list_view.dart';
+import 'story_time_page.dart';
+import 'drawing_pad_view.dart';
+import 'puzzle_list_screen.dart'; // ← Crossword public list
+import 'create_puzzle_screen.dart'; // ← AdminGateScreen (crossword admin)
+import 'admin_view.dart'; // ← AdminGateView (quiz admin)
 
 class HomePage extends StatefulWidget {
   final User user;
@@ -91,6 +98,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  // ── Header (unchanged except Settings icon added top-right) ───────────────
+
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
@@ -133,7 +142,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       ),
                     ),
                     Text(
-                      'Hi, ${widget.user.name ?? "Explorer"}! 🌟',
+                      'Hi, ${widget.user.name}! 🌟',
                       style: GoogleFonts.fredoka(
                         fontSize: 26,
                         color: const Color(0xFFFFD700),
@@ -141,6 +150,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     ),
                   ],
                 ),
+              ),
+              // ── Settings icon → admin panel ──────────────────────────
+              IconButton(
+                onPressed: _showSettingsSheet,
+                icon: const Icon(Icons.settings_rounded,
+                    color: Colors.white54, size: 26),
+                tooltip: 'Settings',
               ),
             ],
           ),
@@ -186,6 +202,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  // ── Grid (all original buttons kept + Crossword added) ────────────────────
+
   Widget _buildMainButtonsGrid() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -196,6 +214,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         children: [
+          // ── original buttons (unchanged) ─────────────────────────────
           _buildBigButton(
             title: 'Quiz Arena',
             icon: Icons.quiz_rounded,
@@ -211,33 +230,55 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             accentColor: const Color(0xFF66BB6A),
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => const TextFromImagePage(),
-              ),
+              MaterialPageRoute(builder: (_) => const TextFromImagePage()),
             ),
           ),
           _buildBigButton(
-            title: 'Text to Image',
-            icon: Icons.image_rounded,
-            accentColor: const Color(0xFF66BB6A),
+            title: 'Notebook',
+            icon: Icons.edit_note_rounded,
+            accentColor: const Color(0xFF42A5F5),
+            onTap: () => _showComingSoon('Notebook 📝'),
+          ),
+          _buildBigButton(
+            title: 'Story Time',
+            icon: Icons.menu_book_rounded,
+            accentColor: const Color(0xFFFFB74D),
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const PuzzleListScreen(),
+                builder: (_) => StoryTimePage(user: widget.user),
               ),
             ),
           ),
           _buildBigButton(
-            title: 'coming soon 1',
-            icon: Icons.menu_book_rounded,
-            accentColor: const Color(0xFFFFB74D),
-            onTap: () => _showComingSoon('Stories 📖✨'),
+            title: 'Drawing Pad',
+            icon: Icons.brush_rounded,
+            accentColor: const Color(0xFFAB47BC),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DrawingPadView()),
+            ),
           ),
           _buildBigButton(
-            title: 'coming soon2',
-            icon: Icons.sports_esports_rounded,
-            accentColor: const Color(0xFFEC407A),
-            onTap: () => _showComingSoon('Fun Games 🎮'),
+            title: 'Puzzles',
+            icon: Icons.extension_rounded,
+            accentColor: const Color(0xFFFF7043),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PuzzlesListView(user: widget.user),
+              ),
+            ),
+          ),
+          // ── NEW: Crossword ────────────────────────────────────────────
+          _buildBigButton(
+            title: 'Crossword',
+            icon: Icons.grid_on_rounded,
+            accentColor: const Color(0xFF6C63FF),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PuzzleListScreen()),
+            ),
           ),
         ],
       ),
@@ -292,12 +333,91 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  // ── Settings bottom sheet → admin gates ───────────────────────────────────
+
+  void _showSettingsSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1A1D27),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text('Settings',
+                  style:
+                      GoogleFonts.fredoka(fontSize: 24, color: Colors.white)),
+              const SizedBox(height: 4),
+              Text('Admin tools',
+                  style:
+                      GoogleFonts.nunito(fontSize: 13, color: Colors.white38)),
+              const SizedBox(height: 20),
+
+              // Crossword Admin
+              _SettingsTile(
+                icon: Icons.grid_4x4_rounded,
+                iconColor: const Color(0xFF6C63FF),
+                title: 'Crossword Admin',
+                subtitle: 'Create & manage crossword puzzles',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminGateScreen()),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+
+              // Quiz Admin
+              _SettingsTile(
+                icon: Icons.quiz_rounded,
+                iconColor: const Color(0xFF66BB6A),
+                title: 'Quiz Admin',
+                subtitle: 'Create & manage quiz subjects and levels',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminGateView()),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showComingSoon(String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$feature coming soon!')),
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Unchanged helper widgets
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _GlowOrb extends StatelessWidget {
   final double size;
@@ -316,6 +436,65 @@ class _GlowOrb extends StatelessWidget {
         shape: BoxShape.circle,
         gradient: RadialGradient(
           colors: [color.withOpacity(opacity), color.withOpacity(0.0)],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _SettingsTile({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white.withOpacity(0.05),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: iconColor, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: GoogleFonts.fredoka(
+                            fontSize: 16, color: Colors.white)),
+                    Text(subtitle,
+                        style: GoogleFonts.nunito(
+                            fontSize: 12, color: Colors.white54)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: Colors.white38),
+            ],
+          ),
         ),
       ),
     );

@@ -36,16 +36,15 @@ class PlayPuzzleScreen extends StatefulWidget {
 
 class _PlayPuzzleScreenState extends State<PlayPuzzleScreen>
     with TickerProviderStateMixin {
-  // ── Data ────────────────────────────────────────────────────────────────────
-  // getPuzzle returns Map<String,dynamic>; we convert it to Puzzle here
+  // ── Data ─────────────────────────────────────────────────────────────────
   late Future<Puzzle> _puzzleFuture;
   Puzzle? _puzzle;
 
-  // ── Controllers — one per cell, keyed by "row_col" ──────────────────────────
+  // ── Controllers — keyed by "row_col" ─────────────────────────────────────
   final Map<String, TextEditingController> _controllers = {};
   final Map<String, FocusNode> _focusNodes = {};
 
-  // ── Game state ───────────────────────────────────────────────────────────────
+  // ── Game state ────────────────────────────────────────────────────────────
   bool _showAnswers = false;
   bool _timeUp = false;
   bool _completed = false;
@@ -54,17 +53,27 @@ class _PlayPuzzleScreenState extends State<PlayPuzzleScreen>
   int? _selectedRow;
   int? _selectedCol;
 
-  // ── Animation ────────────────────────────────────────────────────────────────
+  // ── Animation ─────────────────────────────────────────────────────────────
   late AnimationController _pulseCtrl;
   late AnimationController _celebCtrl;
 
-  // ── Helper: fetch map then build Puzzle ──────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  // KEY FIX: call getCrossword (→ /crosswords/$id), not getPuzzle (→ /puzzles/$id)
+  // Also normalise the map so Puzzle.fromJson always finds the right keys.
+  // ─────────────────────────────────────────────────────────────────────────
   Future<Puzzle> _fetchPuzzle(int id) async {
-    final map = await ApiService().getPuzzle(id);
-    // Ensure list fields are never null
-    map['gridData'] = _safeList(map['gridData']);
-    map['acrossClues'] = _safeList(map['acrossClues']);
-    map['downClues'] = _safeList(map['downClues']);
+    // ✅ correct endpoint
+    final map = await ApiService().getCrossword(id);
+
+    // Backend returns camelCase (gridData, acrossClues, downClues, timerMinutes).
+    // Normalise just in case the server ever returns snake_case variants.
+    map['gridData'] = _safeList(map['gridData'] ?? map['grid_data']);
+    map['acrossClues'] = _safeList(map['acrossClues'] ?? map['across_clues']);
+    map['downClues'] = _safeList(map['downClues'] ?? map['down_clues']);
+    map['timerMinutes'] = map['timerMinutes'] ?? map['timer_minutes'] ?? 10;
+    map['rows'] = map['rows'] ?? map['grid_rows'] ?? 10;
+    map['cols'] = map['cols'] ?? map['grid_cols'] ?? 10;
+
     return Puzzle.fromJson(map);
   }
 
@@ -98,7 +107,7 @@ class _PlayPuzzleScreenState extends State<PlayPuzzleScreen>
     super.dispose();
   }
 
-  // ── Setup ────────────────────────────────────────────────────────────────────
+  // ── Setup ─────────────────────────────────────────────────────────────────
 
   void _setupPuzzle(Puzzle puzzle) {
     _puzzle = puzzle;
@@ -128,19 +137,17 @@ class _PlayPuzzleScreenState extends State<PlayPuzzleScreen>
     });
   }
 
-  // ── Input handling ───────────────────────────────────────────────────────────
+  // ── Input ─────────────────────────────────────────────────────────────────
 
   void _onCellChanged(Cell cell, int r, int c, String value) {
     if (_timeUp || _showAnswers) return;
     final letter = value.isEmpty ? '' : value[value.length - 1].toUpperCase();
-
     setState(() {
       cell.userInput = letter;
       _controllers['${r}_$c']!.text = letter;
       _controllers['${r}_$c']!.selection =
           TextSelection.collapsed(offset: letter.length);
     });
-
     if (letter.isNotEmpty) _advanceFocus(r, c);
     _checkCompletion();
   }
@@ -209,7 +216,7 @@ class _PlayPuzzleScreenState extends State<PlayPuzzleScreen>
     _startCountdown(_puzzle!.timerMinutes);
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────────
+  // ── Helpers ───────────────────────────────────────────────────────────────
 
   String _formatTime() {
     final m = _remainingSeconds ~/ 60;
@@ -231,8 +238,8 @@ class _PlayPuzzleScreenState extends State<PlayPuzzleScreen>
 
   Color _cellColor(Cell cell, int r, int c) {
     if (cell.isBlack) return _cellBlack;
-    final selected = _selectedRow == r && _selectedCol == c;
-    if (selected) return _accent.withOpacity(0.15);
+    if (_selectedRow == r && _selectedCol == c)
+      return _accent.withOpacity(0.15);
     if (_showAnswers) return const Color(0xFFFFF8F8);
     if (cell.userInput.isNotEmpty) {
       return cell.isCorrect
@@ -271,14 +278,12 @@ class _PlayPuzzleScreenState extends State<PlayPuzzleScreen>
           }
 
           final puzzle = snap.data!;
-
           if (_puzzle == null) {
             _setupPuzzle(puzzle);
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _startCountdown(puzzle.timerMinutes);
             });
           }
-
           return _buildMain(puzzle);
         },
       ),
@@ -499,7 +504,6 @@ class _PlayPuzzleScreenState extends State<PlayPuzzleScreen>
 
   Widget _buildCell(Cell cell, int r, int c, double size) {
     final key = '${r}_$c';
-
     if (cell.isBlack) {
       return Container(width: size, height: size, color: _cellBlack);
     }
@@ -663,7 +667,7 @@ class _PlayPuzzleScreenState extends State<PlayPuzzleScreen>
     );
   }
 
-  // ── Overlays ──────────────────────────────────────────────────────────────
+  // ── Banners ───────────────────────────────────────────────────────────────
 
   Widget _buildCompletionBanner() {
     return AnimatedBuilder(
@@ -710,13 +714,12 @@ class _PlayPuzzleScreenState extends State<PlayPuzzleScreen>
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Clue group widget
+// Clue group
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ClueGroup extends StatelessWidget {
   final String title;
   final List<Clue> clues;
-
   const _ClueGroup({required this.title, required this.clues});
 
   @override
