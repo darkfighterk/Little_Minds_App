@@ -1,29 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
-  // ← Replace with your actual GitHub repository URL
-  static const String githubRepoUrl = 'https://github.com/darkfighterk/Little_Minds_App.git';
+  static const String githubRepoUrl =
+      'https://github.com/darkfighterk/Little_Minds_App.git';
 
-  Future<void> _launchUrl() async {
-    final Uri url = Uri.parse(githubRepoUrl);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(
-        url,
-        mode: LaunchMode.externalApplication,
-      );
-    } else {
-      // Optional: handle launch failure (e.g. show SnackBar)
-    }
+  void _copyToClipboard(BuildContext context) {
+    Clipboard.setData(const ClipboardData(text: githubRepoUrl));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('GitHub link copied to clipboard!'),
+        backgroundColor: const Color(0xFF6B48FF),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -44,14 +41,14 @@ class AboutPage extends StatelessWidget {
       ),
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              const Color(0xFF6B48FF),    // vibrant purple (matches ProfileView top)
-              const Color(0xFF4A2B99),    // deeper cosmic purple
-              const Color(0xFF2A1A66),    // dark space purple (matches ProfileView bottom)
+              Color(0xFF6B48FF),
+              Color(0xFF4A2B99),
+              Color(0xFF2A1A66),
             ],
           ),
         ),
@@ -63,7 +60,7 @@ class AboutPage extends StatelessWidget {
               children: [
                 const SizedBox(height: 40),
 
-                // No logo / no sparkle → just title & tagline
+                // Title
                 const Text(
                   "Little Minds",
                   style: TextStyle(
@@ -103,24 +100,20 @@ class AboutPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(color: Colors.white.withOpacity(0.18)),
                   ),
-                  child: Column(
-                    children: [
-                      Text(
-                        "Welcome to Little Minds! 🌈✨\n\n"
-                        "Little Minds is a safe, colorful, and joyful learning app made especially for children aged 2–7.\n\n"
-                        "Through playful games, delightful songs, interactive stories, shapes, colors, numbers, letters, animals and kind characters — every moment helps tiny minds grow with happiness and wonder.\n\n"
-                        "• No advertisements\n"
-                        "• No complicated menus\n"
-                        "• Just safe, happy learning adventures!\n\n"
-                        "Designed with love to spark curiosity and build confidence.",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white.withOpacity(0.94),
-                          height: 1.55,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                  child: Text(
+                    "Welcome to Little Minds! 🌈✨\n\n"
+                    "Little Minds is a safe, colorful, and joyful learning app made especially for children aged 2–7.\n\n"
+                    "Through playful games, delightful songs, interactive stories, shapes, colors, numbers, letters, animals and kind characters — every moment helps tiny minds grow with happiness and wonder.\n\n"
+                    "• No advertisements\n"
+                    "• No complicated menus\n"
+                    "• Just safe, happy learning adventures!\n\n"
+                    "Designed with love to spark curiosity and build confidence.",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.94),
+                      height: 1.55,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
 
@@ -137,18 +130,20 @@ class AboutPage extends StatelessWidget {
 
                 const SizedBox(height: 24),
 
+                // GitHub button — copies link (no url_launcher needed)
                 GestureDetector(
-                  onTap: _launchUrl,
+                  onTap: () => _copyToClipboard(context),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 18),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 36, vertical: 18),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.20),
                       borderRadius: BorderRadius.circular(32),
                       border: Border.all(color: Colors.white.withOpacity(0.35)),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
+                      children: [
                         Icon(Icons.code_rounded, color: Colors.white, size: 30),
                         SizedBox(width: 16),
                         Text(
@@ -164,17 +159,42 @@ class AboutPage extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
 
-                Text(
-                  "Open source • Made for little dreamers everywhere",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withOpacity(0.65),
+                // Show the URL so users can copy/open manually
+                GestureDetector(
+                  onLongPress: () => _copyToClipboard(context),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      githubRepoUrl,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.white.withOpacity(0.65),
+                        fontFamily: 'monospace',
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
 
-                const SizedBox(height: 80),
+                const SizedBox(height: 16),
+
+                Text(
+                  "Tap to copy link • Open source • Made for little dreamers everywhere",
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white.withOpacity(0.55),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 60),
 
                 Text(
                   "© ${DateTime.now().year} Little Minds • Happy Learning!",

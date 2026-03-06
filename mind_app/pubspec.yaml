@@ -33,8 +33,7 @@ dependencies:
   url_launcher: ^6.3.0
 
   ##text file need 
-  #image_picker: ^0.8.7+5               # camera/gallery
-  google_mlkit_text_recognition: ^0.7.0 # OCR
+  #image_picker: ^0.8.7+5               # camera/gallery # OCR
   #path_provider: ^2.0.14               # save files
   pdf: ^3.10.0                         # generate PDF
   open_file: ^3.2.1   
@@ -48,7 +47,7 @@ dependencies:
   image_picker: ^1.1.2
 
   # ── PDF & Text ──────────────────────────────────────────────────────────────
-  pdf: ^3.10.0
+ 
   google_mlkit_text_recognition: ^0.7.0   # OCR / text recognition
 
   # ── Internationalization & Utilities ────────────────────────────────────────
