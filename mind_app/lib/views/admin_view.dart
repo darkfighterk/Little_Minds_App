@@ -9,6 +9,7 @@
 //   Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminGateView()));
 // ============================================================
 
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -152,17 +153,88 @@ class _AdminGateViewState extends State<AdminGateView> {
 }
 
 // =====================================================================
-// MAIN ADMIN VIEW — 4-step wizard
-// Steps: 0=Subject  1=Level  2=Questions  3=Review & Publish
+// MAIN ADMIN VIEW — mode selector: Quiz | Puzzles
 // =====================================================================
 
 class AdminView extends StatefulWidget {
   const AdminView({super.key});
   @override
-  State<AdminView> createState() => _AdminViewState();
+  State<AdminView> createState() => _AdminModeState();
 }
 
-class _AdminViewState extends State<AdminView> {
+enum _AdminMode { quiz, puzzle, story }
+
+class _AdminModeState extends State<AdminView> {
+  _AdminMode _mode = _AdminMode.quiz;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _bg,
+      appBar: AppBar(
+        backgroundColor: _card,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          _mode == _AdminMode.quiz
+              ? 'Quiz Creator'
+              : _mode == _AdminMode.puzzle
+                  ? 'Puzzle Creator'
+                  : 'Story Creator',
+          style: GoogleFonts.fredoka(fontSize: 22, color: Colors.white),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.close_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(52),
+          child: Container(
+            color: _card,
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+            child: Row(children: [
+              _TabChip(
+                label: '📝  Quiz',
+                active: _mode == _AdminMode.quiz,
+                onTap: () => setState(() => _mode = _AdminMode.quiz),
+              ),
+              const SizedBox(width: 10),
+              _TabChip(
+                label: '🧩  Puzzles',
+                active: _mode == _AdminMode.puzzle,
+                onTap: () => setState(() => _mode = _AdminMode.puzzle),
+              ),
+              const SizedBox(width: 10),
+              _TabChip(
+                label: '📖  Stories',
+                active: _mode == _AdminMode.story,
+                onTap: () => setState(() => _mode = _AdminMode.story),
+              ),
+            ]),
+          ),
+        ),
+      ),
+      body: _mode == _AdminMode.quiz
+          ? const _QuizWizard()
+          : _mode == _AdminMode.puzzle
+              ? const _PuzzleWizard()
+              : const _StoryWizard(),
+    );
+  }
+}
+
+// =====================================================================
+// QUIZ WIZARD (original quiz creation wizard)
+// Steps: 0=Subject  1=Level  2=Questions  3=Review & Publish
+// =====================================================================
+
+class _QuizWizard extends StatefulWidget {
+  const _QuizWizard();
+  @override
+  State<_QuizWizard> createState() => _QuizWizardState();
+}
+
+class _QuizWizardState extends State<_QuizWizard> {
   final AdminService _svc = AdminService();
   final PageController _pageCtrl = PageController();
   int _step = 0;
@@ -459,28 +531,10 @@ class _AdminViewState extends State<AdminView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _bg,
-      appBar: AppBar(
-        backgroundColor: _card,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: Text('Quiz Creator',
-            style: GoogleFonts.fredoka(fontSize: 22, color: Colors.white)),
-        leading: _step > 0 && !_published
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                onPressed: () => _goTo(_step - 1),
-              )
-            : IconButton(
-                icon: const Icon(Icons.close_rounded),
-                onPressed: () => Navigator.pop(context),
-              ),
-      ),
-      body: _published ? _buildSuccessScreen() : _buildWizard(),
-    );
+    return _published ? _buildSuccessScreen() : _buildWizard();
   }
 
+  // ── Back navigation (called by parent AppBar if needed) ───────────
   // ── Success Screen ─────────────────────────────────────────
 
   Widget _buildSuccessScreen() {
@@ -1574,6 +1628,1658 @@ class _ReviewCard extends StatelessWidget {
             Text(content,
                 style: GoogleFonts.nunito(fontSize: 13, color: Colors.white54)),
           ]),
+        ),
+      ]),
+    );
+  }
+}
+
+// =====================================================================
+// PUZZLE WIZARD
+// Steps: 0=Details & Image  1=Review & Publish
+// =====================================================================
+
+class _PuzzleWizard extends StatefulWidget {
+  const _PuzzleWizard();
+  @override
+  State<_PuzzleWizard> createState() => _PuzzleWizardState();
+}
+
+class _PuzzleWizardState extends State<_PuzzleWizard> {
+  final AdminService _svc = AdminService();
+
+  // ── Step 0 fields ──────────────────────────────────────────
+  final _titleCtrl = TextEditingController();
+  final _categoryCtrl = TextEditingController(text: 'General');
+  int _pieceCount = 16;
+  String _difficulty = 'Easy';
+  XFile? _imageFile;
+  String? _uploadedImageUrl;
+  bool _uploadingImage = false;
+
+  // ── Existing puzzles list ───────────────────────────────────
+  List<Map<String, dynamic>> _existingPuzzles = [];
+  bool _loadingPuzzles = true;
+
+  // ── Step ───────────────────────────────────────────────────
+  int _step = 0;
+
+  // ── Publishing ─────────────────────────────────────────────
+  bool _publishing = false;
+  bool _published = false;
+  String _publishStatus = '';
+
+  // Piece count options
+  static const List<int> _pieceCounts = [9, 16, 25, 36];
+  static const List<String> _difficulties = ['Easy', 'Medium', 'Hard'];
+  static const List<String> _categories = [
+    'General', 'Nature', 'Animals', 'Cities', 'Science', 'History', 'Art'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchExistingPuzzles();
+  }
+
+  Future<void> _fetchExistingPuzzles() async {
+    final list = await _svc.getPuzzles();
+    if (mounted) {
+      setState(() {
+        _existingPuzzles = list;
+        _loadingPuzzles = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _categoryCtrl.dispose();
+    super.dispose();
+  }
+
+  // ── Image Pick & Upload ────────────────────────────────────
+
+  Future<void> _pickAndUploadImage() async {
+    final picker = ImagePicker();
+    final picked =
+        await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (picked == null) return;
+
+    setState(() {
+      _uploadingImage = true;
+      _imageFile = picked;
+    });
+
+    final url = await _svc.uploadImage(picked);
+    if (mounted) {
+      setState(() {
+        _uploadingImage = false;
+        if (url != null) {
+          _uploadedImageUrl = url;
+          _showSnack('Image uploaded ✓');
+        } else {
+          _showSnack('Image upload failed', isError: true);
+        }
+      });
+    }
+  }
+
+  // ── Validation ─────────────────────────────────────────────
+
+  String? _validateStep0() {
+    if (_titleCtrl.text.trim().isEmpty) return 'Puzzle title is required';
+    if (_uploadedImageUrl == null) return 'Please upload a puzzle image first';
+    return null;
+  }
+
+  void _nextStep() async {
+    if (_step == 0) {
+      final err = _validateStep0();
+      if (err != null) {
+        _showSnack(err, isError: true);
+        return;
+      }
+      setState(() => _step = 1);
+    } else {
+      _publish();
+    }
+  }
+
+  // ── Publish ────────────────────────────────────────────────
+
+  Future<void> _publish() async {
+    setState(() {
+      _publishing = true;
+      _publishStatus = 'Creating puzzle...';
+    });
+
+    final result = await _svc.createPuzzle(
+      title: _titleCtrl.text.trim(),
+      imageUrl: _uploadedImageUrl!,
+      pieceCount: _pieceCount,
+      category: _categoryCtrl.text.trim().isEmpty
+          ? 'General'
+          : _categoryCtrl.text.trim(),
+      difficulty: _difficulty,
+    );
+
+    if (mounted) {
+      if (result != null) {
+        setState(() {
+          _publishing = false;
+          _published = true;
+          _publishStatus = '';
+        });
+        _fetchExistingPuzzles();
+      } else {
+        setState(() {
+          _publishing = false;
+          _publishStatus = '';
+        });
+        _showSnack('Failed to create puzzle', isError: true);
+      }
+    }
+  }
+
+  void _showSnack(String msg, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content:
+          Text(msg, style: GoogleFonts.nunito(fontWeight: FontWeight.w600)),
+      backgroundColor: isError ? _red : _green,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ));
+  }
+
+  Future<void> _deletePuzzle(int id, String title) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: _card,
+        title: Text('Delete Puzzle',
+            style: GoogleFonts.fredoka(color: Colors.white)),
+        content: Text('Delete "$title"? This cannot be undone.',
+            style: GoogleFonts.nunito(color: Colors.white70)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text('Cancel',
+                  style: GoogleFonts.nunito(color: Colors.white54))),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text('Delete',
+                  style: GoogleFonts.nunito(color: _red))),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      final ok = await _svc.deletePuzzle(id);
+      if (ok) {
+        _showSnack('Puzzle deleted');
+        _fetchExistingPuzzles();
+      } else {
+        _showSnack('Delete failed', isError: true);
+      }
+    }
+  }
+
+  // =====================================================================
+  // BUILD
+  // =====================================================================
+
+  @override
+  Widget build(BuildContext context) {
+    if (_published) return _buildSuccessScreen();
+
+    return Column(children: [
+      _buildStepIndicator(),
+      Expanded(
+        child: _step == 0 ? _buildStep0() : _buildStep1Review(),
+      ),
+      _buildBottomBar(),
+    ]);
+  }
+
+  // ── Step Indicator ─────────────────────────────────────────
+
+  Widget _buildStepIndicator() {
+    final steps = ['Details', 'Review'];
+    return Container(
+      color: _card,
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      child: Row(
+        children: steps.asMap().entries.map((e) {
+          final i = e.key;
+          final label = e.value;
+          final active = i == _step;
+          final done = i < _step;
+          return Expanded(
+            child: Row(children: [
+              Column(mainAxisSize: MainAxisSize.min, children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: done ? _green : active ? _accent : Colors.white12,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: done
+                        ? const Icon(Icons.check_rounded,
+                            color: Colors.white, size: 16)
+                        : Text('${i + 1}',
+                            style: GoogleFonts.fredoka(
+                                fontSize: 14,
+                                color: active ? Colors.white : Colors.white38)),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(label,
+                    style: GoogleFonts.nunito(
+                        fontSize: 10,
+                        color: active ? _accent : Colors.white38,
+                        fontWeight:
+                            active ? FontWeight.w700 : FontWeight.w500)),
+              ]),
+              if (i < steps.length - 1)
+                Expanded(
+                  child: Container(
+                    height: 2,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    color: done ? _green : Colors.white12,
+                  ),
+                ),
+            ]),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // ── Bottom Bar ─────────────────────────────────────────────
+
+  Widget _buildBottomBar() {
+    final isLast = _step == 1;
+    return Container(
+      color: _card,
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: _publishing ? null : _nextStep,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isLast ? _gold : _accent,
+            foregroundColor: isLast ? Colors.black87 : Colors.white,
+            disabledBackgroundColor: _accent.withOpacity(0.4),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          ),
+          child: _publishing
+              ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white)),
+                  const SizedBox(width: 12),
+                  Text(_publishStatus,
+                      style: GoogleFonts.fredoka(
+                          fontSize: 16, color: Colors.white)),
+                ])
+              : Text(
+                  isLast ? '🚀  Publish Puzzle' : 'Continue →',
+                  style: GoogleFonts.fredoka(fontSize: 18),
+                ),
+        ),
+      ),
+    );
+  }
+
+  // ── Success Screen ─────────────────────────────────────────
+
+  Widget _buildSuccessScreen() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('🧩', style: TextStyle(fontSize: 80)),
+            const SizedBox(height: 20),
+            Text('Puzzle Published!',
+                style: GoogleFonts.fredoka(fontSize: 36, color: Colors.white)),
+            const SizedBox(height: 12),
+            Text(
+              '"${_titleCtrl.text}" with $_pieceCount pieces is now live!',
+              style: GoogleFonts.nunito(
+                  fontSize: 16, color: Colors.white70, height: 1.6),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 40),
+            ElevatedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _published = false;
+                  _step = 0;
+                  _titleCtrl.clear();
+                  _categoryCtrl.text = 'General';
+                  _imageFile = null;
+                  _uploadedImageUrl = null;
+                  _pieceCount = 16;
+                  _difficulty = 'Easy';
+                });
+              },
+              icon: const Icon(Icons.add_rounded),
+              label:
+                  Text('Add Another', style: GoogleFonts.fredoka(fontSize: 18)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _accent,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // =====================================================================
+  // STEP 0 — Puzzle Details & Image
+  // =====================================================================
+
+  Widget _buildStep0() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // ── Section: puzzle details ──────────────────────────
+        Row(children: [
+          const Text('🧩', style: TextStyle(fontSize: 24)),
+          const SizedBox(width: 10),
+          Text('Puzzle Details',
+              style: GoogleFonts.fredoka(fontSize: 22, color: Colors.white)),
+        ]),
+        const SizedBox(height: 6),
+        Text('Fill in the puzzle info and upload the image.',
+            style: GoogleFonts.nunito(fontSize: 14, color: Colors.white54)),
+        const SizedBox(height: 20),
+
+        // Title
+        _buildField('PUZZLE TITLE', _titleCtrl, hint: 'e.g. Eiffel Tower'),
+        const SizedBox(height: 4),
+
+        // Category dropdown
+        _buildLabel('CATEGORY'),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.06),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white12),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _categories.contains(_categoryCtrl.text)
+                  ? _categoryCtrl.text
+                  : 'General',
+              dropdownColor: _card,
+              isExpanded: true,
+              style: const TextStyle(color: Colors.white),
+              items: _categories
+                  .map((c) => DropdownMenuItem(
+                        value: c,
+                        child: Text(c,
+                            style: GoogleFonts.nunito(color: Colors.white)),
+                      ))
+                  .toList(),
+              onChanged: (v) => setState(() => _categoryCtrl.text = v!),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // Difficulty
+        _buildLabel('DIFFICULTY'),
+        const SizedBox(height: 10),
+        Row(
+          children: _difficulties.map((d) {
+            final active = d == _difficulty;
+            final color = d == 'Easy'
+                ? _green
+                : d == 'Medium'
+                    ? const Color(0xFFFFB74D)
+                    : _red;
+            return Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: GestureDetector(
+                onTap: () => setState(() => _difficulty = d),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 18, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: active ? color.withOpacity(0.2) : _card,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: active ? color : Colors.white12, width: 2),
+                  ),
+                  child: Text(d,
+                      style: GoogleFonts.nunito(
+                          fontSize: 14,
+                          color: active ? color : Colors.white54,
+                          fontWeight: FontWeight.w700)),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 20),
+
+        // Piece count
+        _buildLabel('NUMBER OF PIECES'),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 10,
+          children: _pieceCounts.map((n) {
+            final active = n == _pieceCount;
+            final label = n == 9
+                ? '9  (3×3)'
+                : n == 16
+                    ? '16  (4×4)'
+                    : n == 25
+                        ? '25  (5×5)'
+                        : '36  (6×6)';
+            return GestureDetector(
+              onTap: () => setState(() => _pieceCount = n),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: active ? _accent.withOpacity(0.2) : _card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: active ? _accent : Colors.white12, width: 2),
+                ),
+                child: Text(label,
+                    style: GoogleFonts.nunito(
+                        fontSize: 14,
+                        color: active ? _accent : Colors.white54,
+                        fontWeight: FontWeight.w700)),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 24),
+
+        // Image upload
+        _buildLabel('PUZZLE IMAGE'),
+        const SizedBox(height: 10),
+        GestureDetector(
+          onTap: _uploadingImage ? null : _pickAndUploadImage,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: _card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _uploadedImageUrl != null ? _green : _accent.withOpacity(0.5),
+                width: 2,
+              ),
+            ),
+            child: _uploadingImage
+                ? const SizedBox(
+                    height: 200,
+                    child: Center(
+                      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        CircularProgressIndicator(color: _accent),
+                        SizedBox(height: 12),
+                        Text('Uploading image…', style: TextStyle(color: Colors.white54)),
+                      ]),
+                    ))
+                : _uploadedImageUrl != null
+                        ? Column(children: [
+                            // ── Jigsaw piece grid preview ──────────────
+                            Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(children: [
+                                Row(children: [
+                                  const Icon(Icons.check_circle_rounded, color: _green, size: 16),
+                                  const SizedBox(width: 6),
+                                  Text('Image broken into $_pieceCount pieces',
+                                      style: GoogleFonts.nunito(fontSize: 13, color: _green, fontWeight: FontWeight.w700)),
+                                  const Spacer(),
+                                  GestureDetector(
+                                    onTap: _pickAndUploadImage,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.08),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(children: [
+                                        const Icon(Icons.edit_rounded, color: Colors.white54, size: 14),
+                                        const SizedBox(width: 4),
+                                        Text('Change', style: GoogleFonts.nunito(fontSize: 12, color: Colors.white54)),
+                                      ]),
+                                    ),
+                                  ),
+                                ]),
+                                const SizedBox(height: 12),
+                                // Actual piece grid
+                                _AdminPieceGrid(
+                                  imageUrl: _uploadedImageUrl!,
+                                  cols: _pieceCount == 9 ? 3 : _pieceCount == 16 ? 4 : _pieceCount == 25 ? 5 : 6,
+                                  pieceCount: _pieceCount,
+                                ),
+                              ]),
+                            ),
+                          ])
+                        : SizedBox(
+                            height: 180,
+                            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                              const Icon(Icons.add_photo_alternate_rounded, size: 48, color: _accent),
+                              const SizedBox(height: 12),
+                              Text('Tap to upload puzzle image',
+                                  style: GoogleFonts.nunito(fontSize: 14, color: Colors.white54)),
+                              const SizedBox(height: 4),
+                              Text('JPG, PNG, WEBP — max 10 MB',
+                                  style: GoogleFonts.nunito(fontSize: 12, color: Colors.white30)),
+                            ]),
+                          ),
+          ),
+        ),
+        const SizedBox(height: 32),
+
+        // ── Existing Puzzles ──────────────────────────────────
+        Row(children: [
+          const Text('📋', style: TextStyle(fontSize: 22)),
+          const SizedBox(width: 10),
+          Text('Existing Puzzles',
+              style: GoogleFonts.fredoka(fontSize: 20, color: Colors.white)),
+          const SizedBox(width: 10),
+          if (_loadingPuzzles)
+            const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: _accent)),
+        ]),
+        const SizedBox(height: 12),
+        if (!_loadingPuzzles && _existingPuzzles.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _card,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white12),
+            ),
+            child: Center(
+              child: Text('No puzzles yet. Create your first one!',
+                  style:
+                      GoogleFonts.nunito(fontSize: 14, color: Colors.white38)),
+            ),
+          ),
+        ..._existingPuzzles.map((p) => _buildPuzzleListItem(p)),
+        const SizedBox(height: 20),
+      ]),
+    );
+  }
+
+  Widget _buildPuzzleListItem(Map<String, dynamic> p) {
+    final imageUrl = p['image_url'] as String? ?? '';
+    final title = p['title'] as String? ?? 'Untitled';
+    final pieces = p['piece_count'] as int? ?? 0;
+    final difficulty = p['difficulty'] as String? ?? '';
+    final category = p['category'] as String? ?? '';
+    final id = p['id'] as int? ?? 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: _card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Row(children: [
+        // Thumbnail
+        ClipRRect(
+          borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
+          child: SizedBox(
+            width: 80,
+            height: 80,
+            child: imageUrl.isNotEmpty
+                ? Image.network(imageUrl, fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Center(
+                        child: Text('🧩', style: TextStyle(fontSize: 28))))
+                : const Center(
+                    child: Text('🧩', style: TextStyle(fontSize: 28))),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title,
+                  style: GoogleFonts.fredoka(
+                      fontSize: 16, color: Colors.white),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 4),
+              Text('$pieces pieces  •  $difficulty  •  $category',
+                  style:
+                      GoogleFonts.nunito(fontSize: 12, color: Colors.white54)),
+            ]),
+          ),
+        ),
+        IconButton(
+          onPressed: () => _deletePuzzle(id, title),
+          icon: const Icon(Icons.delete_outline_rounded, color: _red, size: 22),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildField(String label, TextEditingController ctrl,
+      {String hint = ''}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        _buildLabel(label),
+        const SizedBox(height: 6),
+        TextField(
+          controller: ctrl,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(color: Colors.white24, fontSize: 14),
+            filled: true,
+            fillColor: Colors.white.withOpacity(0.06),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.white12)),
+            enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.white12)),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: _accent, width: 2)),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildLabel(String text) => Text(text,
+      style: GoogleFonts.nunito(
+          fontSize: 13,
+          color: Colors.white54,
+          fontWeight: FontWeight.w700));
+
+  // =====================================================================
+  // STEP 1 — Review
+  // =====================================================================
+
+  Widget _buildStep1Review() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          const Text('🔍', style: TextStyle(fontSize: 24)),
+          const SizedBox(width: 10),
+          Text('Review & Publish',
+              style: GoogleFonts.fredoka(fontSize: 22, color: Colors.white)),
+        ]),
+        const SizedBox(height: 6),
+        Text('Double-check everything before publishing.',
+            style: GoogleFonts.nunito(fontSize: 14, color: Colors.white54)),
+        const SizedBox(height: 24),
+
+        // Puzzle piece grid preview
+        if (_uploadedImageUrl != null)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              color: const Color(0xFF160830),
+              padding: const EdgeInsets.all(8),
+              child: _AdminPieceGrid(
+                imageUrl: _uploadedImageUrl!,
+                cols: _pieceCount == 9 ? 3 : _pieceCount == 16 ? 4 : _pieceCount == 25 ? 5 : 6,
+                pieceCount: _pieceCount,
+              ),
+            ),
+          ),
+        const SizedBox(height: 20),
+
+        // Review cards
+        _buildReviewRow('📌', 'Title', _titleCtrl.text),
+        const SizedBox(height: 10),
+        _buildReviewRow('🏷️', 'Category', _categoryCtrl.text),
+        const SizedBox(height: 10),
+        _buildReviewRow('⚡', 'Difficulty', _difficulty),
+        const SizedBox(height: 10),
+        _buildReviewRow('🔢', 'Pieces', '$_pieceCount pieces ($_pieceCount pcs)'),
+        const SizedBox(height: 20),
+
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: _gold.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: _gold.withOpacity(0.3)),
+          ),
+          child: Row(children: [
+            const Icon(Icons.info_outline_rounded, color: _gold, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Once published, this puzzle will be immediately available in the app.',
+                style: GoogleFonts.nunito(
+                    fontSize: 13, color: Colors.white70, height: 1.4),
+              ),
+            ),
+          ]),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildReviewRow(String emoji, String title, String value) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Row(children: [
+        Text(emoji, style: const TextStyle(fontSize: 22)),
+        const SizedBox(width: 12),
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title,
+              style: GoogleFonts.fredoka(fontSize: 14, color: Colors.white54)),
+          Text(value,
+              style: GoogleFonts.fredoka(fontSize: 17, color: Colors.white)),
+        ]),
+      ]),
+    );
+  }
+}
+
+// =====================================================================
+// Jigsaw Path  (bezier tabs & blanks)
+// =====================================================================
+
+Path _pzPath(int top, int right, int bottom, int left,
+    double cell, double nub) {
+  final o = nub;
+  final p = Path()..moveTo(o, o);
+  _pzH(p, o, o + cell, o,        top    * (-nub));
+  _pzV(p, o + cell, o, o + cell, right  *   nub);
+  _pzH(p, o + cell, o, o + cell, bottom *   nub);
+  _pzV(p, o, o + cell, o,        left   * (-nub));
+  return p..close();
+}
+
+void _pzH(Path p, double x0, double x1, double y, double n) {
+  if (n == 0) { p.lineTo(x1, y); return; }
+  final s = x1 > x0 ? 1.0 : -1.0;
+  final w = (x1 - x0).abs();
+  final mx = x0 + s * w * .5;
+  p.lineTo(x0 + s * w * .28, y);
+  p.cubicTo(x0 + s * w * .28, y + n * .6, mx - s * w * .12, y + n, mx, y + n);
+  p.cubicTo(mx + s * w * .12, y + n, x0 + s * w * .72, y + n * .6, x0 + s * w * .72, y);
+  p.lineTo(x1, y);
+}
+
+void _pzV(Path p, double x, double y0, double y1, double n) {
+  if (n == 0) { p.lineTo(x, y1); return; }
+  final s = y1 > y0 ? 1.0 : -1.0;
+  final h = (y1 - y0).abs();
+  final my = y0 + s * h * .5;
+  p.lineTo(x, y0 + s * h * .28);
+  p.cubicTo(x + n * .6, y0 + s * h * .28, x + n, my - s * h * .12, x + n, my);
+  p.cubicTo(x + n, my + s * h * .12, x + n * .6, y0 + s * h * .72, x, y0 + s * h * .72);
+  p.lineTo(x, y1);
+}
+
+// =====================================================================
+// Jigsaw Clipper
+// =====================================================================
+
+class _PzClipper extends CustomClipper<Path> {
+  final int eT, eR, eB, eL;
+  final double cell, nub;
+  const _PzClipper(this.eT, this.eR, this.eB, this.eL, this.cell, this.nub);
+
+  @override
+  Path getClip(Size _) => _pzPath(eT, eR, eB, eL, cell, nub);
+
+  @override
+  bool shouldReclip(_PzClipper o) =>
+      o.eT != eT || o.eR != eR || o.eB != eB || o.eL != eL ||
+      o.cell != cell || o.nub != nub;
+}
+
+// =====================================================================
+// Outline Painter  (draws only the jigsaw stroke, on top of image)
+// =====================================================================
+
+class _PzOutline extends CustomPainter {
+  final int eT, eR, eB, eL;
+  final double cell, nub;
+  const _PzOutline(this.eT, this.eR, this.eB, this.eL, this.cell, this.nub);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawPath(
+      _pzPath(eT, eR, eB, eL, cell, nub),
+      Paint()
+        ..color       = Colors.white.withOpacity(.70)
+        ..style       = PaintingStyle.stroke
+        ..strokeWidth = 1.6
+        ..strokeJoin  = StrokeJoin.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_PzOutline o) => o.cell != cell || o.nub != nub;
+}
+
+// =====================================================================
+// Single Piece Tile
+//
+// Correct technique:
+//   ClipPath (jigsaw shape)
+//     └── SizedBox (canvas: cell + 2·nub square)
+//           └── Stack (clipBehavior: Clip.none  ← lets image overflow layout)
+//                 └── Positioned(left: nub - col·cell, top: nub - row·cell)
+//                       └── Image.network (rendered at cols·cell square)
+//
+// The Positioned shifts the FULL image so that piece (row,col) aligns
+// with the canvas's (nub,nub) origin.  Stack's Clip.none lets it paint
+// beyond the stack's own bounds.  ClipPath then clips all that painting
+// to the jigsaw bezier shape.
+// =====================================================================
+
+class _PzTile extends StatelessWidget {
+  final String imageUrl;
+  final int row, col, cols;
+  final int eT, eR, eB, eL;
+  final double cell, nub;
+
+  const _PzTile({
+    required this.imageUrl,
+    required this.row, required this.col, required this.cols,
+    required this.eT, required this.eR, required this.eB, required this.eL,
+    required this.cell, required this.nub,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final sz     = cell + 2 * nub;   // canvas size
+    final imgPx  = cell * cols;      // full-image render size
+    // Shift so that pixel (col·cell, row·cell) of the image
+    // lands at (nub, nub) inside the canvas.
+    final left   = nub - col * cell;
+    final top    = nub - row * cell;
+
+    return SizedBox(
+      width: sz,
+      height: sz,
+      child: Stack(children: [
+
+        // ── Jigsaw-clipped image ─────────────────────────────
+        ClipPath(
+          clipper: _PzClipper(eT, eR, eB, eL, cell, nub),
+          child: SizedBox(
+            width: sz,
+            height: sz,
+            child: Stack(
+              clipBehavior: Clip.none,        // ← key: image may overflow
+              children: [
+                Positioned(
+                  left:   left,
+                  top:    top,
+                  width:  imgPx,   // ← must be explicit; without this Flutter
+                  height: imgPx,   //   constrains to remaining Stack space → wrong size
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.fill,
+                    gaplessPlayback: true,
+                    loadingBuilder: (_, child, prog) {
+                      if (prog == null) return child;
+                      return Container(
+                        color: const Color(0xFF1A0A3D),
+                        child: Center(
+                          child: SizedBox(
+                            width: cell * .3, height: cell * .3,
+                            child: const CircularProgressIndicator(
+                              color: Color(0xFFFF7043), strokeWidth: 1.5),
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (_, __, ___) => Container(
+                      color: const Color(0xFF1A0A3D),
+                      child: Center(
+                        child: Icon(Icons.broken_image,
+                            color: Colors.white24, size: cell * .3)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // ── White jigsaw outline drawn on top ───────────────
+        CustomPaint(
+          size: Size(sz, sz),
+          painter: _PzOutline(eT, eR, eB, eL, cell, nub),
+        ),
+      ]),
+    );
+  }
+}
+
+// =====================================================================
+// Admin Piece Grid
+// Displays every piece of the puzzle with the real image visible.
+// No ui.Image required — uses Image.network directly.
+// =====================================================================
+
+class _AdminPieceGrid extends StatelessWidget {
+  final String imageUrl;
+  final int cols;
+  final int pieceCount;
+
+  const _AdminPieceGrid({
+    required this.imageUrl,
+    required this.cols,
+    required this.pieceCount,
+    super.key,
+  });
+
+  /// Deterministic edge map — stable per (cols) so preview never jumps.
+  List<List<int>> _buildEdges() {
+    final rng  = Random(cols * 99991);
+    final rows = cols;
+    final hj   = List.generate(rows - 1,
+        (_) => List.generate(cols, (_) => rng.nextBool() ? 1 : -1));
+    final vj   = List.generate(rows,
+        (_) => List.generate(cols - 1, (_) => rng.nextBool() ? 1 : -1));
+    return List.generate(pieceCount, (i) {
+      final r = i ~/ cols, c = i % cols;
+      return [
+        r == 0        ? 0 : -hj[r - 1][c], // top
+        c == cols - 1 ? 0 :  vj[r][c],      // right
+        r == rows - 1 ? 0 :  hj[r][c],      // bottom
+        c == 0        ? 0 : -vj[r][c - 1],  // left
+      ];
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sw    = MediaQuery.of(context).size.width;
+    final gridW = (sw - 80).clamp(120.0, 360.0);
+    final cell  = gridW / cols;
+    // Nub smaller than game view so preview fits on screen
+    final nub   = cell * .20;
+    final sz    = cell + 2 * nub;   // single tile canvas size (includes tab overhang)
+
+    // The N×N grid of bodies occupies exactly gridW×gridW.
+    // Each tile canvas is sz×sz but the body sits at (nub,nub) inside it.
+    // So tile at (r,c) is Positioned at (c*cell - nub, r*cell - nub)
+    // so that its body starts at (c*cell, r*cell).
+    // Total container = gridW + 2*nub (to accommodate edge tab overhangs).
+    final total = gridW + 2 * nub;
+
+    final edges = _buildEdges();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: total,
+            height: total,
+            color: const Color(0xFF080215),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: List.generate(pieceCount, (i) {
+                final r = i ~/ cols;
+                final c = i % cols;
+                final e = edges[i];
+                return Positioned(
+                  // Place tile so its body (starting at nub offset inside tile)
+                  // aligns with cell position in the grid.
+                  left: c * cell,          // tile left = c*cell (body starts at c*cell+nub inside tile, but tile's Positioned offsets by nub already)
+                  top:  r * cell,
+                  child: _PzTile(
+                    imageUrl: imageUrl,
+                    row: r, col: c, cols: cols,
+                    eT: e[0], eR: e[1], eB: e[2], eL: e[3],
+                    cell: cell, nub: nub,
+                  ),
+                );
+              }),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 8),
+        Text(
+          '$pieceCount pieces  •  swipe right to scroll',
+          style: GoogleFonts.nunito(fontSize: 11, color: Colors.white38),
+        ),
+      ],
+    );
+  }
+}
+// =====================================================================
+// STORY WIZARD
+// Steps: 0 = Story Info   1 = Pages   2 = Review & Publish
+// =====================================================================
+
+class _StoryWizard extends StatefulWidget {
+  const _StoryWizard();
+  @override
+  State<_StoryWizard> createState() => _StoryWizardState();
+}
+
+class _StoryPageDraft {
+  final TextEditingController titleCtrl = TextEditingController();
+  final TextEditingController bodyCtrl  = TextEditingController();
+  XFile?  imageFile;
+  String? uploadedImageUrl;
+
+  void dispose() {
+    titleCtrl.dispose();
+    bodyCtrl.dispose();
+  }
+}
+
+class _StoryWizardState extends State<_StoryWizard> {
+  final _svc = AdminService();
+
+  // ── Step 0 controllers ──────────────────────────────────────────────
+  final _titleCtrl      = TextEditingController();
+  final _authorCtrl     = TextEditingController();
+  final _descCtrl       = TextEditingController();
+  final _categoryCtrl   = TextEditingController();
+  final _ageRangeCtrl   = TextEditingController(text: '4-8');
+  String _difficulty    = 'Easy';
+  String _coverEmoji    = '📖';
+  XFile?  _coverFile;
+  String? _coverUrl;
+
+  // ── Step 1 pages ────────────────────────────────────────────────────
+  final List<_StoryPageDraft> _pages = [_StoryPageDraft()];
+
+  int  _step      = 0;
+  bool _loading   = false;
+  bool _published = false;
+  int? _createdStoryId;
+
+  final _picker = ImagePicker();
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _authorCtrl.dispose();
+    _descCtrl.dispose();
+    _categoryCtrl.dispose();
+    _ageRangeCtrl.dispose();
+    for (final p in _pages) p.dispose();
+    super.dispose();
+  }
+
+  // ── helpers ─────────────────────────────────────────────────────────
+
+  void _snack(String msg, {bool error = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg),
+      backgroundColor: error ? _red : _green,
+    ));
+  }
+
+  Future<String?> _pickAndUpload(_StoryPageDraft? page) async {
+    final f = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (f == null) return null;
+    setState(() {
+      if (page == null) { _coverFile = f; } else { page.imageFile = f; }
+    });
+    setState(() => _loading = true);
+    final url = await _svc.uploadImage(f);
+    setState(() => _loading = false);
+    if (url == null) { _snack('Image upload failed', error: true); return null; }
+    setState(() {
+      if (page == null) { _coverUrl = url; } else { page.uploadedImageUrl = url; }
+    });
+    return url;
+  }
+
+  // ── STEP 2 — publish ─────────────────────────────────────────────────
+  Future<void> _publish() async {
+    setState(() => _loading = true);
+
+    try {
+      // Upload cover image if picked but not yet uploaded
+      if (_coverFile != null && _coverUrl == null) {
+        final url = await _svc.uploadImage(_coverFile!);
+        if (url != null) setState(() => _coverUrl = url);
+      }
+
+      // Upload any page images that haven't been uploaded yet
+      for (final p in _pages) {
+        if (p.imageFile != null && p.uploadedImageUrl == null) {
+          final url = await _svc.uploadImage(p.imageFile!);
+          if (url != null) p.uploadedImageUrl = url;
+        }
+      }
+
+      final validPages = _pages
+          .where((p) => p.bodyCtrl.text.trim().isNotEmpty)
+          .toList();
+
+      if (validPages.isEmpty) {
+        _snack('At least one page with content is required', error: true);
+        setState(() => _loading = false);
+        return;
+      }
+
+      final id = await _svc.createStory(
+        title:       _titleCtrl.text.trim(),
+        author:      _authorCtrl.text.trim(),
+        description: _descCtrl.text.trim(),
+        coverUrl:    _coverUrl ?? '',
+        category:    _categoryCtrl.text.trim().isEmpty ? 'General' : _categoryCtrl.text.trim(),
+        difficulty:  _difficulty,
+        ageRange:    _ageRangeCtrl.text.trim(),
+        coverEmoji:  _coverEmoji,
+        pages: validPages
+            .asMap()
+            .entries
+            .map((e) => {
+                  'page_number': e.key + 1,
+                  'title':       e.value.titleCtrl.text.trim(),
+                  'body':        e.value.bodyCtrl.text.trim(),
+                  'image_url':   e.value.uploadedImageUrl ?? '',
+                })
+            .toList(),
+      );
+
+      setState(() => _loading = false);
+
+      if (id != null) {
+        setState(() { _published = true; _createdStoryId = id; });
+      } else {
+        _snack('Server rejected the story. Check that the backend is running and the stories table exists.', error: true);
+      }
+    } catch (e) {
+      setState(() => _loading = false);
+      _snack('Publish error: $e', error: true);
+    }
+  }
+
+  // ── validation helpers ───────────────────────────────────────────────
+  bool get _step0Valid =>
+      _titleCtrl.text.trim().isNotEmpty && _authorCtrl.text.trim().isNotEmpty;
+
+  bool get _step1Valid =>
+      _pages.isNotEmpty &&
+      _pages.first.bodyCtrl.text.trim().isNotEmpty;
+
+  // ── build ─────────────────────────────────────────────────────────────
+  @override
+  Widget build(BuildContext context) {
+    if (_published) return _buildSuccess();
+
+    return Stack(children: [
+      SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _StepIndicator(current: _step, labels: const ['Story Info', 'Pages', 'Publish']),
+          const SizedBox(height: 24),
+          if (_step == 0) _buildStep0(),
+          if (_step == 1) _buildStep1(),
+          if (_step == 2) _buildStep2(),
+        ]),
+      ),
+      // bottom nav
+      Positioned(
+        bottom: 0, left: 0, right: 0,
+        child: Container(
+          color: _bg,
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+          child: Row(children: [
+            if (_step > 0)
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => setState(() => _step--),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white54,
+                    side: const BorderSide(color: Colors.white24),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: const Text('Back'),
+                ),
+              ),
+            if (_step > 0) const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed: _loading
+                    ? null
+                    : () {
+                        if (_step == 0) {
+                          if (!_step0Valid) { _snack('Title and Author are required', error: true); return; }
+                          setState(() => _step = 1);
+                        } else if (_step == 1) {
+                          if (!_step1Valid) { _snack('At least one page needs content', error: true); return; }
+                          setState(() => _step = 2);
+                        } else {
+                          _publish();
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _accent,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                child: _loading
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : Text(_step == 2 ? '🚀 Publish Story' : 'Next →',
+                        style: GoogleFonts.fredoka(fontSize: 16)),
+              ),
+            ),
+          ]),
+        ),
+      ),
+    ]);
+  }
+
+  // ── STEP 0 — Story Info ───────────────────────────────────────────────
+  Widget _buildStep0() {
+    const emojis = ['📖', '🐉', '🚀', '🌲', '🐠', '🤖', '🦕', '🦄', '⭐', '🌊'];
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _SectionHeader(icon: Icons.auto_stories_rounded, label: 'Story Details'),
+      const SizedBox(height: 16),
+
+      // Cover image
+      GestureDetector(
+        onTap: () => _pickAndUpload(null),
+        child: Container(
+          width: double.infinity,
+          height: 160,
+          decoration: BoxDecoration(
+            color: _card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white12),
+          ),
+          child: _coverFile != null || _coverUrl != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(_coverUrl ?? '', fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.white38, size: 48)),
+                )
+              : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  const Icon(Icons.add_photo_alternate_rounded, color: Colors.white38, size: 48),
+                  const SizedBox(height: 8),
+                  Text('Tap to add cover image (optional)',
+                      style: GoogleFonts.nunito(fontSize: 13, color: Colors.white38)),
+                ]),
+        ),
+      ),
+      const SizedBox(height: 16),
+
+      // Emoji picker
+      Text('Cover Emoji', style: GoogleFonts.nunito(fontSize: 13, color: Colors.white54)),
+      const SizedBox(height: 8),
+      Wrap(
+        spacing: 8,
+        children: emojis.map((e) => GestureDetector(
+          onTap: () => setState(() => _coverEmoji = e),
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: _coverEmoji == e ? _accent : _card,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _coverEmoji == e ? _accent : Colors.white12),
+            ),
+            child: Text(e, style: const TextStyle(fontSize: 22)),
+          ),
+        )).toList(),
+      ),
+      const SizedBox(height: 16),
+
+      _AdminTextField(controller: _titleCtrl,   label: 'Story Title *',  hint: 'e.g. The Dragon\'s Secret'),
+      const SizedBox(height: 12),
+      _AdminTextField(controller: _authorCtrl,  label: 'Author *',       hint: 'e.g. Little Minds Team'),
+      const SizedBox(height: 12),
+      _AdminTextField(controller: _descCtrl,    label: 'Description',    hint: 'Short blurb shown on the card', maxLines: 3),
+      const SizedBox(height: 12),
+      _AdminTextField(controller: _categoryCtrl, label: 'Category',       hint: 'e.g. Adventure, Science, Fantasy'),
+      const SizedBox(height: 12),
+      _AdminTextField(controller: _ageRangeCtrl, label: 'Age Range',      hint: 'e.g. 4-8'),
+      const SizedBox(height: 16),
+
+      // Difficulty
+      Text('Difficulty', style: GoogleFonts.nunito(fontSize: 13, color: Colors.white54)),
+      const SizedBox(height: 8),
+      Row(children: ['Easy', 'Medium', 'Hard'].map((d) => Padding(
+        padding: const EdgeInsets.only(right: 10),
+        child: GestureDetector(
+          onTap: () => setState(() => _difficulty = d),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            decoration: BoxDecoration(
+              color: _difficulty == d ? _accent : _card,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: _difficulty == d ? _accent : Colors.white12),
+            ),
+            child: Text(d, style: GoogleFonts.nunito(color: Colors.white, fontWeight: FontWeight.w700)),
+          ),
+        ),
+      )).toList()),
+    ]);
+  }
+
+  // ── STEP 1 — Pages ───────────────────────────────────────────────────
+  Widget _buildStep1() {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _SectionHeader(icon: Icons.menu_book_rounded, label: 'Story Pages'),
+      const SizedBox(height: 4),
+      Text('Add at least one page. Each page can have text and an optional image.',
+          style: GoogleFonts.nunito(fontSize: 13, color: Colors.white54)),
+      const SizedBox(height: 16),
+
+      ...List.generate(_pages.length, (i) => _buildPageCard(i)),
+
+      const SizedBox(height: 12),
+      SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: () => setState(() => _pages.add(_StoryPageDraft())),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: _gold,
+            side: const BorderSide(color: _gold, width: 1.5),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          icon: const Icon(Icons.add_rounded),
+          label: Text('Add Page', style: GoogleFonts.fredoka(fontSize: 16)),
+        ),
+      ),
+    ]);
+  }
+
+  Widget _buildPageCard(int i) {
+    final p = _pages[i];
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(color: _accent, borderRadius: BorderRadius.circular(20)),
+            child: Text('Page ${i + 1}', style: GoogleFonts.fredoka(color: Colors.white, fontSize: 14)),
+          ),
+          const Spacer(),
+          if (_pages.length > 1)
+            IconButton(
+              icon: const Icon(Icons.delete_outline_rounded, color: _red, size: 20),
+              onPressed: () => setState(() { p.dispose(); _pages.removeAt(i); }),
+            ),
+        ]),
+        const SizedBox(height: 12),
+        _AdminTextField(controller: p.titleCtrl, label: 'Page Title (optional)', hint: 'e.g. Into the Forest'),
+        const SizedBox(height: 10),
+        _AdminTextField(controller: p.bodyCtrl,  label: 'Page Content *', hint: 'Write the story text for this page...', maxLines: 5),
+        const SizedBox(height: 12),
+        // Page image
+        GestureDetector(
+          onTap: () => _pickAndUpload(p),
+          child: Container(
+            width: double.infinity,
+            height: 110,
+            decoration: BoxDecoration(
+              color: const Color(0xFF150831),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white12),
+            ),
+            child: p.uploadedImageUrl != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(p.uploadedImageUrl!, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.white38, size: 36)),
+                  )
+                : p.imageFile != null
+                    ? Center(child: Text('⏳ Uploading…', style: GoogleFonts.nunito(color: Colors.white38)))
+                    : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        const Icon(Icons.image_rounded, color: Colors.white24, size: 36),
+                        const SizedBox(height: 6),
+                        Text('Tap to add illustration (optional)',
+                            style: GoogleFonts.nunito(fontSize: 12, color: Colors.white38)),
+                      ]),
+          ),
+        ),
+      ]),
+    );
+  }
+
+  // ── STEP 2 — Review & Publish ─────────────────────────────────────────
+  Widget _buildStep2() {
+    final validPages = _pages.where((p) => p.bodyCtrl.text.trim().isNotEmpty).toList();
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _SectionHeader(icon: Icons.preview_rounded, label: 'Review & Publish'),
+      const SizedBox(height: 16),
+      _ReviewRow(label: 'Title',       value: _titleCtrl.text),
+      _ReviewRow(label: 'Author',      value: _authorCtrl.text),
+      _ReviewRow(label: 'Category',    value: _categoryCtrl.text.isEmpty ? 'General' : _categoryCtrl.text),
+      _ReviewRow(label: 'Difficulty',  value: _difficulty),
+      _ReviewRow(label: 'Age Range',   value: _ageRangeCtrl.text),
+      _ReviewRow(label: 'Pages',       value: '${validPages.length}'),
+      if (_descCtrl.text.isNotEmpty) _ReviewRow(label: 'Description', value: _descCtrl.text),
+      const SizedBox(height: 20),
+      Text('Pages Preview', style: GoogleFonts.fredoka(fontSize: 16, color: Colors.white70)),
+      const SizedBox(height: 10),
+      ...validPages.asMap().entries.map((e) => Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(color: _card, borderRadius: BorderRadius.circular(12)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Page ${e.key + 1}${e.value.titleCtrl.text.isNotEmpty ? " — ${e.value.titleCtrl.text}" : ""}',
+              style: GoogleFonts.fredoka(color: _gold, fontSize: 14)),
+          const SizedBox(height: 6),
+          Text(e.value.bodyCtrl.text, style: GoogleFonts.nunito(color: Colors.white70, fontSize: 13), maxLines: 3, overflow: TextOverflow.ellipsis),
+        ]),
+      )),
+    ]);
+  }
+
+  Widget _buildSuccess() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          const Text('🎉', style: TextStyle(fontSize: 72)),
+          const SizedBox(height: 16),
+          Text('Story Published!', style: GoogleFonts.fredoka(fontSize: 28, color: Colors.white)),
+          const SizedBox(height: 8),
+          Text('Story ID: $_createdStoryId',
+              style: GoogleFonts.nunito(fontSize: 14, color: Colors.white54)),
+          const SizedBox(height: 32),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                _titleCtrl.clear(); _authorCtrl.clear(); _descCtrl.clear();
+                _categoryCtrl.clear(); _ageRangeCtrl.text = '4-8';
+                _difficulty = 'Easy'; _coverEmoji = '📖';
+                _coverFile = null; _coverUrl = null;
+                for (final p in _pages) p.dispose();
+                _pages
+                  ..clear()
+                  ..add(_StoryPageDraft());
+                _step = 0; _published = false; _createdStoryId = null;
+              });
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _accent,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            child: Text('Create Another Story', style: GoogleFonts.fredoka(fontSize: 16)),
+          ),
+        ]),
+      ),
+    );
+  }
+}
+
+// ── Shared small widgets used by _StoryWizard ────────────────────────────
+
+class _StepIndicator extends StatelessWidget {
+  final int current;
+  final List<String> labels;
+  const _StepIndicator({required this.current, required this.labels});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: List.generate(labels.length * 2 - 1, (i) {
+        if (i.isOdd) {
+          return Expanded(
+            child: Container(height: 2, color: i ~/ 2 < current ? _accent : Colors.white12),
+          );
+        }
+        final idx = i ~/ 2;
+        final done = idx < current;
+        final active = idx == current;
+        return Column(children: [
+          Container(
+            width: 28, height: 28,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: done ? _accent : active ? _accent.withOpacity(0.3) : _card,
+              border: Border.all(color: done || active ? _accent : Colors.white24, width: 2),
+            ),
+            child: Center(
+              child: done
+                  ? const Icon(Icons.check, size: 14, color: Colors.white)
+                  : Text('${idx + 1}',
+                      style: GoogleFonts.fredoka(fontSize: 13,
+                          color: active ? Colors.white : Colors.white38)),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(labels[idx],
+              style: GoogleFonts.nunito(
+                  fontSize: 10,
+                  color: active || done ? Colors.white : Colors.white38,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.normal)),
+        ]);
+      }),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _SectionHeader({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(children: [
+      Icon(icon, color: _accent, size: 20),
+      const SizedBox(width: 8),
+      Text(label, style: GoogleFonts.fredoka(fontSize: 18, color: Colors.white)),
+    ]);
+  }
+}
+
+class _AdminTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final String hint;
+  final int maxLines;
+  const _AdminTextField({
+    required this.controller,
+    required this.label,
+    required this.hint,
+    this.maxLines = 1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(label, style: GoogleFonts.nunito(fontSize: 13, color: Colors.white54)),
+      const SizedBox(height: 6),
+      TextField(
+        controller: controller,
+        maxLines: maxLines,
+        style: GoogleFonts.nunito(color: Colors.white, fontSize: 14),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: GoogleFonts.nunito(color: Colors.white24, fontSize: 13),
+          filled: true,
+          fillColor: const Color(0xFF150831),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: _accent, width: 1.5)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        ),
+      ),
+    ]);
+  }
+}
+
+class _ReviewRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _ReviewRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        SizedBox(
+          width: 100,
+          child: Text(label, style: GoogleFonts.nunito(fontSize: 13, color: Colors.white38)),
+        ),
+        Expanded(
+          child: Text(value,
+              style: GoogleFonts.nunito(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w700)),
         ),
       ]),
     );

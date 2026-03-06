@@ -1,4 +1,8 @@
 // lib/views/main_home_view.dart
+//
+// Changes from original:
+//   • Added import for DrawingPadView
+//   • "coming soon2" button replaced with "Drawing Pad" button
 
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -9,10 +13,7 @@ import 'home_view.dart';
 import 'bottom_nav_bar.dart';
 import 'puzzles_list_view.dart';
 import 'story_time_page.dart';
-import 'drawing_pad_view.dart';
-import 'puzzle_list_screen.dart'; // ← Crossword public list
-import 'create_puzzle_screen.dart'; // ← AdminGateScreen (crossword admin)
-import 'admin_view.dart'; // ← AdminGateView (quiz admin)
+import 'drawing_pad_view.dart'; // ← NEW
 
 class HomePage extends StatefulWidget {
   final User user;
@@ -250,6 +251,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
             ),
           ),
+          // ── NEW: Drawing Pad ──────────────────────────────────────────────
           _buildBigButton(
             title: 'Drawing Pad',
             icon: Icons.brush_rounded,
@@ -259,6 +261,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               MaterialPageRoute(builder: (_) => const DrawingPadView()),
             ),
           ),
+          // ─────────────────────────────────────────────────────────────────
           _buildBigButton(
             title: 'Puzzles',
             icon: Icons.extension_rounded,
@@ -268,16 +271,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               MaterialPageRoute(
                 builder: (_) => PuzzlesListView(user: widget.user),
               ),
-            ),
-          ),
-          // ── NEW: Crossword ────────────────────────────────────────────
-          _buildBigButton(
-            title: 'Crossword',
-            icon: Icons.grid_on_rounded,
-            accentColor: const Color(0xFF6C63FF),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PuzzleListScreen()),
             ),
           ),
         ],
@@ -436,65 +429,6 @@ class _GlowOrb extends StatelessWidget {
         shape: BoxShape.circle,
         gradient: RadialGradient(
           colors: [color.withOpacity(opacity), color.withOpacity(0.0)],
-        ),
-      ),
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _SettingsTile({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withOpacity(0.05),
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: iconColor, size: 22),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,
-                        style: GoogleFonts.fredoka(
-                            fontSize: 16, color: Colors.white)),
-                    Text(subtitle,
-                        style: GoogleFonts.nunito(
-                            fontSize: 12, color: Colors.white54)),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right_rounded, color: Colors.white38),
-            ],
-          ),
         ),
       ),
     );

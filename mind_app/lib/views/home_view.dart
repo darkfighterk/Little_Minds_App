@@ -8,9 +8,9 @@ import '../models/game_model.dart';
 import '../services/game_service.dart';
 import '../services/admin_service.dart';
 import 'level_map_view.dart';
-import 'admin_view.dart';
 import 'bottom_nav_bar.dart';
 import 'chat_screen.dart';
+import 'puzzles_list_view.dart';
 
 class HomeView extends StatefulWidget {
   final User user;
@@ -201,27 +201,35 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
       child: Column(
         children: [
-          Row(
+Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Choose Your',
-                    style: GoogleFonts.fredoka(
-                      fontSize: 28,
-                      color: Colors.white,
+              // --- ADDED: BACK BUTTON ---
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 28),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              // --------------------------
+              Expanded( // Added Expanded to ensure text doesn't overflow
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Choose Your',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 28,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Adventure!',
-                    style: GoogleFonts.fredoka(
-                      fontSize: 28,
-                      color: Color(0xFFFFD700),
+                    Text(
+                      'Adventure!',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 28,
+                        color: const Color(0xFFFFD700),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               AnimatedBuilder(
                 animation: _floatController,
@@ -248,7 +256,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                       Text(
                         '$totalStars Stars',
                         style: GoogleFonts.fredoka(
-                          color: Color(0xFFFFD700),
+                          color: const Color(0xFFFFD700),
                         ),
                       ),
                     ],
@@ -292,6 +300,18 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 ),
               ],
             ),
+            const SizedBox(height: 14),
+            _PuzzlesCard(
+              floatController: _floatController,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PuzzlesListView(user: widget.user),
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -312,6 +332,93 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     if (mounted) {
       await _loadProgress();
     }
+  }
+}
+
+class _PuzzlesCard extends StatelessWidget {
+  final AnimationController floatController;
+  final VoidCallback onTap;
+
+  const _PuzzlesCard({
+    required this.floatController,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedBuilder(
+        animation: floatController,
+        builder: (_, child) => Transform.translate(
+          offset: Offset(0, sin((floatController.value + 0.5) * pi) * 3),
+          child: child,
+        ),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFF6B6B).withOpacity(0.4),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.25),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Center(
+                  child: Text('🧩', style: TextStyle(fontSize: 32)),
+                ),
+              ),
+              const SizedBox(width: 18),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Puzzles',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 22,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Challenge your brain!',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.85),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
