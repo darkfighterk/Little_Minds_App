@@ -9,6 +9,7 @@ import '../services/game_service.dart';
 import '../services/admin_service.dart';
 import 'level_map_view.dart';
 import 'bottom_nav_bar.dart';
+// Note: ChatScreen import එක දැන් මෙතනට අවශ්‍ය නැහැ මොකද බොත්තම වෙනම තියෙන නිසා.
 import 'chat_screen.dart';
 import 'puzzles_list_view.dart';
 
@@ -110,8 +111,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: _buildChatButton(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      // මයින්ඩ් බොට්ගේ FloatingActionButton එක මෙතනින් ඉවත් කළා.
+      // එය දැන් ප්‍රධාන Navigation පේජ් එකේ (Scaffold) ඇත.
       body: _buildBody(),
       bottomNavigationBar: const BottomNavBar(
         primaryColor: Color(0xFFFFD700),
@@ -120,55 +121,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildChatButton() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const ChatScreen(),
-          ),
-        );
-      },
-      child: Container(
-        height: 85,
-        width: 85,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF00E5FF).withOpacity(0.4),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              height: 65,
-              width: 65,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFF00E5FF),
-                    Color(0xFF1DE9B6),
-                  ],
-                ),
-              ),
-            ),
-            Image.asset(
-              'assets/images/mindie.png',
-              height: 80,
-              fit: BoxFit.contain,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // _buildChatButton function එක සම්පූර්ණයෙන්ම ඉවත් කරන ලදී.
 
   Widget _buildBody() {
     return Container(
@@ -221,6 +174,12 @@ Row(
                         color: Colors.white,
                       ),
                     ),
+                  ),
+                  Text(
+                    'Adventure!',
+                    style: GoogleFonts.fredoka(
+                      fontSize: 28,
+                      color: const Color(0xFFFFD700),
                     Text(
                       'Adventure!',
                       style: GoogleFonts.fredoka(
@@ -462,7 +421,7 @@ class _SubjectCard extends StatelessWidget {
                 subject.name,
                 style: GoogleFonts.fredoka(
                   fontSize: 18,
-                  color: Color(0xFF3A1C72),
+                  color: const Color(0xFF3A1C72),
                 ),
               ),
               const SizedBox(height: 8),
