@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'AboutPage.dart';
 import 'admin_view.dart';
 import 'profile_view.dart';
-import 'login_view.dart';           // ← ADD THIS (adjust path if needed)
-import '../services/game_service.dart';  // ← ADD THIS for clearSession
+import 'about_view.dart';
+import 'login_view.dart'; // ← ADD THIS (adjust path if needed)
+import '../services/game_service.dart'; // ← ADD THIS for clearSession
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -198,10 +199,15 @@ class SettingsView extends StatelessWidget {
                 _buildSettingsTile(
                   icon: Icons.help,
                   iconColor: const Color(0xFFAB47BC),
-                  title: "Help & Support",
+                  title: "About",
                   subtitle: "FAQs and Chat",
                   onTap: () {
-                    // TODO: Open help / support screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AboutView(),
+                      ),
+                    );
                   },
                 ),
 
@@ -214,7 +220,8 @@ class SettingsView extends StatelessWidget {
                       context: context,
                       builder: (context) => AlertDialog(
                         title: const Text('Sign Out'),
-                        content: const Text('Are you sure you want to sign out?'),
+                        content:
+                            const Text('Are you sure you want to sign out?'),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
@@ -252,7 +259,8 @@ class SettingsView extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.redAccent.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.redAccent.withOpacity(0.4)),
+                      border:
+                          Border.all(color: Colors.redAccent.withOpacity(0.4)),
                     ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
