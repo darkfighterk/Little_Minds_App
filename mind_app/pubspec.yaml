@@ -72,10 +72,12 @@ flutter:
     - assets/icons/
     - assets/illustrations/
     - assets/images/
+    - assets/icons/github.png
     - assets/images/mindie.png
     # Category backgrounds
-    - assets/images/category_biology_heart.png
+    - assets/images/category_biology_heart.png 
     - assets/images/category_history_ruins.png
+    - assets/learn_pic.png
     - assets/images/category_engineering_gears.png
     # Add more as needed
     # - assets/models/   # for future AR/3D models

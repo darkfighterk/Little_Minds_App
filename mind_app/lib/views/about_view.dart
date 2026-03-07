@@ -18,6 +18,34 @@ class AboutView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true, // body goes behind transparent appBar
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: Container(
+          padding: const EdgeInsets.only(top: 20, left: 10, right: 10),
+          color: Colors.transparent,
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+              const Spacer(),
+              const Text(
+                "About Explorer",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+            ],
+          ),
+        ),
+      ),
       body: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
@@ -36,39 +64,13 @@ class AboutView extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                /// Back Button
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                    const Spacer(),
-                    const Text(
-                      "About Explorer",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
+                const SizedBox(height: 20), // optional spacing below AppBar
 
                 /// APP LOGO
                 const CircleAvatar(
                   radius: 50,
                   backgroundColor: Colors.white24,
-                  child: Icon(
-                    Icons.explore,
-                    size: 50,
-                    color: Colors.white,
-                  ),
+                  backgroundImage: AssetImage("assets/logo.png"),
                 ),
 
                 const SizedBox(height: 10),
@@ -94,197 +96,275 @@ class AboutView extends StatelessWidget {
 
                 const SizedBox(height: 25),
 
-                /// APP DESCRIPTION
+                /// BACKGROUND IMAGE SECTION
                 Container(
+                  width: double.infinity,
+                  height: 180,
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage("assets/learn_pic.png"),
+                      fit: BoxFit.fill,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 25),
+
+                /// ---------------- OUR VISION ----------------
+                Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: RichText(
-                    textAlign: TextAlign.center,
-                    text: const TextSpan(
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        height: 1.6,
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "OUR VISION",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      children: [
-                        TextSpan(
-                          text: "OUR VISION\n",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                            shadows: [
-                              Shadow(
-                                color: Colors.purpleAccent,
-                                blurRadius: 10,
-                                offset: Offset(2, 2),
-                              ),
-                            ],
-                          ),
+                      SizedBox(height: 10),
+                      Text(
+                        "To create a fun and engaging digital learning environment where young explorers "
+                        "can develop knowledge, creativity, and problem-solving skills while enjoying "
+                        "their learning journey.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          height: 1.6,
                         ),
-                        TextSpan(
-                          text:
-                              "To create a fun and engaging digital learning environment where young explorers "
-                              "can develop knowledge, creativity, and problem-solving skills while enjoying "
-                              "their learning journey.\n\n",
-                        ),
-                        TextSpan(
-                          text: "OUR MISSION\n",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                            shadows: [
-                              Shadow(
-                                color: Colors.purpleAccent,
-                                blurRadius: 10,
-                                offset: Offset(2, 2),
-                              ),
-                            ],
-                          ),
-                        ),
-                        TextSpan(
-                          text:
-                              "To support children aged 6 to 18 by providing interactive tools such as quizzes, "
-                              "puzzles, drawing activities, and digital notebooks that make learning simple, "
-                              "enjoyable, and accessible anytime.\n\n",
-                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
-                        /// ---------------- APP FEATURES ----------------
-                        TextSpan(
-                          text: "APP FEATURES\n",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                            shadows: [
-                              Shadow(
-                                color: Colors.purpleAccent,
-                                blurRadius: 10,
-                                offset: Offset(2, 2),
-                              ),
-                            ],
-                          ),
-                        ),
+                const SizedBox(height: 20),
 
-                        TextSpan(
-                          text: "Quiz Arena\n",
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold),
+                /// ---------------- OUR MISSION ----------------
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "OUR MISSION",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
-                        TextSpan(
-                          text:
-                              "Play MCQ quizzes from different subjects like History and more. "
-                              "Students can progress level by level like a game while improving knowledge.\n\n",
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        "To support children aged 6 to 18 by providing interactive tools such as quizzes, "
+                        "puzzles, drawing activities, and digital notebooks that make learning simple, "
+                        "enjoyable, and accessible anytime.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          height: 1.6,
                         ),
+                      ),
+                    ],
+                  ),
+                ),
 
-                        TextSpan(
-                          text: "Text to Image\n",
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text:
-                              "Upload an image and easily extract or copy the text that appears in it. "
-                              "This helps students quickly capture written information from pictures.\n\n",
-                        ),
+                const SizedBox(height: 20),
 
-                        TextSpan(
-                          text: "Notebook\n",
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold),
+                /// ---------------- APP FEATURES ----------------
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "APP FEATURES",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
-                        TextSpan(
-                          text:
-                              "A simple digital notebook where students can write and save notes "
-                              "about what they learn.\n\n",
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        "Quiz Arena",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
+                      ),
+                      Text(
+                        "Play MCQ quizzes from different subjects like History and more. "
+                        "Students can progress level by level like a game while improving knowledge.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white70, height: 1.6),
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        "Text to Image",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        "Upload an image and easily extract or copy the text that appears in it. "
+                        "This helps students quickly capture written information from pictures.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white70, height: 1.6),
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        "Notebook",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        "A simple digital notebook where students can write and save notes "
+                        "about what they learn.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white70, height: 1.6),
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        "Story Time",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        "Provides interesting stories suitable for different age groups "
+                        "to improve reading and imagination.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white70, height: 1.6),
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        "Drawing Pad",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        "Allows children to draw pictures freely and express their creativity.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white70, height: 1.6),
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        "Puzzles",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        "Picture puzzles where users arrange pieces correctly "
+                        "to complete the full image and improve problem-solving skills.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white70, height: 1.6),
+                      ),
+                    ],
+                  ),
+                ),
 
-                        TextSpan(
-                          text: "Story Time\n",
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text:
-                              "Provides interesting stories suitable for different age groups "
-                              "to improve reading and imagination.\n\n",
-                        ),
+                const SizedBox(height: 20),
 
-                        TextSpan(
-                          text: "Drawing Pad\n",
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold),
+                /// ---------------- OUR VALUES ----------------
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "OUR VALUES",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
-                        TextSpan(
-                          text:
-                              "Allows children to draw pictures freely and express their creativity.\n\n",
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        "• Encouraging Curiosity and Creativity",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
-
-                        TextSpan(
-                          text: "Puzzles\n",
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "We believe every child has a natural curiosity. Our platform encourages students "
+                        "to explore ideas, solve puzzles, draw creatively, and express their imagination "
+                        "while learning.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white70, height: 1.6),
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        "• Making Learning Fun and Interactive",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
-                        TextSpan(
-                          text:
-                              "Picture puzzles where users arrange pieces correctly "
-                              "to complete the full image and improve problem-solving skills.\n\n",
+                      ),
+                      Text(
+                        "Education should never be boring. Through engaging features like Quiz Arena, "
+                        "Image Puzzles, and Story Time, we transform traditional learning into an "
+                        "enjoyable adventure.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white70, height: 1.6),
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        "• Supporting Growth and Confidence",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
-
-                        /// ---------------- OUR VALUES ----------------
-                        TextSpan(
-                          text: "OUR VALUES\n",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                            shadows: [
-                              Shadow(
-                                color: Colors.purpleAccent,
-                                blurRadius: 10,
-                                offset: Offset(2, 2),
-                              ),
-                            ],
-                          ),
-                        ),
-                        TextSpan(
-                          text: "• Encouraging Curiosity and Creativity\n",
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text:
-                              "We believe every child has a natural curiosity. Our platform encourages students "
-                              "to explore ideas, solve puzzles, draw creatively, and express their imagination "
-                              "while learning.\n\n",
-                        ),
-                        TextSpan(
-                          text: "• Making Learning Fun and Interactive\n",
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text:
-                              "Education should never be boring. Through engaging features like Quiz Arena, "
-                              "Image Puzzles, and Story Time, we transform traditional learning into an "
-                              "enjoyable adventure.\n\n",
-                        ),
-                        TextSpan(
-                          text: "• Supporting Growth and Confidence\n",
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text:
-                              "Our goal is to help students build confidence in their abilities by giving them "
-                              "tools to practice knowledge, improve skills, and discover their unique talents.",
-                        ),
-                      ],
-                    ),
+                      ),
+                      Text(
+                        "Our goal is to help students build confidence in their abilities by giving them "
+                        "tools to practice knowledge, improve skills, and discover their unique talents.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white70, height: 1.6),
+                      ),
+                    ],
                   ),
                 ),
 
@@ -310,10 +390,10 @@ class AboutView extends StatelessWidget {
                       ),
                       SizedBox(width: 15),
                       Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
-                            "Developer",
+                            "Group Seven",
                             style: TextStyle(
                               color: Colors.white70,
                               fontSize: 14,
@@ -329,7 +409,7 @@ class AboutView extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            "Flutter App Developer",
+                            "Flutter App Developers",
                             style: TextStyle(
                               color: Colors.white70,
                             ),
@@ -395,7 +475,11 @@ class AboutView extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    icon: const Icon(Icons.code),
+                    icon: Image.asset(
+                      "assets/icons/github.png",
+                      height: 22,
+                      width: 22,
+                    ),
                     label: const Text("View on GitHub"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
