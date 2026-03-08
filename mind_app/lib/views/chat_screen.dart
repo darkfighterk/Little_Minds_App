@@ -75,7 +75,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     });
   }
 
-  //Main Section for Connecting to the Go Backend
   Future<void> _handleSend() async {
     if (_messageController.text.trim().isEmpty) return;
     final userText = _messageController.text.trim();
@@ -98,7 +97,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
         final botResponse = data['reply'];
 
         setState(() {
@@ -106,8 +104,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           _isLoading = false;
         });
       } else {
-        throw Exception(
-            "Oops! Mindie is a bit confused right now. (Status: ${response.statusCode})");
+        throw Exception("Status: ${response.statusCode}");
       }
     } catch (e) {
       setState(() {
@@ -196,7 +193,15 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       ),
       child: Row(
         children: [
-          _KidButton(bgColor: const Color(0xFFFF7043), child: const Text('☰')),
+          // Updated: Added Back Button with Navigation logic
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: _KidButton(
+              bgColor: const Color(0xFFFF7043),
+              child: const Icon(Icons.arrow_back_ios_new,
+                  size: 18, color: Color(0xFFAD1457)),
+            ),
+          ),
           const Spacer(),
           Row(
             children: [
