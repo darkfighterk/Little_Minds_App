@@ -96,14 +96,17 @@ class AboutView extends StatelessWidget {
 
                 const SizedBox(height: 25),
 
-                /// BACKGROUND IMAGE SECTION
+                /// FULLY RESPONSIVE BACKGROUND IMAGE
                 Container(
                   width: double.infinity,
-                  height: 180,
-                  decoration: const BoxDecoration(
+                  height: MediaQuery.of(context).size.width *
+                      0.7, // dynamic height based on screen width
+                  decoration: BoxDecoration(
                     image: DecorationImage(
                       image: AssetImage("assets/learn_pic.png"),
-                      fit: BoxFit.fill,
+                      fit: BoxFit
+                          .fitWidth, // fit full width, scale height proportionally
+                      alignment: Alignment.topCenter, // show top of image first
                     ),
                   ),
                 ),
@@ -371,52 +374,185 @@ class AboutView extends StatelessWidget {
                 const SizedBox(height: 25),
 
                 /// DEVELOPER CARD
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: const [
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Colors.white24,
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 30,
+                KeyedSubtree(
+                  key: UniqueKey(),
+                  child: Builder(
+                    builder: (context) {
+                      return GestureDetector(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return Dialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Stack(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(20),
+                                      child: SingleChildScrollView(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Text(
+                                              "Developer Team",
+                                              style: TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 20),
+                                            ListTile(
+                                              leading: const CircleAvatar(
+                                                backgroundImage: AssetImage(
+                                                    "assets/Tharindu.png"),
+                                                radius: 25,
+                                              ),
+                                              title: const Text("32372"),
+                                              subtitle:
+                                                  const Text("A.K.A.Tharindu"),
+                                            ),
+                                            ListTile(
+                                              leading: const CircleAvatar(
+                                                backgroundImage: AssetImage(
+                                                    "assets/Wanasinghe.png"),
+                                                radius: 25,
+                                              ),
+                                              title: const Text("32318"),
+                                              subtitle: const Text(
+                                                  "W.M.P.B.Wanasinghe"),
+                                            ),
+                                            ListTile(
+                                              leading: const CircleAvatar(
+                                                backgroundImage: AssetImage(
+                                                    "assets/Ranjith.png"),
+                                                radius: 25,
+                                              ),
+                                              title: const Text("32747"),
+                                              subtitle:
+                                                  const Text("U.D.S.Ranjith"),
+                                            ),
+                                            ListTile(
+                                              leading: const CircleAvatar(
+                                                backgroundImage: AssetImage(
+                                                    "assets/Kavinda.png"),
+                                                radius: 25,
+                                              ),
+                                              title: const Text("32327"),
+                                              subtitle:
+                                                  const Text("R.A.V.Kavinda"),
+                                            ),
+                                            ListTile(
+                                              leading: const CircleAvatar(
+                                                backgroundImage: AssetImage(
+                                                    "assets/Godamune.png"),
+                                                radius: 25,
+                                              ),
+                                              title: const Text("IT0005"),
+                                              subtitle: const Text(
+                                                  "G.A.P.O.Godamune"),
+                                            ),
+                                            ListTile(
+                                              leading: const CircleAvatar(
+                                                backgroundImage: AssetImage(
+                                                    "assets/Perera.png"),
+                                                radius: 25,
+                                              ),
+                                              title: const Text("IT0006"),
+                                              subtitle:
+                                                  const Text("R.A.V.M.Perera"),
+                                            ),
+                                            ListTile(
+                                              leading: const CircleAvatar(
+                                                backgroundImage: AssetImage(
+                                                    "assets/Rathnayaka.png"),
+                                                radius: 25,
+                                              ),
+                                              title: const Text("IT0007"),
+                                              subtitle: const Text(
+                                                  "P.H.D.K.Rathnayaka"),
+                                            ),
+                                            ListTile(
+                                              leading: const CircleAvatar(
+                                                backgroundImage: AssetImage(
+                                                    "assets/Thilakarathna.png"),
+                                                radius: 25,
+                                              ),
+                                              title: const Text("IT0008"),
+                                              subtitle: const Text(
+                                                  "I.A.C.S.Thilakarathna"),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      right: 5,
+                                      top: 5,
+                                      child: IconButton(
+                                        icon: const Icon(Icons.close),
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            children: const [
+                              CircleAvatar(
+                                radius: 30,
+                                backgroundColor: Colors.white24,
+                                child: Icon(
+                                  Icons.person,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                              ),
+                              SizedBox(width: 15),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Group Seven",
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  SizedBox(height: 5),
+                                  Text(
+                                    "Explorer Team",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    "Flutter App Developers",
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            ],
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 15),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Group Seven",
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
-                            ),
-                          ),
-                          SizedBox(height: 5),
-                          Text(
-                            "Explorer Team",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            "Flutter App Developers",
-                            style: TextStyle(
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ],
-                      )
-                    ],
+                      );
+                    },
                   ),
                 ),
 
@@ -437,10 +573,198 @@ class AboutView extends StatelessWidget {
                           ),
                         ),
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("FAQ section coming soon"),
-                            ),
+                          showDialog(
+                            context: context,
+                            barrierDismissible:
+                                true, // <-- This allows tapping outside to close
+                            builder: (context) {
+                              return Dialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Stack(
+                                  children: [
+                                    /// CLOSE BUTTON
+                                    Positioned(
+                                      top: 5,
+                                      right: 5,
+                                      child: IconButton(
+                                        icon: const Icon(Icons.close),
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                      ),
+                                    ),
+
+                                    Padding(
+                                      padding: const EdgeInsets.all(20),
+                                      child: SingleChildScrollView(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: const [
+                                            SizedBox(height: 10),
+
+                                            Text(
+                                              "Frequently Asked Questions",
+                                              style: TextStyle(
+                                                fontSize: 22,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+
+                                            SizedBox(height: 20),
+
+                                            /// QUESTION 1
+                                            Text(
+                                              "1. How do I create an account?",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              "You can create an account by entering your name, email, and password on the Sign Up page.",
+                                            ),
+
+                                            SizedBox(height: 15),
+
+                                            /// QUESTION 2
+                                            Text(
+                                              "2. How do I log in to the app?",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              "Use the email and password you registered with on the Login screen.",
+                                            ),
+
+                                            SizedBox(height: 15),
+
+                                            /// QUESTION 3
+                                            Text(
+                                              "3. What should I do if I forget my password?",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              "Tap 'Forgot Password' on the login page and create a new password.",
+                                            ),
+
+                                            SizedBox(height: 15),
+
+                                            /// QUESTION 4
+                                            Text(
+                                              "4. What is the purpose of this app?",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              "This app helps children aged 6-18 improve their knowledge through fun and interactive learning games.",
+                                            ),
+
+                                            SizedBox(height: 15),
+
+                                            /// QUESTION 5
+                                            Text(
+                                              "5. What features are available in the app?",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              "Quiz Arena, Text to Copy (image text extraction), Notebook, Story Time, Drawing Pad, and Image Puzzles.",
+                                            ),
+
+                                            SizedBox(height: 15),
+
+                                            /// QUESTION 6
+                                            Text(
+                                              "6. What happens in Quiz Arena?",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              "Quiz Arena provides subject-based MCQ quizzes with multiple levels.",
+                                            ),
+
+                                            SizedBox(height: 15),
+
+                                            /// QUESTION 7
+                                            Text(
+                                              "7. What is the Text to Copy feature?",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              "You can upload or capture an image and copy the text detected in the image.",
+                                            ),
+
+                                            SizedBox(height: 15),
+
+                                            /// QUESTION 8
+                                            Text(
+                                              "8. What is Notebook used for?",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              "Notebook allows you to write and save personal notes anytime.",
+                                            ),
+
+                                            SizedBox(height: 15),
+
+                                            /// QUESTION 9
+                                            Text(
+                                              "9. What can I do in Story Time?",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              "You can read interesting stories based on different age groups.",
+                                            ),
+
+                                            SizedBox(height: 15),
+
+                                            /// QUESTION 10
+                                            Text(
+                                              "10. What is Drawing Pad?",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              "Drawing Pad allows children to draw pictures and improve creativity.",
+                                            ),
+
+                                            SizedBox(height: 15),
+
+                                            /// QUESTION 11
+                                            Text(
+                                              "11. What are Image Puzzles?",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Text(
+                                              "Image puzzles let you rearrange pieces of an image to complete the picture.",
+                                            ),
+
+                                            SizedBox(height: 20),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           );
                         },
                       ),
@@ -458,10 +782,74 @@ class AboutView extends StatelessWidget {
                           ),
                         ),
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Contact feature coming soon"),
-                            ),
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return Dialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Stack(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(20),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Text(
+                                            "Contact Group Leaders",
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 15),
+                                          ListTile(
+                                            leading: const Icon(Icons.phone,
+                                                color: Colors.green),
+                                            title: const Text("A.K.A.Tharindu"),
+                                            subtitle: const Text("0719361313"),
+                                            onTap: () async {
+                                              final Uri call =
+                                                  Uri.parse("tel:0719361313");
+                                              if (await canLaunchUrl(call)) {
+                                                await launchUrl(call);
+                                              }
+                                            },
+                                          ),
+                                          ListTile(
+                                            leading: const Icon(Icons.phone,
+                                                color: Colors.green),
+                                            title: const Text(
+                                                "W.M.P.B.Wanasinghe"),
+                                            subtitle: const Text("0754627745"),
+                                            onTap: () async {
+                                              final Uri call =
+                                                  Uri.parse("tel:0754627745");
+                                              if (await canLaunchUrl(call)) {
+                                                await launchUrl(call);
+                                              }
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    /// CLOSE BUTTON
+                                    Positioned(
+                                      top: 5,
+                                      right: 5,
+                                      child: IconButton(
+                                        icon: const Icon(Icons.close),
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           );
                         },
                       ),
