@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'AboutPage.dart';
+import 'help_us_page.dart';
 import 'admin_view.dart';
 import 'profile_view.dart';
 import 'about_view.dart';
@@ -38,7 +38,7 @@ class SettingsView extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const AboutPage(),
+                  builder: (context) => const HelpUsPage(),
                 ),
               );
             },
