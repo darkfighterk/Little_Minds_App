@@ -5,7 +5,8 @@ import 'views/login_view.dart';
 import 'views/sign_up_view.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Required for plugins (path_provider, etc.)
+  WidgetsFlutterBinding
+      .ensureInitialized(); // Required for plugins (path_provider, etc.)
   runApp(const MindApp());
 }
 
