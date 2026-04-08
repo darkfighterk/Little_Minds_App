@@ -1,27 +1,38 @@
+// lib/models/user_model.dart
 class User {
-  final int id;
+  final String id;
   final String name;
   final String email;
+  final String? token;
 
-  User({required this.id, required this.name, required this.email});
+  User({
+    required this.id,
+    required this.name,
+    required this.email,
+    this.token,
+  });
 
-  // Create a User from JSON (from backend response)
   factory User.fromJson(Map<String, dynamic> json) {
     print("📦 Parsing user from JSON: $json");
+
+    final dynamic rawId = json['id'];
+    String userId = '';
+    if (rawId is String) {
+      userId = rawId;
+    } else if (rawId is int) {
+      userId = rawId.toString();
+    } else {
+      userId = json['email']?.toString() ?? 'unknown';
+    }
+
     return User(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? '',
-      email: json['email'] ?? '',
+      id: userId,
+      name: json['name']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      token: json['token']?.toString(),
     );
   }
 
-  // Convert User to JSON (for sending to backend if needed)
-  Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'email': email};
-  }
-
   @override
-  String toString() {
-    return 'User(id: $id, name: $name, email: $email)';
-  }
+  String toString() => 'User(id: $id, name: $name, email: $email)';
 }

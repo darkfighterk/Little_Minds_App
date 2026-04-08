@@ -1,22 +1,22 @@
+// lib/services/api_service.dart
 import 'dart:convert';
-
 import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:http/http.dart' as http;
-
 import '../models/puzzle.dart';
 
 class ApiService {
-  // ── Base URL ────────────────────────────────────────────────────────────────
+  // ── Base URL ───────────────────────────────────────────────────────────────
   static String get baseUrl {
     if (kIsWeb) return 'http://localhost:8080';
-    return 'http://10.0.2.2:8080';
+    return 'http://10.0.2.2:8080'; // Android emulator
+    // Real device → 'http://192.168.x.x:8080'
   }
 
-  static void _log(String message) {
-    if (kDebugMode) print('API: $message');
+  static void _log(String msg) {
+    if (kDebugMode) print('ApiService: $msg');
   }
 
-  /// Headers with admin key
+  // ── Headers ────────────────────────────────────────────────────────────────
   static Map<String, String> adminHeaders(String adminKey) => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -28,9 +28,8 @@ class ApiService {
     'Accept': 'application/json',
   };
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // Helper — unwrap { message, data } envelope
-  // ──────────────────────────────────────────────────────────────────────────
+  // ── Envelope unwrapper ─────────────────────────────────────────────────────
+  // Backend wraps everything as { "message": "...", "data": {...} }
   static dynamic _unwrap(dynamic body) {
     if (body is Map<String, dynamic> && body.containsKey('data')) {
       return body['data'];
@@ -38,9 +37,9 @@ class ApiService {
     return body;
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // PUBLIC: Jigsaw puzzles  →  /puzzles
-  // ──────────────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PUBLIC — Jigsaw Puzzles  →  /puzzles
+  // ═══════════════════════════════════════════════════════════════════════════
 
   Future<List<Map<String, dynamic>>> getPuzzles() async {
     final uri = Uri.parse('$baseUrl/puzzles');
@@ -49,6 +48,11 @@ class ApiService {
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = _unwrap(jsonDecode(response.body));
+        // Backend returns { data: { puzzles: [...] } }
+        if (data is Map<String, dynamic>) {
+          final list = data['puzzles'];
+          if (list is List) return list.cast<Map<String, dynamic>>();
+        }
         if (data is List) return data.cast<Map<String, dynamic>>();
       }
       return [];
@@ -92,11 +96,10 @@ class ApiService {
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // ADMIN: Crossword Puzzles  →  /admin/crosswords
-  // ──────────────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ADMIN — Crosswords  →  /admin/crosswords
+  // ═══════════════════════════════════════════════════════════════════════════
 
-  /// List all crosswords (admin key required)
   Future<List<Map<String, dynamic>>> adminGetCrosswords(String adminKey) async {
     final uri = Uri.parse('$baseUrl/admin/crosswords');
     _log('GET $uri');
@@ -119,7 +122,6 @@ class ApiService {
     }
   }
 
-  /// Get one crossword with full grid (admin key required)
   Future<Map<String, dynamic>> adminGetCrossword(
       int id, String adminKey) async {
     final uri = Uri.parse('$baseUrl/admin/crosswords/$id');
@@ -140,7 +142,6 @@ class ApiService {
     }
   }
 
-  /// Create new crossword (admin key required)
   Future<Map<String, dynamic>> adminCreateCrossword(
       Puzzle puzzle, String adminKey) async {
     final uri = Uri.parse('$baseUrl/admin/crosswords');
@@ -155,11 +156,11 @@ class ApiService {
               headers: adminHeaders(adminKey), body: jsonEncode(bodyJson))
           .timeout(const Duration(seconds: 20));
       if (response.statusCode == 201 || response.statusCode == 200) {
-        final body = jsonDecode(response.body);
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
         return (body['data'] as Map<String, dynamic>?) ?? {};
       }
       if (response.statusCode == 403) throw Exception('Invalid admin key');
-      final errBody = jsonDecode(response.body);
+      final errBody = jsonDecode(response.body) as Map<String, dynamic>;
       throw Exception(
           errBody['error'] ?? 'Server error ${response.statusCode}');
     } catch (e) {
@@ -168,7 +169,6 @@ class ApiService {
     }
   }
 
-  /// Update existing crossword (admin key required)
   Future<void> adminUpdateCrossword(
       int id, Puzzle puzzle, String adminKey) async {
     final uri = Uri.parse('$baseUrl/admin/crosswords/$id');
@@ -190,7 +190,6 @@ class ApiService {
     }
   }
 
-  /// Delete crossword (admin key required)
   Future<void> adminDeleteCrossword(int id, String adminKey) async {
     final uri = Uri.parse('$baseUrl/admin/crosswords/$id');
     _log('DELETE $uri');
@@ -207,16 +206,17 @@ class ApiService {
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // PUBLIC: Crosswords  →  /crosswords
-  // ──────────────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PUBLIC — Crosswords  →  /crosswords
+  // ═══════════════════════════════════════════════════════════════════════════
 
   Future<List<Map<String, dynamic>>> getCrosswords(
       {String? category, String? difficulty}) async {
     final params = <String, String>{};
     if (category != null && category.isNotEmpty) params['category'] = category;
-    if (difficulty != null && difficulty.isNotEmpty)
+    if (difficulty != null && difficulty.isNotEmpty) {
       params['difficulty'] = difficulty;
+    }
     final uri = Uri.parse('$baseUrl/crosswords')
         .replace(queryParameters: params.isEmpty ? null : params);
     _log('GET $uri');

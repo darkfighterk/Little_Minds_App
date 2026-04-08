@@ -1,8 +1,4 @@
-// ============================================================
-// login_controller.dart  (UPDATED — saves JWT session)
-// Place in: lib/controllers/login_controller.dart
-// ============================================================
-
+// lib/controllers/login_controller.dart
 import '../services/auth_service.dart';
 import '../services/game_service.dart';
 import '../models/user_model.dart';
@@ -10,7 +6,7 @@ import '../models/user_model.dart';
 class LoginController {
   final AuthService _authService = AuthService();
 
-  // Login user
+  // LOGIN
   Future<User?> login(String email, String password) async {
     if (email.isEmpty || password.isEmpty) {
       print("❌ Email or password is empty");
@@ -21,11 +17,11 @@ class LoginController {
     final response = await _authService.loginUser(email, password);
 
     if (response == null) {
-      print("❌ LoginController: No response from auth service");
+      print("❌ LoginController: No response");
       return null;
     }
 
-    if (response.containsKey('error')) {
+    if (response.containsKey('error') && response['error'] != '') {
       print("❌ LoginController: Error - ${response['error']}");
       return null;
     }
@@ -33,25 +29,26 @@ class LoginController {
     if (response.containsKey('data') && response['data'] != null) {
       final data = response['data'] as Map<String, dynamic>;
 
-      // ── SAVE SESSION (user_id + JWT token) ──────────────────
-      // This lets GameService authenticate progress API calls.
-      final userId = (data['id'] as num?)?.toInt() ?? 0;
-      final token = (data['token'] as String?) ?? '';
+      final token = data['token'] as String?;
+      final userId = data['id'] as String?;
+      final userEmail = data['email'] as String?;
 
-      if (userId > 0 && token.isNotEmpty) {
+      if (token != null &&
+          token.isNotEmpty &&
+          userId != null &&
+          userId.isNotEmpty) {
         await GameService.saveSession(userId, token);
         print("✅ Session saved: userId=$userId");
-      }
 
-      print("✅ LoginController: Login successful");
-      return User.fromJson(data);
+        return User.fromJson(data);
+      }
     }
 
     print("❌ LoginController: Invalid response structure");
     return null;
   }
 
-  // Register user
+  // REGISTER
   Future<User?> addUser(String name, String email, String password) async {
     if (name.isEmpty || email.isEmpty || password.isEmpty) {
       print("❌ Name, email, or password is empty");
@@ -66,17 +63,29 @@ class LoginController {
       return null;
     }
 
-    if (response.containsKey('error')) {
-      print("❌ LoginController: Error - ${response['error']}");
+    print("✅ POST /register body: $response");
+
+    if (response.containsKey('error') && response['error'] != '') {
+      print("❌ LoginController: Server error - ${response['error']}");
       return null;
     }
 
     if (response.containsKey('data') && response['data'] != null) {
-      print("✅ LoginController: Registration successful");
-      return User.fromJson(response['data']);
+      final data = response['data'] as Map<String, dynamic>;
+
+      final userId = data['id'] as String?;
+      final userEmail = data['email'] as String?;
+      final userName = data['name'] as String? ?? name;
+
+      if (userId != null && userEmail != null) {
+        print("✅ Registration successful: $userId");
+
+        // Auto login after registration
+        return await login(email, password);
+      }
     }
 
-    print("❌ LoginController: Invalid response structure");
+    print("❌ LoginController: Invalid response structure: $response");
     return null;
   }
 
