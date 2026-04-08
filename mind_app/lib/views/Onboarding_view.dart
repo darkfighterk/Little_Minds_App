@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
-import 'login_view.dart'; // adjust path if needed
+import 'package:google_fonts/google_fonts.dart';
+import 'login_view.dart';
+
+const Color mainBlue = Color(0xFF3AAFFF);
+const Color secondaryPurple = Color(0xFFA55FEF);
+const Color canvasBg = Color(0xFFF8FAFC);
 
 class OnboardingView extends StatelessWidget {
   const OnboardingView({super.key});
@@ -7,142 +12,185 @@ class OnboardingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(
-        0xFFFCE4F9,
-      ), // ≈ pink-purple from your screenshot
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // Optional: subtle floating shapes or stars can be added here if desired
-            Positioned(
-              top: 40,
-              right: 30,
-              child: Icon(Icons.star, color: Colors.yellow[700], size: 60),
-            ),
-            Positioned(
-              bottom: 100,
-              left: 50,
-              child: Icon(Icons.star, color: Colors.yellow[600], size: 40),
-            ),
-            Positioned(
-              top: 120,
-              left: 40,
-              child: Icon(Icons.star, color: Colors.yellow[500], size: 50),
-            ),
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          //  Decorative Wave Background
+          _buildBackgroundDecor(),
 
-            Center(
-              child: Column(
+          SafeArea(
+            child: Column(
+              children: [
+                const Spacer(flex: 2),
+
+                //  Main Illustration with Glow
+                _buildIllustration(),
+
+                const Spacer(flex: 1),
+
+                //  Catchy Title in Recoleta
+                _buildTitleSection(),
+
+                const SizedBox(height: 15),
+
+                //  Subtitle in Nunito
+                _buildSubtitle(),
+
+                const Spacer(flex: 2),
+
+                //  Action Buttons
+                _buildButtonSection(context),
+
+                const SizedBox(height: 40),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBackgroundDecor() {
+    return Positioned(
+      top: -100,
+      right: -50,
+      child: Container(
+        width: 300,
+        height: 300,
+        decoration: BoxDecoration(
+          color: mainBlue.withOpacity(0.05),
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIllustration() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: secondaryPurple.withOpacity(0.1),
+            blurRadius: 50,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Image.asset(
+        'assets/illustrations/onboarding_girls.png',
+        height: 320,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => const Icon(
+          Icons.auto_awesome_motion_rounded,
+          size: 150,
+          color: secondaryPurple,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTitleSection() {
+    return Column(
+      children: [
+        const Text(
+          "Let’s Start Your",
+          style: TextStyle(
+            fontFamily: 'Recoleta',
+            fontSize: 34,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        Text(
+          "Learning Adventure",
+          style: TextStyle(
+            fontFamily: 'Recoleta',
+            fontSize: 34,
+            fontWeight: FontWeight.bold,
+            color: mainBlue,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubtitle() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 40),
+      child: Text(
+        "Discover fun games, magic art, and amazing stories made just for you!",
+        textAlign: TextAlign.center,
+        style: GoogleFonts.nunito(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Colors.black45,
+          height: 1.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildButtonSection(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 30),
+      child: Row(
+        children: [
+          // ── Skip Button ──
+          Expanded(
+            child: TextButton(
+              onPressed: () => Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginView()),
+              ),
+              child: Text(
+                "Skip",
+                style: GoogleFonts.nunito(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black38,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 20),
+          // ── Start Button ──
+          Expanded(
+            flex: 2,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginView()),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: secondaryPurple,
+                foregroundColor: Colors.white,
+                elevation: 8,
+                shadowColor: secondaryPurple.withOpacity(0.4),
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // The main illustration with speech bubbles (single image as requested)
-                  Image.asset(
-                    'assets/illustrations/onboarding_girls.png', // ← put your combined image here
-                    height: 380, // adjust based on your image aspect ratio
-                    fit: BoxFit.contain,
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  const Text(
-                    "Let’s Start",
+                  Text(
+                    "Get Started",
                     style: TextStyle(
-                      fontSize: 36,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFFAB47BC),
+                      letterSpacing: 0.5,
                     ),
                   ),
-                  const Text(
-                    "Your Learning Adventure",
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFAB47BC),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: 60),
-
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () {
-                              // Optional: maybe show a tooltip or just do nothing
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const LoginView(),
-                                ),
-                              );
-                            },
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(
-                                color: Color(0xFFAB47BC),
-                                width: 2,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                            child: const Text(
-                              'Skip',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Color(0xFFAB47BC),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const LoginView(),
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFAB47BC),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              elevation: 4,
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Start',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                                Icon(Icons.arrow_forward_rounded),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  SizedBox(width: 10),
+                  Icon(Icons.arrow_forward_rounded, size: 20),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

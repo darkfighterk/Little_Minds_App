@@ -17,6 +17,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   final List<Map<String, dynamic>> _messages = [];
   bool _isLoading = false;
 
+  final Color mainBlue = const Color(0xFF3AAFFF);
+  final Color secondaryPurple = const Color(0xFFA55FEF);
+  final Color accentOrange = const Color(0xFFFF8811);
+  final Color sunnyYellow = const Color(0xFFFDDF50);
+
   late AnimationController _floatController;
   late AnimationController _bounceController;
   late Animation<double> _bounceAnim;
@@ -27,31 +32,26 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-
-    final emojis = ['⭐', '🌟', '✨', '💫', '🌈', '🦋', '🌸', '🍭', '🎈', '🎀'];
-    for (int i = 0; i < 14; i++) {
+    // Background decorations
+    final emojis = ['⭐', '✨', '🪐', '🦖', '💡', '🌈', '🔭', '📚'];
+    for (int i = 0; i < 10; i++) {
       _decoItems.add(_DecoItem(
         x: _random.nextDouble(),
-        y: _random.nextDouble() * 0.85,
-        size: _random.nextDouble() * 14 + 8,
+        y: _random.nextDouble() * 0.8,
+        size: _random.nextDouble() * 15 + 10,
         phase: _random.nextDouble() * 2 * math.pi,
         emoji: emojis[_random.nextInt(emojis.length)],
       ));
     }
 
-    _floatController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 5),
-    )..repeat();
-
+    _floatController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 6))
+          ..repeat();
     _bounceController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
-
-    _bounceAnim = Tween<double>(begin: 0, end: -14).animate(
-      CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut),
-    );
+        vsync: this, duration: const Duration(milliseconds: 1200))
+      ..repeat(reverse: true);
+    _bounceAnim = Tween<double>(begin: 0, end: -10).animate(
+        CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut));
   }
 
   @override
@@ -63,17 +63,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
+  String get _systemPrompt =>
+      "You are Mindie, a super friendly AI buddy for kids. "
+      "Rules: 1. Use lots of emojis. 2. Keep answers under 3 short sentences. "
+      "3. Use simple words kids understand. 4. Always end with a fun question. "
+      "5. Be exciting and encouraging!";
 
   Future<void> _handleSend() async {
     if (_messageController.text.trim().isEmpty) return;
@@ -88,30 +82,28 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
     try {
       final url = Uri.parse("http://10.0.2.2:8080/chat");
-
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({"message": userText}),
-      );
+      final response = await http.post(url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            "message": userText,
+            "system": _systemPrompt // ✅ Sending instruction to AI
+          }));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final botResponse = data['reply'];
-
         setState(() {
-          _messages.add({"text": botResponse, "isMe": false});
+          _messages.add({"text": data['reply'], "isMe": false});
           _isLoading = false;
         });
       } else {
-        throw Exception("Status: ${response.statusCode}");
+        throw Exception();
       }
     } catch (e) {
       setState(() {
         _messages.add({
           "text":
-              "Mindie is taking a little nap! 🦄 (Please check if the server is running!)",
-          "isMe": false,
+              "Mindie is having a little nap! 💤 Maybe check the internet? ✨",
+          "isMe": false
         });
         _isLoading = false;
       });
@@ -119,108 +111,47 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _scrollToBottom();
   }
 
-  bool get _hasMessages => _messages.isNotEmpty;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFFFF9C4), Color(0xFFFCE4EC), Color(0xFFE8EAF6)],
-          ),
-        ),
-        child: SafeArea(
-          child: Stack(
-            children: [
-              ..._buildFloatingDeco(context),
-              Column(
-                children: [
-                  _buildHeader(),
-                  Expanded(
-                    child: _hasMessages
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          ..._buildFloatingDeco(context),
+          SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(),
+                Expanded(
+                    child: _messages.isNotEmpty
                         ? _buildMessageList()
-                        : _buildHeroSection(),
-                  ),
-                  if (_isLoading && _hasMessages) _buildTypingIndicator(),
-                  _buildInputBar(),
-                ],
-              ),
-            ],
+                        : _buildHeroSection()),
+                if (_isLoading) _buildTypingIndicator(),
+                _buildInputBar(),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  List<Widget> _buildFloatingDeco(BuildContext context) {
-    final screenW = MediaQuery.of(context).size.width;
-    final screenH = MediaQuery.of(context).size.height;
-    return _decoItems.map((item) {
-      return AnimatedBuilder(
-        animation: _floatController,
-        builder: (context, _) {
-          final yOffset =
-              math.sin(_floatController.value * 2 * math.pi + item.phase) * 18;
-          return Positioned(
-            left: item.x * screenW,
-            top: item.y * screenH * 0.8 + yOffset,
-            child: Opacity(
-              opacity: 0.28,
-              child: Text(item.emoji, style: TextStyle(fontSize: item.size)),
-            ),
-          );
-        },
-      );
-    }).toList();
-  }
-
   Widget _buildHeader() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(14, 10, 14, 4),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.80),
-        borderRadius: BorderRadius.circular(26),
-        boxShadow: [
-          BoxShadow(
-              color: const Color(0xFFFFAB91).withOpacity(0.25),
-              blurRadius: 16,
-              offset: const Offset(0, 4)),
-        ],
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Updated: Added Back Button with Navigation logic
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: _KidButton(
-              bgColor: const Color(0xFFFF7043),
-              child: const Icon(Icons.arrow_back_ios_new,
-                  size: 18, color: Color(0xFFAD1457)),
-            ),
-          ),
-          const Spacer(),
-          Row(
-            children: [
-              AnimatedBuilder(
-                animation: _bounceAnim,
-                builder: (context, child) => Transform.translate(
-                    offset: Offset(0, _bounceAnim.value * 0.4),
-                    child: const Text('🦄', style: TextStyle(fontSize: 26))),
-              ),
-              const SizedBox(width: 8),
-              Text('Mindie',
-                  style: GoogleFonts.fredoka(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFFAD1457))),
-            ],
-          ),
-          const Spacer(),
-          _KidButton(bgColor: const Color(0xFF26C6DA), child: const Text('✏️')),
+          IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20)),
+          Text('Chat with Mindie',
+              style: TextStyle(
+                  fontFamily: 'Recoleta',
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: mainBlue)),
+          const Text('🦄', style: TextStyle(fontSize: 24)),
         ],
       ),
     );
@@ -228,48 +159,120 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   Widget _buildHeroSection() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
-          const SizedBox(height: 20),
+          const SizedBox(height: 40),
           AnimatedBuilder(
             animation: _bounceAnim,
             builder: (context, child) => Transform.translate(
-                offset: Offset(0, _bounceAnim.value), child: _MindieAvatar()),
+                offset: Offset(0, _bounceAnim.value),
+                child: _MindieAvatar(mainBlue)),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 25),
           Text("Hi! I'm Mindie! 👋",
-              style: GoogleFonts.fredoka(
+              style: TextStyle(
+                  fontFamily: 'Recoleta',
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFFAD1457))),
-          const SizedBox(height: 8),
-          Text("Your smart learning buddy! 🌟",
+                  color: mainBlue)),
+          const SizedBox(height: 10),
+          Text("Pick a fun topic to start! ✨",
               style: GoogleFonts.nunito(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF6A1B9A))),
-          const SizedBox(height: 28),
+                  color: Colors.blueGrey)),
+          const SizedBox(height: 35),
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 12,
+            runSpacing: 12,
             alignment: WrapAlignment.center,
             children: [
               _TopicChip(
-                  label: '🦕 Dinosaurs',
-                  color: const Color(0xFF66BB6A),
+                  label: '🚀 Space Fact',
+                  color: secondaryPurple,
                   onTap: () =>
-                      _quickAsk('Tell me a fun fact about dinosaurs!')),
+                      _quickAsk('Tell me a super cool space fact! 🪐')),
               _TopicChip(
-                  label: '🚀 Space',
-                  color: const Color(0xFF42A5F5),
-                  onTap: () =>
-                      _quickAsk('Tell me something amazing about space!')),
+                  label: '🦖 Dinosaurs',
+                  color: const Color(0xFF4CAF50),
+                  onTap: () => _quickAsk('Tell me a fun dinosaur fact! 🦖')),
               _TopicChip(
-                  label: '📖 Story',
-                  color: const Color(0xFFAB47BC),
-                  onTap: () => _quickAsk('Tell me a short fun story!')),
+                  label: '🦁 Animals',
+                  color: accentOrange,
+                  onTap: () => _quickAsk('Tell me a funny animal fact! 🦁')),
+              _TopicChip(
+                  label: '🍎 Science',
+                  color: Colors.pinkAccent,
+                  onTap: () => _quickAsk('Tell me a magic science fact! 🧪')),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessageList() {
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.all(20),
+      itemCount: _messages.length,
+      itemBuilder: (context, i) => _buildBubble(_messages[i]),
+    );
+  }
+
+  Widget _buildBubble(Map<String, dynamic> msg) {
+    bool isMe = msg['isMe'];
+    return Align(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          color: isMe ? mainBlue : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(24).copyWith(
+            bottomRight:
+                isMe ? const Radius.circular(4) : const Radius.circular(24),
+            bottomLeft:
+                isMe ? const Radius.circular(24) : const Radius.circular(4),
+          ),
+        ),
+        child: Text(msg['text'],
+            style: GoogleFonts.nunito(
+                color: isMe ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.w700,
+                fontSize: 15)),
+      ),
+    );
+  }
+
+  Widget _buildInputBar() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 25),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(35),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)
+          ]),
+      child: Row(
+        children: [
+          const SizedBox(width: 15),
+          Expanded(
+              child: TextField(
+                  controller: _messageController,
+                  onSubmitted: (_) => _handleSend(),
+                  decoration: const InputDecoration(
+                      hintText: 'Ask Mindie anything...',
+                      border: InputBorder.none))),
+          GestureDetector(
+            onTap: _handleSend,
+            child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration:
+                    BoxDecoration(color: mainBlue, shape: BoxShape.circle),
+                child: const Icon(Icons.send_rounded,
+                    color: Colors.white, size: 20)),
           ),
         ],
       ),
@@ -281,122 +284,58 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _handleSend();
   }
 
-  Widget _buildMessageList() {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      itemCount: _messages.length,
-      itemBuilder: (context, index) => _buildBubble(_messages[index]),
-    );
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients)
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    });
   }
 
-  Widget _buildBubble(Map<String, dynamic> msg) {
-    final bool isMe = msg['isMe'];
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Row(
-        mainAxisAlignment:
-            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (!isMe) ...[
-            Container(
-              width: 38,
-              height: 38,
-              margin: const EdgeInsets.only(right: 8, bottom: 4),
-              decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                      colors: [Color(0xFFCE93D8), Color(0xFFAD1457)])),
-              child: const Center(
-                  child: Text('🦄', style: TextStyle(fontSize: 20))),
-            ),
-          ],
-          Flexible(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 5),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-              decoration: BoxDecoration(
-                gradient: isMe
-                    ? const LinearGradient(
-                        colors: [Color(0xFFFF6F00), Color(0xFFFFB300)])
-                    : const LinearGradient(
-                        colors: [Color(0xFFCE93D8), Color(0xFFBA68C8)]),
-                borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(20),
-                    topRight: const Radius.circular(20),
-                    bottomLeft: Radius.circular(isMe ? 20 : 4),
-                    bottomRight: Radius.circular(isMe ? 4 : 20)),
-              ),
-              child: Text(msg['text'],
-                  style: GoogleFonts.nunito(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white)),
-            ),
-          ),
-        ],
-      ),
-    );
+  List<Widget> _buildFloatingDeco(BuildContext context) {
+    final sw = MediaQuery.of(context).size.width;
+    final sh = MediaQuery.of(context).size.height;
+    return _decoItems
+        .map((item) => AnimatedBuilder(
+              animation: _floatController,
+              builder: (context, _) {
+                final yOff = math.sin(
+                        _floatController.value * 2 * math.pi + item.phase) *
+                    15;
+                return Positioned(
+                    left: item.x * sw,
+                    top: item.y * sh + yOff,
+                    child: Opacity(
+                        opacity: 0.1,
+                        child: Text(item.emoji,
+                            style: TextStyle(fontSize: item.size))));
+              },
+            ))
+        .toList();
   }
 
-  Widget _buildTypingIndicator() {
-    return const Padding(
-        padding: EdgeInsets.only(left: 20, bottom: 10), child: _TypingDots());
-  }
-
-  Widget _buildInputBar() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(14, 6, 14, 16),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.90),
-          borderRadius: BorderRadius.circular(30)),
-      child: Row(
-        children: [
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              onSubmitted: (_) => _handleSend(),
-              style: GoogleFonts.nunito(
-                  fontWeight: FontWeight.w700, color: const Color(0xFF4A148C)),
-              decoration: const InputDecoration(
-                  hintText: 'Ask Mindie! 💬', border: InputBorder.none),
-            ),
-          ),
-          GestureDetector(
-            onTap: _handleSend,
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                      colors: [Color(0xFFFF6F00), Color(0xFFFFB300)]),
-                  borderRadius: BorderRadius.circular(14)),
-              child:
-                  const Icon(Icons.send_rounded, color: Colors.white, size: 20),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildTypingIndicator() => const Padding(
+      padding: EdgeInsets.only(left: 30, bottom: 15),
+      child: Text('🦄 Mindie is thinking...',
+          style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)));
 }
 
-// --- Helper Classes ---
-
 class _MindieAvatar extends StatelessWidget {
+  final Color color;
+  const _MindieAvatar(this.color);
   @override
   Widget build(BuildContext context) {
-    return Stack(alignment: Alignment.center, children: [
-      Container(
-          width: 175,
-          height: 175,
-          decoration:
-              const BoxDecoration(shape: BoxShape.circle, color: Colors.white)),
-      const Text('🦄', style: TextStyle(fontSize: 95)),
-    ]);
+    return Container(
+      width: 140,
+      height: 140,
+      decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(color: color.withOpacity(0.1), width: 8),
+          boxShadow: [
+            BoxShadow(color: color.withOpacity(0.1), blurRadius: 30)
+          ]),
+      child: const Center(child: Text('🦄', style: TextStyle(fontSize: 70))),
+    );
   }
 }
 
@@ -408,48 +347,13 @@ class _TopicChip extends StatelessWidget {
       {required this.label, required this.color, required this.onTap});
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-            color: color.withOpacity(0.14),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: color.withOpacity(0.55), width: 2)),
-        child: Text(label,
-            style: GoogleFonts.fredoka(
-                fontWeight: FontWeight.bold, color: color.withOpacity(0.9))),
-      ),
-    );
-  }
-}
-
-class _KidButton extends StatelessWidget {
-  final Color bgColor;
-  final Widget child;
-  const _KidButton({required this.bgColor, required this.child});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-            color: bgColor.withOpacity(0.18),
-            borderRadius: BorderRadius.circular(14)),
-        child: Center(child: child));
-  }
-}
-
-class _TypingDots extends StatelessWidget {
-  const _TypingDots();
-  @override
-  Widget build(BuildContext context) {
-    return Row(children: [
-      const Text('🦄 ', style: TextStyle(fontSize: 18)),
-      Text('Mindie is thinking...',
-          style: GoogleFonts.nunito(
-              fontWeight: FontWeight.bold, color: Colors.grey))
-    ]);
+    return ActionChip(
+        onPressed: onTap,
+        label: Text(label,
+            style:
+                GoogleFonts.nunito(fontWeight: FontWeight.bold, color: color)),
+        backgroundColor: color.withOpacity(0.1),
+        shape: StadiumBorder(side: BorderSide(color: color.withOpacity(0.3))));
   }
 }
 

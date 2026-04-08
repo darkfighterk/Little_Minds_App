@@ -1,353 +1,283 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'help_us_page.dart';
 import 'admin_view.dart';
 import 'profile_view.dart';
 import 'about_view.dart';
-import 'login_view.dart'; // ← ADD THIS (adjust path if needed)
-import '../services/game_service.dart'; // ← ADD THIS for clearSession
+import 'login_view.dart';
+import '../services/game_service.dart';
+
+const Color mainBlue = Color(0xFF3AAFFF);
+const Color secondaryPurple = Color(0xFFA55FEF);
+const Color accentOrange = Color(0xFFFF8811);
+const Color softBlueBg = Color(0xFFF1F5F9);
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'App Settings',
           style: TextStyle(
-            color: Colors.white,
+            fontFamily: 'Recoleta',
+            color: Colors.black87,
             fontWeight: FontWeight.bold,
-            fontSize: 22,
+            fontSize: 24,
           ),
         ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.help_outline, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const HelpUsPage(),
-                ),
-              );
-            },
+            icon: const Icon(Icons.help_outline_rounded, color: mainBlue),
+            onPressed: () => Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const HelpUsPage())),
           ),
         ],
       ),
-      extendBodyBehindAppBar: true,
       body: Container(
+        width: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: isDark
-                ? [const Color(0xFF2A1A5E), const Color(0xFF180F38)]
-                : [const Color(0xFF7C5CFF), const Color(0xFF5A3CCC)],
+            colors: [mainBlue.withOpacity(0.05), Colors.white],
           ),
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 12),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            children: [
+              // ──  Explorer Profile Header ──
+              _buildModernProfileHeader(),
+              const SizedBox(height: 40),
 
-                // Avatar + sparkle
-                Stack(
-                  alignment: Alignment.bottomRight,
-                  children: [
-                    CircleAvatar(
-                      radius: 54,
-                      backgroundColor: Colors.white.withOpacity(0.25),
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundImage: const NetworkImage(
-                          'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 4,
-                      right: 4,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFFFD700),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.auto_awesome,
-                          color: Colors.deepPurple,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              // ──  Account Section ──
+              _buildSectionHeader("MY ACCOUNT"),
+              _buildSettingsTile(
+                icon: Icons.person_outline_rounded,
+                color: mainBlue,
+                title: "Profile Info",
+                subtitle: "Update your name and avatar",
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const ProfileView())),
+              ),
+              const SizedBox(height: 12),
+              _buildSettingsTile(
+                icon: Icons.admin_panel_settings_outlined,
+                color: Colors.redAccent,
+                title: "Admin Gate",
+                subtitle: "Content management & controls",
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const AdminGateView())),
+              ),
 
-                const SizedBox(height: 16),
+              const SizedBox(height: 32),
 
-                // Greeting
-                const Text(
-                  "Hi there, Explorer!",
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "LET'S CUSTOMIZE YOUR ADVENTURE",
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.white.withOpacity(0.85),
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+              // ──  Preferences Section ──
+              _buildSectionHeader("EXPERIENCE"),
+              _buildSettingsTile(
+                icon: Icons.palette_outlined,
+                color: secondaryPurple,
+                title: "Appearance",
+                subtitle: "Customize themes and colors",
+                onTap: () {},
+              ),
+              const SizedBox(height: 12),
+              _buildSettingsTile(
+                icon: Icons.info_outline_rounded,
+                color: accentOrange,
+                title: "About Little Minds",
+                subtitle: "FAQs, Version 2.0.1",
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const AboutView())),
+              ),
 
-                const SizedBox(height: 36),
+              const SizedBox(height: 60),
 
-                // Settings group title
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "APP SETTINGS",
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white.withOpacity(0.7),
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
+              // ──  Logout CTA ──
+              _buildSignOutButton(context),
 
-                // Profile tile
-                _buildSettingsTile(
-                  icon: Icons.person,
-                  iconColor: const Color(0xFF00D4FF),
-                  title: "Profile",
-                  subtitle: "View and manage your account",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ProfileView(),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 8),
-
-                // Admin tile
-                _buildSettingsTile(
-                  icon: Icons.admin_panel_settings,
-                  iconColor: const Color(0xFFFF5252),
-                  title: "Admin",
-                  subtitle: "Management & controls",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AdminGateView(),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // Remaining settings
-                _buildSettingsTile(
-                  icon: Icons.translate,
-                  iconColor: const Color(0xFF00D4FF),
-                  title: "App Language",
-                  subtitle: "English (US)",
-                  onTap: () {
-                    // TODO: Open language selector
-                  },
-                ),
-                const SizedBox(height: 8),
-
-                _buildSettingsTile(
-                  icon: Icons.palette,
-                  iconColor: const Color(0xFFFF80AB),
-                  title: "Appearance",
-                  subtitle: isDark
-                      ? "Dark Mode, Purple Theme"
-                      : "Light Mode, Purple Theme",
-                  onTap: () {
-                    // TODO: Open theme / appearance selector
-                  },
-                ),
-                const SizedBox(height: 8),
-
-                _buildSettingsTile(
-                  icon: Icons.help,
-                  iconColor: const Color(0xFFAB47BC),
-                  title: "About",
-                  subtitle: "FAQs and Chat",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AboutView(),
-                      ),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 40),
-
-                // ── Logout button ───────────────────────────────────────────────
-                GestureDetector(
-                  onTap: () async {
-                    final bool? confirmed = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Sign Out'),
-                        content:
-                            const Text('Are you sure you want to sign out?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text(
-                              'Sign Out',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-
-                    if (confirmed == true) {
-                      // Clear session data
-                      await GameService.clearSession();
-
-                      // Navigate to login screen and remove all previous routes
-                      if (context.mounted) {
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginView(),
-                          ),
-                          (route) => false,
-                        );
-                      }
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(16),
-                      border:
-                          Border.all(color: Colors.redAccent.withOpacity(0.4)),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.logout, color: Colors.redAccent),
-                        SizedBox(width: 12),
-                        Text(
-                          "Sign Out of Explorer Account",
-                          style: TextStyle(
-                            color: Colors.redAccent,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 80),
-              ],
-            ),
+              const SizedBox(height: 20),
+              Text(
+                "Little Minds v2.0.1\nMade with ❤️ for tiny explorers",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.nunito(
+                    color: Colors.black26,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSettingsTile({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
-        ),
-        child: Row(
+  Widget _buildModernProfileHeader() {
+    return Column(
+      children: [
+        Stack(
+          alignment: Alignment.bottomRight,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.18),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: iconColor, size: 28),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.75),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
+              padding: const EdgeInsets.all(4),
+              decoration:
+                  const BoxDecoration(color: mainBlue, shape: BoxShape.circle),
+              child: const CircleAvatar(
+                radius: 55,
+                backgroundImage: NetworkImage(
+                    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300'),
               ),
             ),
-            const Icon(
-              Icons.chevron_right,
-              color: Colors.white54,
-              size: 28,
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                  color: Color(0xFFFFD700), shape: BoxShape.circle),
+              child:
+                  const Icon(Icons.star_rounded, color: Colors.brown, size: 18),
             ),
           ],
         ),
+        const SizedBox(height: 16),
+        const Text("Hi, Little Explorer!",
+            style: TextStyle(
+                fontFamily: 'Recoleta',
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87)),
+        Text("Customize your learning adventure",
+            style: GoogleFonts.nunito(
+                color: Colors.black45,
+                fontWeight: FontWeight.w700,
+                fontSize: 14)),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 8, bottom: 12),
+        child: Text(title,
+            style: GoogleFonts.nunito(
+                fontWeight: FontWeight.w900,
+                fontSize: 12,
+                color: mainBlue.withOpacity(0.6),
+                letterSpacing: 1.5)),
       ),
     );
+  }
+
+  Widget _buildSettingsTile(
+      {required IconData icon,
+      required Color color,
+      required String title,
+      required String subtitle,
+      required VoidCallback onTap}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+              color: mainBlue.withOpacity(0.04),
+              blurRadius: 15,
+              offset: const Offset(0, 5))
+        ],
+      ),
+      child: ListTile(
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(15)),
+          child: Icon(icon, color: color, size: 24),
+        ),
+        title: Text(title,
+            style: const TextStyle(
+                fontFamily: 'Recoleta',
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+                color: Colors.black87)),
+        subtitle: Text(subtitle,
+            style: GoogleFonts.nunito(
+                fontSize: 13,
+                color: Colors.black38,
+                fontWeight: FontWeight.w600)),
+        trailing: const Icon(Icons.arrow_forward_ios_rounded,
+            size: 16, color: Colors.black12),
+      ),
+    );
+  }
+
+  Widget _buildSignOutButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () => _handleLogout(context),
+        icon: const Icon(Icons.logout_rounded, size: 20),
+        label: const Text("Sign Out Explorer",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.redAccent,
+          elevation: 0,
+          side: const BorderSide(color: Color(0xFFFFEBEE), width: 2),
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleLogout(BuildContext context) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        title: const Text('Sign Out?',
+            style:
+                TextStyle(fontFamily: 'Recoleta', fontWeight: FontWeight.bold)),
+        content: const Text(
+            'Are you sure you want to take a break, Little Explorer?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text('Stay',
+                  style: GoogleFonts.nunito(
+                      color: Colors.grey, fontWeight: FontWeight.bold))),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text('Sign Out',
+                  style: GoogleFonts.nunito(
+                      color: Colors.red, fontWeight: FontWeight.w900))),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await GameService.clearSession();
+      if (context.mounted) {
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginView()),
+            (route) => false);
+      }
+    }
   }
 }
