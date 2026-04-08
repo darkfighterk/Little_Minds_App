@@ -2,75 +2,172 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/course_model.dart';
 
+const Color mainBlue = Color(0xFF3AAFFF);
+const Color secondaryPurple = Color(0xFFA55FEF);
+const Color accentOrange = Color(0xFFFF8811);
+const Color canvasBg = Color(0xFFF8FAFC);
+
 class CategoryFilterScreen extends StatelessWidget {
   final String categoryName;
   final List<Course> courses;
 
-  const CategoryFilterScreen(
-      {super.key, required this.categoryName, required this.courses});
+  const CategoryFilterScreen({
+    super.key,
+    required this.categoryName,
+    required this.courses,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text("$categoryName Adventures",
-            style: GoogleFonts.lexend(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: Colors.black,
+        backgroundColor: Colors.white,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          "$categoryName Adventures",
+          style: const TextStyle(
+            fontFamily: 'Recoleta',
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
       ),
-      body: courses.isEmpty
-          ? Center(child: Text("No courses found in $categoryName"))
-          : GridView.builder(
-              padding: const EdgeInsets.all(24),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.75,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [mainBlue.withOpacity(0.05), Colors.white],
+          ),
+        ),
+        child: courses.isEmpty
+            ? _buildEmptyState()
+            : GridView.builder(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 18,
+                  mainAxisSpacing: 18,
+                  childAspectRatio: 0.72,
+                ),
+                itemCount: courses.length,
+                itemBuilder: (context, index) {
+                  return _buildModernAdventureCard(courses[index]);
+                },
               ),
-              itemCount: courses.length,
-              itemBuilder: (context, index) {
-                final course = courses[index];
-                return _buildCompactCourseCard(course);
-              },
-            ),
+      ),
     );
   }
 
-  Widget _buildCompactCourseCard(Course course) {
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text("🔭", style: TextStyle(fontSize: 60)),
+          const SizedBox(height: 15),
+          Text(
+            "No adventures found in $categoryName",
+            style: GoogleFonts.nunito(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black38,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernAdventureCard(Course course) {
+    // Determine card accent based on category
+    final cardColor = categoryName == "Science" ? mainBlue : accentOrange;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(25),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+          BoxShadow(
+            color: cardColor.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          )
         ],
+        border: Border.all(color: Colors.black.withOpacity(0.03)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Container(
-              decoration: const BoxDecoration(
-                color: Color(0xFFF3E5F5),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: cardColor.withOpacity(0.08),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(25)),
               ),
-              child: const Center(
-                  child: Icon(Icons.play_circle_outline,
-                      size: 40, color: Color(0xFFAB47BC))),
+              child: Center(
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 40,
+                  color: cardColor,
+                ),
+              ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(15),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(course.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                    maxLines: 1),
-                Text(course.instructor,
-                    style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                Text(
+                  course.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'Recoleta',
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  course.instructor,
+                  style: GoogleFonts.nunito(
+                    fontSize: 12,
+                    color: Colors.black38,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Play Pill
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: cardColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    "START",
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: cardColor,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

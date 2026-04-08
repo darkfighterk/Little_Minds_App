@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AboutView extends StatelessWidget {
   const AboutView({super.key});
@@ -7,9 +8,13 @@ class AboutView extends StatelessWidget {
   static const String githubUrl =
       "https://github.com/darkfighterk/Little_Minds_App.git";
 
+  final Color mainBlue = const Color(0xFF3AAFFF);
+  final Color secondaryPurple = const Color(0xFFA55FEF);
+  final Color secondaryOrange = const Color(0xFFFF8811);
+  final Color secondaryYellow = const Color(0xFFFDDF50);
+
   Future<void> openGithub() async {
     final Uri url = Uri.parse(githubUrl);
-
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       throw "Could not launch $url";
     }
@@ -18,886 +23,332 @@ class AboutView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true, // body goes behind transparent appBar
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: Container(
-          padding: const EdgeInsets.only(top: 20, left: 10, right: 10),
-          color: Colors.transparent,
-          child: Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-              const Spacer(),
-              const Text(
-                "About Explorer",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const Spacer(),
-            ],
+      backgroundColor: Colors.white,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon:
+              const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          "About Little Minds",
+          style: TextStyle(
+            fontFamily: 'Recoleta',
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
           ),
+        ),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // ── Top Wave Section ───────────────────────────────────────
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.only(top: 110, bottom: 40),
+              decoration: BoxDecoration(
+                color: mainBlue,
+                borderRadius:
+                    const BorderRadius.vertical(bottom: Radius.circular(50)),
+                boxShadow: [
+                  BoxShadow(
+                      color: mainBlue.withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10))
+                ],
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                        color: Colors.white, shape: BoxShape.circle),
+                    child: const CircleAvatar(
+                      radius: 50,
+                      backgroundImage: AssetImage("assets/logo.png"),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  const Text(
+                    "Explorer App",
+                    style: TextStyle(
+                      fontFamily: 'Recoleta',
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    "Version 1.0.0",
+                    style: GoogleFonts.nunito(
+                        color: Colors.white70, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
+              child: Column(
+                children: [
+                  // ──  Strategy Cards ──
+                  _buildAboutCard(
+                      "OUR VISION",
+                      "To create a fun and engaging digital learning environment where young explorers can develop knowledge, creativity, and problem-solving skills.",
+                      secondaryPurple),
+                  const SizedBox(height: 18),
+                  _buildAboutCard(
+                      "OUR MISSION",
+                      "To support children aged 6 to 18 by providing interactive tools such as quizzes, puzzles, and digital notebooks that make learning simple.",
+                      secondaryOrange),
+
+                  const SizedBox(height: 35),
+
+                  // ──  Developers Tile ──
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text("Development Team",
+                        style: TextStyle(
+                            fontFamily: 'Recoleta',
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(height: 15),
+                  _buildDeveloperTile(context),
+
+                  const SizedBox(height: 30),
+
+                  // ── Action Buttons ──
+                  Row(
+                    children: [
+                      Expanded(
+                          child: _buildActionBtn("FAQ", Icons.help_rounded,
+                              secondaryYellow, () => _showFAQ(context))),
+                      const SizedBox(width: 15),
+                      Expanded(
+                          child: _buildActionBtn(
+                              "Contact",
+                              Icons.mail_rounded,
+                              Colors.greenAccent[700]!,
+                              () => _showContact(context))),
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  SizedBox(
+                    width: double.infinity,
+                    child: _buildActionBtn("Source Code (GitHub)",
+                        Icons.terminal_rounded, Colors.black87, openGithub),
+                  ),
+
+                  const SizedBox(height: 40),
+                  Text("© 2026 Little Minds Project",
+                      style: GoogleFonts.nunito(
+                          color: Colors.grey, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xff3b0b66),
-              Color(0xff6a11cb),
-              Color(0xff8e2de2),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+    );
+  }
+
+  // ──  Component Builders ──────────────────────────────────────────────
+
+  Widget _buildAboutCard(String title, String desc, Color color) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: color.withOpacity(0.15), width: 2),
+      ),
+      child: Column(
+        children: [
+          Text(title,
+              style: TextStyle(
+                  fontFamily: 'Recoleta',
+                  color: color,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Text(desc,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.nunito(
+                  fontSize: 14,
+                  height: 1.6,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black54)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeveloperTile(BuildContext context) {
+    return InkWell(
+      onTap: () => _showTeamDialog(context),
+      borderRadius: BorderRadius.circular(30),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: mainBlue.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: mainBlue.withOpacity(0.1)),
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
+        child: Row(
+          children: [
+            CircleAvatar(
+                backgroundColor: mainBlue,
+                child: const Icon(Icons.groups_rounded, color: Colors.white)),
+            const SizedBox(width: 15),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 20), // optional spacing below AppBar
-
-                /// APP LOGO
-                const CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Colors.white24,
-                  backgroundImage: AssetImage("assets/logo.png"),
-                ),
-
-                const SizedBox(height: 10),
-
-                const Text(
-                  "Explorer Learning App",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 5),
-
-                const Text(
-                  "Version 1.0.0",
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                  ),
-                ),
-
-                const SizedBox(height: 25),
-
-                /// FULLY RESPONSIVE BACKGROUND IMAGE
-                Container(
-                  width: double.infinity,
-                  height: MediaQuery.of(context).size.width *
-                      0.7, // dynamic height based on screen width
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage("assets/learn_pic.png"),
-                      fit: BoxFit
-                          .fitWidth, // fit full width, scale height proportionally
-                      alignment: Alignment.topCenter, // show top of image first
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 25),
-
-                /// ---------------- OUR VISION ----------------
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        "OUR VISION",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        "To create a fun and engaging digital learning environment where young explorers "
-                        "can develop knowledge, creativity, and problem-solving skills while enjoying "
-                        "their learning journey.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          height: 1.6,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                /// ---------------- OUR MISSION ----------------
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        "OUR MISSION",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        "To support children aged 6 to 18 by providing interactive tools such as quizzes, "
-                        "puzzles, drawing activities, and digital notebooks that make learning simple, "
-                        "enjoyable, and accessible anytime.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          height: 1.6,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                /// ---------------- APP FEATURES ----------------
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        "APP FEATURES",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        "Quiz Arena",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        "Play MCQ quizzes from different subjects like History and more. "
-                        "Students can progress level by level like a game while improving knowledge.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white70, height: 1.6),
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        "Text to Image",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        "Upload an image and easily extract or copy the text that appears in it. "
-                        "This helps students quickly capture written information from pictures.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white70, height: 1.6),
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        "Notebook",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        "A simple digital notebook where students can write and save notes "
-                        "about what they learn.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white70, height: 1.6),
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        "Story Time",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        "Provides interesting stories suitable for different age groups "
-                        "to improve reading and imagination.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white70, height: 1.6),
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        "Drawing Pad",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        "Allows children to draw pictures freely and express their creativity.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white70, height: 1.6),
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        "Puzzles",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        "Picture puzzles where users arrange pieces correctly "
-                        "to complete the full image and improve problem-solving skills.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white70, height: 1.6),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                /// ---------------- OUR VALUES ----------------
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        "OUR VALUES",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        "• Encouraging Curiosity and Creativity",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        "We believe every child has a natural curiosity. Our platform encourages students "
-                        "to explore ideas, solve puzzles, draw creatively, and express their imagination "
-                        "while learning.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white70, height: 1.6),
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        "• Making Learning Fun and Interactive",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        "Education should never be boring. Through engaging features like Quiz Arena, "
-                        "Image Puzzles, and Story Time, we transform traditional learning into an "
-                        "enjoyable adventure.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white70, height: 1.6),
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        "• Supporting Growth and Confidence",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        "Our goal is to help students build confidence in their abilities by giving them "
-                        "tools to practice knowledge, improve skills, and discover their unique talents.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white70, height: 1.6),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 25),
-
-                /// DEVELOPER CARD
-                KeyedSubtree(
-                  key: UniqueKey(),
-                  child: Builder(
-                    builder: (context) {
-                      return GestureDetector(
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) {
-                              return Dialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Stack(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.all(20),
-                                      child: SingleChildScrollView(
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Text(
-                                              "Developer Team",
-                                              style: TextStyle(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 20),
-                                            ListTile(
-                                              leading: const CircleAvatar(
-                                                backgroundImage: AssetImage(
-                                                    "assets/Tharindu.png"),
-                                                radius: 25,
-                                              ),
-                                              title: const Text("32372"),
-                                              subtitle:
-                                                  const Text("A.K.A.Tharindu"),
-                                            ),
-                                            ListTile(
-                                              leading: const CircleAvatar(
-                                                backgroundImage: AssetImage(
-                                                    "assets/Wanasinghe.png"),
-                                                radius: 25,
-                                              ),
-                                              title: const Text("32318"),
-                                              subtitle: const Text(
-                                                  "W.M.P.B.Wanasinghe"),
-                                            ),
-                                            ListTile(
-                                              leading: const CircleAvatar(
-                                                backgroundImage: AssetImage(
-                                                    "assets/Ranjith.png"),
-                                                radius: 25,
-                                              ),
-                                              title: const Text("32747"),
-                                              subtitle:
-                                                  const Text("U.D.S.Ranjith"),
-                                            ),
-                                            ListTile(
-                                              leading: const CircleAvatar(
-                                                backgroundImage: AssetImage(
-                                                    "assets/Kavinda.png"),
-                                                radius: 25,
-                                              ),
-                                              title: const Text("32327"),
-                                              subtitle:
-                                                  const Text("R.A.V.Kavinda"),
-                                            ),
-                                            ListTile(
-                                              leading: const CircleAvatar(
-                                                backgroundImage: AssetImage(
-                                                    "assets/Godamune.png"),
-                                                radius: 25,
-                                              ),
-                                              title: const Text("IT0005"),
-                                              subtitle: const Text(
-                                                  "G.A.P.O.Godamune"),
-                                            ),
-                                            ListTile(
-                                              leading: const CircleAvatar(
-                                                backgroundImage: AssetImage(
-                                                    "assets/Perera.png"),
-                                                radius: 25,
-                                              ),
-                                              title: const Text("IT0006"),
-                                              subtitle:
-                                                  const Text("R.A.V.M.Perera"),
-                                            ),
-                                            ListTile(
-                                              leading: const CircleAvatar(
-                                                backgroundImage: AssetImage(
-                                                    "assets/Rathnayaka.png"),
-                                                radius: 25,
-                                              ),
-                                              title: const Text("IT0007"),
-                                              subtitle: const Text(
-                                                  "P.H.D.K.Rathnayaka"),
-                                            ),
-                                            ListTile(
-                                              leading: const CircleAvatar(
-                                                backgroundImage: AssetImage(
-                                                    "assets/Thilakarathna.png"),
-                                                radius: 25,
-                                              ),
-                                              title: const Text("IT0008"),
-                                              subtitle: const Text(
-                                                  "I.A.C.S.Thilakarathna"),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    Positioned(
-                                      right: 5,
-                                      top: 5,
-                                      child: IconButton(
-                                        icon: const Icon(Icons.close),
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            children: const [
-                              CircleAvatar(
-                                radius: 30,
-                                backgroundColor: Colors.white24,
-                                child: Icon(
-                                  Icons.person,
-                                  color: Colors.white,
-                                  size: 30,
-                                ),
-                              ),
-                              SizedBox(width: 15),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Group Seven",
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  SizedBox(height: 5),
-                                  Text(
-                                    "Explorer Team",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    "Flutter App Developers",
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                    ),
-                                  ),
-                                ],
-                              )
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-
-                const SizedBox(height: 25),
-
-                /// BUTTONS
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.help_outline),
-                        label: const Text("FAQ"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                        ),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            barrierDismissible:
-                                true, // <-- This allows tapping outside to close
-                            builder: (context) {
-                              return Dialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Stack(
-                                  children: [
-                                    /// CLOSE BUTTON
-                                    Positioned(
-                                      top: 5,
-                                      right: 5,
-                                      child: IconButton(
-                                        icon: const Icon(Icons.close),
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                      ),
-                                    ),
-
-                                    Padding(
-                                      padding: const EdgeInsets.all(20),
-                                      child: SingleChildScrollView(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: const [
-                                            SizedBox(height: 10),
-
-                                            Text(
-                                              "Frequently Asked Questions",
-                                              style: TextStyle(
-                                                fontSize: 22,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-
-                                            SizedBox(height: 20),
-
-                                            /// QUESTION 1
-                                            Text(
-                                              "1. How do I create an account?",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              "You can create an account by entering your name, email, and password on the Sign Up page.",
-                                            ),
-
-                                            SizedBox(height: 15),
-
-                                            /// QUESTION 2
-                                            Text(
-                                              "2. How do I log in to the app?",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Use the email and password you registered with on the Login screen.",
-                                            ),
-
-                                            SizedBox(height: 15),
-
-                                            /// QUESTION 3
-                                            Text(
-                                              "3. What should I do if I forget my password?",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Tap 'Forgot Password' on the login page and create a new password.",
-                                            ),
-
-                                            SizedBox(height: 15),
-
-                                            /// QUESTION 4
-                                            Text(
-                                              "4. What is the purpose of this app?",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              "This app helps children aged 6-18 improve their knowledge through fun and interactive learning games.",
-                                            ),
-
-                                            SizedBox(height: 15),
-
-                                            /// QUESTION 5
-                                            Text(
-                                              "5. What features are available in the app?",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Quiz Arena, Text to Copy (image text extraction), Notebook, Story Time, Drawing Pad, and Image Puzzles.",
-                                            ),
-
-                                            SizedBox(height: 15),
-
-                                            /// QUESTION 6
-                                            Text(
-                                              "6. What happens in Quiz Arena?",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Quiz Arena provides subject-based MCQ quizzes with multiple levels.",
-                                            ),
-
-                                            SizedBox(height: 15),
-
-                                            /// QUESTION 7
-                                            Text(
-                                              "7. What is the Text to Copy feature?",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              "You can upload or capture an image and copy the text detected in the image.",
-                                            ),
-
-                                            SizedBox(height: 15),
-
-                                            /// QUESTION 8
-                                            Text(
-                                              "8. What is Notebook used for?",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Notebook allows you to write and save personal notes anytime.",
-                                            ),
-
-                                            SizedBox(height: 15),
-
-                                            /// QUESTION 9
-                                            Text(
-                                              "9. What can I do in Story Time?",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              "You can read interesting stories based on different age groups.",
-                                            ),
-
-                                            SizedBox(height: 15),
-
-                                            /// QUESTION 10
-                                            Text(
-                                              "10. What is Drawing Pad?",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Drawing Pad allows children to draw pictures and improve creativity.",
-                                            ),
-
-                                            SizedBox(height: 15),
-
-                                            /// QUESTION 11
-                                            Text(
-                                              "11. What are Image Puzzles?",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              "Image puzzles let you rearrange pieces of an image to complete the picture.",
-                                            ),
-
-                                            SizedBox(height: 20),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.email),
-                        label: const Text("Contact"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                        ),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) {
-                              return Dialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Stack(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.all(20),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Text(
-                                            "Contact Group Leaders",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 15),
-                                          ListTile(
-                                            leading: const Icon(Icons.phone,
-                                                color: Colors.green),
-                                            title: const Text("A.K.A.Tharindu"),
-                                            subtitle: const Text("0719361313"),
-                                            onTap: () async {
-                                              final Uri call =
-                                                  Uri.parse("tel:0719361313");
-                                              if (await canLaunchUrl(call)) {
-                                                await launchUrl(call);
-                                              }
-                                            },
-                                          ),
-                                          ListTile(
-                                            leading: const Icon(Icons.phone,
-                                                color: Colors.green),
-                                            title: const Text(
-                                                "W.M.P.B.Wanasinghe"),
-                                            subtitle: const Text("0754627745"),
-                                            onTap: () async {
-                                              final Uri call =
-                                                  Uri.parse("tel:0754627745");
-                                              if (await canLaunchUrl(call)) {
-                                                await launchUrl(call);
-                                              }
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-
-                                    /// CLOSE BUTTON
-                                    Positioned(
-                                      top: 5,
-                                      right: 5,
-                                      child: IconButton(
-                                        icon: const Icon(Icons.close),
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 15),
-
-                /// GITHUB BUTTON
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    icon: Image.asset(
-                      "assets/icons/github.png",
-                      height: 22,
-                      width: 22,
-                    ),
-                    label: const Text("View on GitHub"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
-                    onPressed: () async {
-                      final Uri url = Uri.parse(githubUrl);
-
-                      if (!await launchUrl(url,
-                          mode: LaunchMode.externalApplication)) {
-                        throw "Could not launch $url";
-                      }
-                    },
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                const Text(
-                  "© 2026 Explorer App",
-                  style: TextStyle(
-                    color: Colors.white60,
-                  ),
-                )
+                Text("Group Seven Team",
+                    style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.bold, fontSize: 17)),
+                Text("NSBM Undergraduates",
+                    style: GoogleFonts.nunito(
+                        color: Colors.grey[600], fontSize: 13)),
               ],
             ),
+            const Spacer(),
+            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: mainBlue),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionBtn(
+      String label, IconData icon, Color color, VoidCallback onTap) {
+    return ElevatedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, color: Colors.white, size: 20),
+      label: Text(label,
+          style: GoogleFonts.nunito(fontWeight: FontWeight.bold, fontSize: 15)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        elevation: 0,
+      ),
+    );
+  }
+
+  // ──  Dialogs ────────────────────────────────────────────────────────
+
+  void _showTeamDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        title: const Text("Developer Team",
+            style: TextStyle(fontFamily: 'Recoleta')),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              _devItem("A.K.A.Tharindu", "32372", "assets/Tharindu.png"),
+              _devItem("W.M.P.B.Wanasinghe", "32318", "assets/Wanasinghe.png"),
+              _devItem("U.D.S.Ranjith", "32747", "assets/Ranjith.png"),
+              _devItem("R.A.V.Kavinda", "32327", "assets/Kavinda.png"),
+              _devItem("G.A.P.O.Godamune", "IT0005", "assets/Godamune.png"),
+              _devItem("R.A.V.M.Perera", "IT0006", "assets/Perera.png"),
+              _devItem("P.H.D.K.Rathnayaka", "IT0007", "assets/Rathnayaka.png"),
+              _devItem("I.A.C.S.Thilakarathna", "IT0008",
+                  "assets/Thilakarathna.png"),
+            ],
           ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Close"))
+        ],
+      ),
+    );
+  }
+
+  Widget _devItem(String name, String id, String asset) {
+    return ListTile(
+      leading: CircleAvatar(backgroundImage: AssetImage(asset), radius: 22),
+      title: Text(name,
+          style: GoogleFonts.nunito(fontWeight: FontWeight.bold, fontSize: 14)),
+      subtitle: Text(id, style: GoogleFonts.nunito(fontSize: 12)),
+    );
+  }
+
+  void _showFAQ(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        title: const Text("FAQ", style: TextStyle(fontFamily: 'Recoleta')),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _faqItem("How do I play?",
+                  "Choose any activity from the home screen like Quiz Arena or Puzzles."),
+              _faqItem("Is it free?",
+                  "Yes, Little Minds is a free educational project for students."),
+              _faqItem("Can I save notes?",
+                  "Yes, use the Notebook feature to save your ideas."),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Got it"))
+        ],
+      ),
+    );
+  }
+
+  Widget _faqItem(String q, String a) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(q,
+              style: GoogleFonts.nunito(
+                  fontWeight: FontWeight.bold, color: mainBlue)),
+          Text(a,
+              style: GoogleFonts.nunito(fontSize: 13, color: Colors.black54)),
+        ],
+      ),
+    );
+  }
+
+  void _showContact(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        title:
+            const Text("Contact Us", style: TextStyle(fontFamily: 'Recoleta')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.phone, color: Colors.green),
+              title: const Text("Call Tharindu"),
+              subtitle: const Text("0719361313"),
+              onTap: () => launchUrl(Uri.parse("tel:0719361313")),
+            ),
+          ],
         ),
       ),
     );

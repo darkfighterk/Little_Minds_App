@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+const Color mainBlue = Color(0xFF3AAFFF);
+const Color secondaryPurple = Color(0xFFA55FEF);
+const Color canvasBg = Color(0xFFF8FAFC);
 
 class HelpUsPage extends StatelessWidget {
   const HelpUsPage({super.key});
@@ -7,288 +11,223 @@ class HelpUsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Help Us',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          'Help Center',
+          style: TextStyle(
+              fontFamily: 'Recoleta',
+              color: Colors.black87,
+              fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
       ),
-      extendBodyBehindAppBar: true,
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF6B48FF),
-              Color(0xFF4A2B99),
-              Color(0xFF2A1A66),
-            ],
+            colors: [mainBlue.withOpacity(0.05), Colors.white],
           ),
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 40),
-
-                // Header
-                const Text(
-                  "Hello, How can we help you? 👋",
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ──  Header ──
+              const Text(
+                "Hello! How can we\nhelp you today? 👋",
+                style: TextStyle(
+                  fontFamily: 'Recoleta',
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                  height: 1.2,
                 ),
+              ),
+              const SizedBox(height: 24),
 
-                const SizedBox(height: 20),
-
-                // Search Bar
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.95),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: const TextField(
-                    decoration: InputDecoration(
-                      hintText: "Search for ideas, feedback, or suggestions...",
-                      prefixIcon: Icon(Icons.search, color: Color(0xFF6B48FF)),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    style: TextStyle(color: Colors.black87),
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                // How You Can Help
-                _buildSectionCard(
-                  icon: Icons.favorite_rounded,
-                  title: "How You Can Help 💕",
-                  description: "Little Minds grows with your love and ideas!",
-                  items: const [
-                    "Tell us what your child loves the most",
-                    "Suggest new games, stories, or features",
-                    "Report if something is hard to use",
-                    "Share ideas for Quiz Arena, Story Time, Text to Image, Notebook & Puzzle",
-                    "Rate us on the Play Store ❤️",
+              // ──  Modern Search Bar ──
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                        color: mainBlue.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8)),
                   ],
                 ),
-
-                const SizedBox(height: 24),
-
-                // Suggest New Features
-                _buildSectionCard(
-                  icon: Icons.lightbulb_rounded,
-                  title: "Suggest New Features",
-                  description: "What would make Little Minds even more magical?",
-                  items: const [
-                    "New learning games",
-                    "More stories or characters",
-                    "Better parental controls",
-                    "New puzzle types",
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // Give Feedback
-                _buildSectionCard(
-                  icon: Icons.feedback_rounded,
-                  title: "Give Feedback",
-                  description: "We read every message from parents & teachers",
-                  items: const [
-                    "What your child enjoys most",
-                    "What needs improvement",
-                    "Any safety or usability concerns",
-                  ],
-                ),
-
-                const SizedBox(height: 40),
-
-                // Contact Section (without GitHub)
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.13),
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2)),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: "Search for ideas or feedback...",
+                    hintStyle: GoogleFonts.nunito(color: Colors.black38),
+                    prefixIcon:
+                        const Icon(Icons.search_rounded, color: mainBlue),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 18),
                   ),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.email_rounded,
-                          color: Colors.white, size: 48),
-                      const SizedBox(height: 16),
-                      const Text(
-                        "Send us your ideas!",
-                        style: TextStyle(
-                          fontSize: 22,
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // ──  Section Cards ──
+              _buildModernSectionCard(
+                icon: Icons.auto_awesome_rounded,
+                title: "How You Can Help",
+                color: mainBlue,
+                items: [
+                  "Tell us what your child loves the most",
+                  "Suggest new games or stories",
+                  "Rate us on the Play Store ❤️",
+                ],
+              ),
+              const SizedBox(height: 20),
+              _buildModernSectionCard(
+                icon: Icons.lightbulb_outline_rounded,
+                title: "New Features",
+                color: secondaryPurple,
+                items: [
+                  "New learning game ideas",
+                  "More characters or puzzle types",
+                  "Better parental controls",
+                ],
+              ),
+
+              const SizedBox(height: 40),
+
+              // ── Contact CTA ──
+              Container(
+                padding: const EdgeInsets.all(30),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [mainBlue, secondaryPurple],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                        color: mainBlue.withOpacity(0.3),
+                        blurRadius: 25,
+                        offset: const Offset(0, 10)),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.mail_outline_rounded,
+                        color: Colors.white, size: 50),
+                    const SizedBox(height: 16),
+                    const Text(
+                      "Send us your ideas!",
+                      style: TextStyle(
+                          fontFamily: 'Recoleta',
+                          fontSize: 24,
                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "We truly value every suggestion from parents and teachers 💌\n\n"
-                        "Your input helps us create a safer and more fun experience for curious little explorers.",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white.withValues(alpha: 0.9),
-                          height: 1.5,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 28),
-
-                      // Email Button (you can replace with your actual email later)
-                      GestureDetector(
-                        onTap: () {
-                          // TODO: Add your email function here
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Email feature coming soon! 💌'),
-                              backgroundColor: Color(0xFF6B48FF),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 32, vertical: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.22),
-                            borderRadius: BorderRadius.circular(30),
-                            border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.4)),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.email_rounded,
-                                  color: Colors.white, size: 28),
-                              SizedBox(width: 14),
-                              Text(
-                                "Send Email",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 50),
-
-                Center(
-                  child: Text(
-                    "Thank you for helping make Little Minds magical! ✨\n"
-                    "Made with love for tiny explorers everywhere 🌟",
-                    style: TextStyle(
-                      fontSize: 15.5,
-                      color: Colors.white.withValues(alpha: 0.8),
-                      height: 1.6,
+                          fontWeight: FontWeight.bold),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                Center(
-                  child: Text(
-                    "© ${DateTime.now().year} Little Minds",
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.5),
+                    const SizedBox(height: 12),
+                    Text(
+                      "Your input helps us create a safer and more fun experience for curious little explorers.",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.nunito(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 15,
+                          height: 1.5),
                     ),
-                  ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: mainBlue,
+                        shape: const StadiumBorder(),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 40, vertical: 15),
+                        elevation: 0,
+                      ),
+                      child: const Text("Send Email",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
+                    ),
+                  ],
                 ),
+              ),
 
-                const SizedBox(height: 40),
-              ],
-            ),
+              const SizedBox(height: 40),
+              Center(
+                child: Text(
+                  "© ${DateTime.now().year} Little Minds\nMade with love for tiny explorers 🌟",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.nunito(
+                      color: Colors.black38, fontSize: 12, height: 1.6),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  // Reusable Section Card
-  Widget _buildSectionCard({
+  Widget _buildModernSectionCard({
     required IconData icon,
     required String title,
-    required String description,
+    required Color color,
     required List<String> items,
   }) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: color.withOpacity(0.1), width: 2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: Colors.white, size: 32),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12)),
+                child: Icon(icon, color: color, size: 24),
               ),
+              const SizedBox(width: 16),
+              Text(title,
+                  style: const TextStyle(
+                      fontFamily: 'Recoleta',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87)),
             ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            description,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.white.withValues(alpha: 0.85),
-            ),
           ),
           const SizedBox(height: 20),
           ...items.map((item) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("•  ",
-                        style: TextStyle(color: Colors.white, fontSize: 18)),
+                    Icon(Icons.check_circle_outline_rounded,
+                        color: color.withOpacity(0.5), size: 18),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        item,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white.withValues(alpha: 0.93),
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
+                        child: Text(item,
+                            style: GoogleFonts.nunito(
+                                color: Colors.black54,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600))),
                   ],
                 ),
               )),

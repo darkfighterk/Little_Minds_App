@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'views/splash_view.dart';
 import 'views/onboarding_view.dart';
 import 'views/login_view.dart';
 import 'views/sign_up_view.dart';
 
 void main() async {
-  WidgetsFlutterBinding
-      .ensureInitialized(); // Required for plugins (path_provider, etc.)
+  // Required for local storage and OCR plugins
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MindApp());
 }
 
@@ -15,10 +16,36 @@ class MindApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ──  Premium Brand Colors ──
+    const Color mainBlue = Color(0xFF3AAFFF);
+
     return MaterialApp(
-      title: 'Mind App',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      title: 'Little Minds',
       debugShowCheckedModeBanner: false,
+
+      // ──  Global Premium Theme ──
+      theme: ThemeData(
+        useMaterial3: true,
+        primaryColor: mainBlue,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: mainBlue,
+          primary: mainBlue,
+        ),
+        // Setting Nunito as default body font
+        textTheme: GoogleFonts.nunitoTextTheme(
+          Theme.of(context).textTheme,
+        ),
+        // Premium Button Style across the app
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            elevation: 0,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          ),
+        ),
+      ),
+
+      // ──  Navigation Routes ──
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashView(),

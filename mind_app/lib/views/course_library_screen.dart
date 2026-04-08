@@ -7,6 +7,11 @@ import '../services/course_service.dart';
 import 'bottom_nav_bar.dart';
 import 'category_filter_screen.dart';
 
+const Color mainBlue = Color(0xFF3AAFFF);
+const Color secondaryPurple = Color(0xFFA55FEF);
+const Color accentOrange = Color(0xFFFF8811);
+const Color sunnyYellow = Color(0xFFFDDF50);
+
 class CourseLibraryScreen extends StatefulWidget {
   const CourseLibraryScreen({super.key});
 
@@ -21,23 +26,15 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch courses from Backend (10.0.2.2)
     _futureCourses = _courseService.fetchCourses();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    const primary = Color(0xFFAB47BC);
-    const bgLight = Color(0xFFFAF5FB);
-    const bgDark = Color(0xFF1A0F1C);
-
-    final backgroundColor = isDark ? bgDark : bgLight;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Stack(
           children: [
@@ -46,190 +43,149 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
-                      child: CircularProgressIndicator(color: primary));
+                      child: CircularProgressIndicator(color: mainBlue));
                 } else if (snapshot.hasError) {
                   return Center(
                       child: Text("Connection Error: ${snapshot.error}"));
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return const Center(
-                      child: Text("No adventures found. Check Backend!"));
+                      child: Text("No adventures found! Check Backend."));
                 }
 
                 final allCourses = snapshot.data!;
 
-                return Column(
-                  children: [
-                    // Wrap with Expanded to fix "RenderFlex overflow"
-                    Expanded(
-                      child: CustomScrollView(
-                        slivers: [
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(24, 32, 24, 24),
-                              child: _buildHeader(isDark, primary),
-                            ),
-                          ),
-
-                          // Science Wonders Section
-                          _buildCategorySection(
-                            context: context,
-                            title: "Science Wonders",
-                            accentColor: const Color(0xFF4ADE80),
-                            primary: primary,
-                            courses: allCourses
-                                .where((c) => c.category == "Science")
-                                .toList(),
-                          ),
-
-                          // History Time-Travel Section
-                          _buildCategorySection(
-                            context: context,
-                            title: "History Time-Travel",
-                            accentColor: const Color(0xFFFB923C),
-                            primary: primary,
-                            courses: allCourses
-                                .where((c) => c.category == "History")
-                                .toList(),
-                          ),
-
-                          const SliverToBoxAdapter(
-                              child: SizedBox(height: 120)),
-                        ],
+                return CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                        child: _buildModernHeader(isDark),
                       ),
                     ),
+                    _buildCategorySection(
+                      context: context,
+                      title: "Science Wonders",
+                      accentColor: const Color(0xFF4ADE80),
+                      courses: allCourses
+                          .where((c) => c.category == "Science")
+                          .toList(),
+                    ),
+                    _buildCategorySection(
+                      context: context,
+                      title: "History Time-Travel",
+                      accentColor: accentOrange,
+                      courses: allCourses
+                          .where((c) => c.category == "History")
+                          .toList(),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 140)),
                   ],
                 );
               },
             ),
-
-            // Fixed Bottom Navigation
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: BottomNavBar(primaryColor: primary, isDark: isDark),
-            ),
-
-            // AR Button
-            Positioned(
-              bottom: 48,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: FloatingActionButton(
-                  backgroundColor: primary,
-                  shape: const CircleBorder(),
-                  onPressed: () {},
-                  child: const Icon(Icons.view_in_ar_rounded,
-                      color: Colors.white, size: 36),
-                ),
-              ),
-            ),
+            _buildFixedOverlays(isDark),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader(bool isDark, Color primary) {
+  Widget _buildModernHeader(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Hi, Little Explorer! 🚀",
-                      style: GoogleFonts.lexend(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87)),
-                  Text("What shall we discover today?",
-                      style:
-                          GoogleFonts.lexend(fontSize: 14, color: Colors.grey)),
-                ],
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Hi, Little Explorer! 🚀",
+                    style: TextStyle(
+                        fontFamily: 'Recoleta',
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87)),
+                Text("What shall we discover today?",
+                    style: GoogleFonts.nunito(
+                        fontSize: 14,
+                        color: Colors.black45,
+                        fontWeight: FontWeight.w600)),
+              ],
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                  color: primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20)),
-              child: Text("1,250 💎",
-                  style:
-                      TextStyle(color: primary, fontWeight: FontWeight.bold)),
+                  color: sunnyYellow.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: sunnyYellow)),
+              child: const Text("1,250 💎",
+                  style: TextStyle(
+                      color: accentOrange, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 25),
         TextField(
           decoration: InputDecoration(
             hintText: "Search adventures...",
-            prefixIcon: const Icon(Icons.search),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+            hintStyle: GoogleFonts.nunito(color: Colors.black26),
+            prefixIcon: const Icon(Icons.search_rounded, color: mainBlue),
+            filled: true,
+            fillColor: mainBlue.withOpacity(0.05),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide.none),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildCategorySection({
-    required BuildContext context,
-    required String title,
-    required Color accentColor,
-    required Color primary,
-    required List<Course> courses,
-  }) {
+  Widget _buildCategorySection(
+      {required BuildContext context,
+      required String title,
+      required Color accentColor,
+      required List<Course> courses}) {
     return SliverToBoxAdapter(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(title,
-                    style: GoogleFonts.lexend(
-                        fontSize: 20, fontWeight: FontWeight.bold)),
+                    style: const TextStyle(
+                        fontFamily: 'Recoleta',
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87)),
                 TextButton(
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => CategoryFilterScreen(
-                          categoryName: title,
-                          courses: courses,
-                        ),
-                      ),
-                    );
-                  },
-                  child: Text("View All",
+                          builder: (context) => CategoryFilterScreen(
+                              categoryName: title, courses: courses))),
+                  child: const Text("View All",
                       style: TextStyle(
-                          color: primary, fontWeight: FontWeight.bold)),
+                          color: mainBlue, fontWeight: FontWeight.w800)),
                 ),
               ],
             ),
           ),
           SizedBox(
-            height: 240,
-            child: courses.isEmpty
-                ? const Center(child: Text("No courses in this category"))
-                : ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    itemCount: courses.length,
-                    itemBuilder: (context, index) {
-                      final course = courses[index];
-                      return _buildCourseCard(course, accentColor);
-                    },
-                  ),
+            height: 220,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              itemCount: courses.length,
+              itemBuilder: (context, index) =>
+                  _buildCourseCard(courses[index], accentColor),
+            ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -238,12 +194,15 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
   Widget _buildCourseCard(Course course, Color accentColor) {
     return Container(
       width: 180,
-      margin: const EdgeInsets.only(right: 16),
+      margin: const EdgeInsets.only(right: 20, bottom: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(25),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+          BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 15,
+              offset: const Offset(0, 8))
         ],
       ),
       child: Column(
@@ -254,28 +213,71 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
               decoration: BoxDecoration(
                   color: accentColor.withOpacity(0.1),
                   borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(20))),
+                      const BorderRadius.vertical(top: Radius.circular(25))),
               child: Center(
-                  child: Icon(Icons.play_circle_fill,
-                      size: 40, color: accentColor)),
+                  child: Icon(Icons.auto_awesome_rounded,
+                      size: 45, color: accentColor)),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(15),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(course.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
                     maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontFamily: 'Recoleta',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15)),
                 Text(course.instructor,
-                    style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                    style: GoogleFonts.nunito(
+                        color: Colors.black38,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700)),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildFixedOverlays(bool isDark) {
+    return Stack(
+      children: [
+        Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: BottomNavBar(primaryColor: mainBlue, isDark: isDark)),
+        Positioned(
+          bottom: 48,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient:
+                      const LinearGradient(colors: [mainBlue, secondaryPurple]),
+                  boxShadow: [
+                    BoxShadow(
+                        color: mainBlue.withOpacity(0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5))
+                  ]),
+              child: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.view_in_ar_rounded,
+                      color: Colors.white, size: 32)),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

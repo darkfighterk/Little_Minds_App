@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
-import 'login_view.dart'; // adjust path if needed
+import 'package:google_fonts/google_fonts.dart';
+import 'login_view.dart';
+
+const Color mainBlue = Color(0xFF3AAFFF);
+const Color secondaryPurple = Color(0xFFA55FEF);
+const Color accentOrange = Color(0xFFFF8811);
+const Color sunnyYellow = Color(0xFFFDDF50);
 
 class ForgotPasswordResetView extends StatefulWidget {
   final String email;
   final String otp;
 
-  const ForgotPasswordResetView({super.key, required this.email, required this.otp});
+  const ForgotPasswordResetView(
+      {super.key, required this.email, required this.otp});
 
   @override
-  State<ForgotPasswordResetView> createState() => _ForgotPasswordResetViewState();
+  State<ForgotPasswordResetView> createState() =>
+      _ForgotPasswordResetViewState();
 }
 
 class _ForgotPasswordResetViewState extends State<ForgotPasswordResetView> {
@@ -18,27 +26,193 @@ class _ForgotPasswordResetViewState extends State<ForgotPasswordResetView> {
   bool obscure1 = true;
   bool obscure2 = true;
 
+  // ──  Reset Logic (Preserved your logic) ──
   void _onSavePressed() async {
     final pass = passwordController.text.trim();
     final confirm = confirmController.text.trim();
 
     if (pass.isEmpty || confirm.isEmpty || pass != confirm || pass.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please check your passwords')),
-      );
+      _showError('Please check your passwords (min 6 characters)');
       return;
     }
 
     setState(() => isLoading = true);
-    // TODO: real reset password API
+    //  Later: Integrate your real reset API here
     await Future.delayed(const Duration(seconds: 1));
     setState(() => isLoading = false);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Password updated!'), backgroundColor: Colors.green),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Password updated successfully! 🎉'),
+            backgroundColor: Colors.green),
+      );
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => const LoginView()));
+    }
+  }
 
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginView()));
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg), backgroundColor: Colors.orangeAccent));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          //  Soft Background Decor
+          _buildBackgroundDecor(),
+
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: Column(
+                children: [
+                  const SizedBox(height: 15),
+                  _buildBackButton(),
+                  const SizedBox(height: 30),
+
+                  //  Illustration Section
+                  _buildIllustration(),
+                  const SizedBox(height: 35),
+
+                  //  Header Text in Recoleta
+                  const Text(
+                    'Create New Password',
+                    style: TextStyle(
+                        fontFamily: 'Recoleta',
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Your new password must be different from your old one for safety! 🛡️',
+                    style: GoogleFonts.nunito(
+                        fontSize: 15,
+                        color: Colors.black38,
+                        fontWeight: FontWeight.w600),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  //  Input Fields
+                  _InputField(
+                    controller: passwordController,
+                    label: 'New Password',
+                    obscureText: obscure1,
+                    icon: Icons.lock_outline_rounded,
+                    suffix: obscure1
+                        ? Icons.visibility_off_rounded
+                        : Icons.visibility_rounded,
+                    onSuffixTap: () => setState(() => obscure1 = !obscure1),
+                  ),
+                  const SizedBox(height: 20),
+                  _InputField(
+                    controller: confirmController,
+                    label: 'Confirm Password',
+                    obscureText: obscure2,
+                    icon: Icons.verified_user_outlined,
+                    suffix: obscure2
+                        ? Icons.visibility_off_rounded
+                        : Icons.visibility_rounded,
+                    onSuffixTap: () => setState(() => obscure2 = !obscure2),
+                  ),
+
+                  const SizedBox(height: 45),
+
+                  //  Save Button
+                  _buildSaveButton(),
+                  const SizedBox(height: 30),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBackgroundDecor() {
+    return Positioned(
+      top: -100,
+      right: -50,
+      child: Container(
+          width: 300,
+          height: 300,
+          decoration: BoxDecoration(
+              color: mainBlue.withOpacity(0.06), shape: BoxShape.circle)),
+    );
+  }
+
+  Widget _buildBackButton() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+              ]),
+          child: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 20, color: Colors.black87),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIllustration() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+          color: sunnyYellow.withOpacity(0.1), shape: BoxShape.circle),
+      child: Image.asset(
+        'assets/illustrations/reset_password.png',
+        height: 180,
+        errorBuilder: (_, __, ___) => const Icon(
+            Icons.enhanced_encryption_rounded,
+            size: 100,
+            color: secondaryPurple),
+      ),
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 60,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : _onSavePressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: secondaryPurple,
+          foregroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          elevation: 8,
+          shadowColor: secondaryPurple.withOpacity(0.4),
+        ),
+        child: isLoading
+            ? const SizedBox(
+                height: 25,
+                width: 25,
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 3))
+            : const Text('Save Password',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5)),
+      ),
+    );
   }
 
   @override
@@ -47,169 +221,74 @@ class _ForgotPasswordResetViewState extends State<ForgotPasswordResetView> {
     confirmController.dispose();
     super.dispose();
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFCE4F9),
-
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // Only top-right bubble kept (bottom one removed)
-            Positioned(
-              top: -100,
-              right: -80,
-              child: Container(
-                width: 280,
-                height: 280,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFFE8C1FA).withOpacity(0.7),
-                ),
-              ),
-            ),
-            // Bottom purple ball removed here
-
-            SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 28),
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, 4))],
-                      ),
-                      child: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFFAB47BC), size: 24),
-                    ),
-                  ),
-
-                  const SizedBox(height: 44),
-
-                  const Text(
-                    'Create new password',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Color(0xFFAB47BC)),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Text(
-                    'New password must be different from last password',
-                    style: TextStyle(fontSize: 15, color: Colors.grey[800]),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: 36),
-
-                  Center(
-                    child: Image.asset(
-                      'assets/illustrations/reset_password.png',
-                      height: 220,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(Icons.lock_reset_rounded, size: 100, color: Color(0xFFAB47BC));
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  _InputField(
-                    controller: passwordController,
-                    label: 'Password',
-                    hint: '••••••••••',
-                    obscureText: obscure1,
-                    prefixIcon: Icons.lock_outline,
-                    suffixIcon: obscure1 ? Icons.visibility_off : Icons.visibility,
-                    onSuffixTap: () => setState(() => obscure1 = !obscure1),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  _InputField(
-                    controller: confirmController,
-                    label: 'Confirm Password',
-                    hint: '••••••••••',
-                    obscureText: obscure2,
-                    prefixIcon: Icons.lock_outline,
-                    suffixIcon: obscure2 ? Icons.visibility_off : Icons.visibility,
-                    onSuffixTap: () => setState(() => obscure2 = !obscure2),
-                  ),
-
-                  const SizedBox(height: 48),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 58,
-                    child: ElevatedButton(
-                      onPressed: isLoading ? null : _onSavePressed,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFAB47BC),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      child: isLoading
-                          ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text('Save password', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _InputField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
-  final String? hint;
   final bool obscureText;
-  final IconData? prefixIcon;
-  final IconData? suffixIcon;
+  final IconData icon;
+  final IconData? suffix;
   final VoidCallback? onSuffixTap;
 
-  const _InputField({
-    required this.controller,
-    required this.label,
-    this.hint,
-    this.obscureText = false,
-    this.prefixIcon,
-    this.suffixIcon,
-    this.onSuffixTap,
-  });
+  const _InputField(
+      {required this.controller,
+      required this.label,
+      required this.icon,
+      this.obscureText = false,
+      this.suffix,
+      this.onSuffixTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4))],
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscureText,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-          prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: const Color(0xFFAB47BC)) : null,
-          suffixIcon: suffixIcon != null
-              ? GestureDetector(onTap: onSuffixTap, child: Icon(suffixIcon, color: Colors.grey[600]))
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label.toUpperCase(),
+            style: GoogleFonts.nunito(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                color: mainBlue.withOpacity(0.6),
+                letterSpacing: 1.1)),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5))
+            ],
+          ),
+          child: TextField(
+            controller: controller,
+            obscureText: obscureText,
+            style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+            decoration: InputDecoration(
+              prefixIcon: Icon(icon, color: mainBlue.withOpacity(0.5)),
+              suffixIcon: suffix != null
+                  ? IconButton(
+                      icon: Icon(suffix, color: Colors.black26),
+                      onPressed: onSuffixTap)
+                  : null,
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide:
+                      BorderSide(color: mainBlue.withOpacity(0.1), width: 2)),
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide:
+                      BorderSide(color: mainBlue.withOpacity(0.08), width: 2)),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: const BorderSide(color: mainBlue, width: 2)),
+              contentPadding: const EdgeInsets.all(20),
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 }
