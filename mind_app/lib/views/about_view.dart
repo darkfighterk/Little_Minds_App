@@ -70,7 +70,7 @@ class AboutView extends StatelessWidget {
                         color: Colors.white, shape: BoxShape.circle),
                     child: const CircleAvatar(
                       radius: 50,
-                      backgroundImage: AssetImage("assets/logo.png"),
+                      backgroundImage: AssetImage("assets/brand/play_store_512.png"),
                     ),
                   ),
                   const SizedBox(height: 15),

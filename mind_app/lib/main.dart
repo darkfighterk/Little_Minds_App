@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'views/splash_view.dart';
 import 'views/onboarding_view.dart';
 import 'views/login_view.dart';
 import 'views/sign_up_view.dart';
@@ -46,9 +45,8 @@ class MindApp extends StatelessWidget {
       ),
 
       // ──  Navigation Routes ──
-      initialRoute: '/',
+      initialRoute: '/login',
       routes: {
-        '/': (context) => const SplashView(),
         '/onboarding': (context) => const OnboardingView(),
         '/login': (context) => const LoginView(),
         '/register': (context) => const SignUpView(),

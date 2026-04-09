@@ -4,7 +4,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
-        android:label="mind_app"
+        android:label="Little Minds"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
