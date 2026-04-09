@@ -1,49 +1,52 @@
-// lib/services/game_service.dart
+// ============================================================
+// game_service.dart  (FIXED — userId is now String)
+// Place in: lib/services/game_service.dart
+// ============================================================
+
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GameService {
-  // ── Base URL ───────────────────────────────────────────────────────────────
+  // ── Base URL (matches auth_service.dart) ───────────────────
   static String get baseUrl {
     if (kIsWeb) return 'http://localhost:8080';
     return 'http://10.0.2.2:8080'; // Android emulator
   }
 
-  // ── SharedPreferences keys ─────────────────────────────────────────────────
+  // ── Token cache key (stored after login) ───────────────────
   static const _tokenKey = 'jwt_token';
-  static const _userIdKey = 'user_id'; // stored as String (email)
+  static const _userIdKey = 'user_id';
 
-  // ── Session helpers ────────────────────────────────────────────────────────
-
-  /// Call this right after a successful login.
-  /// [userId] is the user's email (your backend uses email as the ID).
+  // ── Persist token & userId after login ─────────────────────
+  // UPDATED: userId is now String (your backend uses email as id)
   static Future<void> saveSession(String userId, String token) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userIdKey, userId);
+    await prefs.setString(_userIdKey, userId); // Changed from setInt
     await prefs.setString(_tokenKey, token);
-    print('✅ GameService: session saved | userId=$userId');
+    print('✅ GameService: Session saved | userId=$userId');
   }
 
-  /// Call on logout — removes token, userId and cached progress.
+  // ── Clear all session data (logout) ────────────────────────────
   static Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_userIdKey);
     await prefs.remove(_tokenKey);
 
-    // Clear cached progress for all known subjects
-    for (final subject in _knownSubjects) {
-      await prefs.remove(_starsKey(subject));
-      await prefs.remove(_levelsKey(subject));
+    // Optional: clear cached progress too
+    final subjects = ['science', 'biology', 'history'];
+    for (final subject in subjects) {
+      await prefs.remove('cache_stars_$subject');
+      await prefs.remove('cache_levels_$subject');
     }
 
-    print('👋 GameService: session cleared');
+    print('👋 Session cleared (logout)');
   }
 
   static Future<String?> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_userIdKey);
+    return prefs.getString(_userIdKey); // Changed from getInt
   }
 
   static Future<String?> _getToken() async {
@@ -51,7 +54,8 @@ class GameService {
     return prefs.getString(_tokenKey);
   }
 
-  // ── Auth headers ───────────────────────────────────────────────────────────
+  // ── HTTP helpers ───────────────────────────────────────────
+
   Future<Map<String, String>> _authHeaders() async {
     final token = await _getToken();
     return {
@@ -60,43 +64,38 @@ class GameService {
     };
   }
 
-  // ── Cache keys & known subjects ────────────────────────────────────────────
-  static const _knownSubjects = ['science', 'biology', 'history'];
-  static String _starsKey(String subjectId) => 'cache_stars_$subjectId';
-  static String _levelsKey(String subjectId) => 'cache_levels_$subjectId';
+  // ── Cache helpers (for instant UI) ────────────────────────
+
+  String _cacheStarsKey(String subjectId) => 'cache_stars_$subjectId';
+  String _cacheLevelsKey(String subjectId) => 'cache_levels_$subjectId';
 
   Future<void> _cacheProgress(
       String subjectId, int stars, List<int> levels) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_starsKey(subjectId), stars);
+    await prefs.setInt(_cacheStarsKey(subjectId), stars);
     await prefs.setStringList(
-      _levelsKey(subjectId),
-      levels.map((e) => e.toString()).toList(),
-    );
+        _cacheLevelsKey(subjectId), levels.map((e) => e.toString()).toList());
   }
 
   Future<int> _cachedStars(String subjectId) async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_starsKey(subjectId)) ?? 0;
+    return prefs.getInt(_cacheStarsKey(subjectId)) ?? 0;
   }
 
   Future<List<int>> _cachedLevels(String subjectId) async {
     final prefs = await SharedPreferences.getInstance();
-    return (prefs.getStringList(_levelsKey(subjectId)) ?? [])
-        .map(int.parse)
-        .toList();
+    final stored = prefs.getStringList(_cacheLevelsKey(subjectId)) ?? [];
+    return stored.map(int.parse).toList();
   }
 
-  // ── Public API ─────────────────────────────────────────────────────────────
+  // ── Public API ─────────────────────────────────────────────
 
-  /// Fetch stars + completed levels for [subjectId] from the backend.
-  /// Falls back to local cache on any error.
+  /// Fetch stars + completed levels for one subject from the backend.
   Future<({int stars, List<int> completedLevels})> fetchProgress(
       String subjectId) async {
     final userId = await getUserId();
-
     if (userId == null || userId.isEmpty) {
-      print('⚠️ GameService.fetchProgress: no userId in session');
+      print('⚠️ GameService.fetchProgress: No userId found');
       return (
         stars: await _cachedStars(subjectId),
         completedLevels: await _cachedLevels(subjectId),
@@ -113,19 +112,19 @@ class GameService {
           .timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 200) {
-        final body = jsonDecode(response.body) as Map<String, dynamic>;
-        final data = body['data'] as Map<String, dynamic>? ?? {};
+        final body = jsonDecode(response.body);
+        final data = body['data'] as Map<String, dynamic>;
 
         final stars = (data['total_stars'] as num?)?.toInt() ?? 0;
-        final rawLevels = data['completed_levels'] as List<dynamic>? ?? [];
+        final rawLevels = (data['completed_levels'] as List<dynamic>?) ?? [];
         final levels = rawLevels.map((e) => (e as num).toInt()).toList();
 
         await _cacheProgress(subjectId, stars, levels);
-        print('✅ fetchProgress [$subjectId] → $stars stars');
+        print('✅ Fetched progress for $subjectId: $stars stars');
         return (stars: stars, completedLevels: levels);
+      } else {
+        print('⚠️ fetchProgress HTTP ${response.statusCode}');
       }
-
-      print('⚠️ fetchProgress HTTP ${response.statusCode}');
     } catch (e) {
       print('⚠️ GameService.fetchProgress error: $e — using cache');
     }
@@ -136,8 +135,7 @@ class GameService {
     );
   }
 
-  /// POST a completed level result to the backend.
-  /// Returns the user's new total star count, or -1 on failure.
+  /// Save a completed level to the database.
   Future<int> saveLevelResult({
     required String subjectId,
     required int levelNumber,
@@ -153,8 +151,8 @@ class GameService {
 
     try {
       final headers = await _authHeaders();
-      final payload = jsonEncode({
-        'user_id': userId, // String (email)
+      final body = jsonEncode({
+        'user_id': userId, // Now sending String
         'subject_id': subjectId,
         'level_number': levelNumber,
         'stars_earned': starsEarned,
@@ -163,33 +161,31 @@ class GameService {
       });
 
       final response = await http
-          .post(Uri.parse('$baseUrl/progress'), headers: headers, body: payload)
+          .post(Uri.parse('$baseUrl/progress'), headers: headers, body: body)
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final body = jsonDecode(response.body) as Map<String, dynamic>;
-        final data = body['data'] as Map<String, dynamic>? ?? {};
-        final newTotal = (data['total_stars'] as num?)?.toInt() ?? 0;
+        final data = jsonDecode(response.body)['data'] as Map<String, dynamic>;
+        final newTotal = (data['total_stars'] as num).toInt();
 
-        // Refresh cache
-        await fetchProgress(subjectId);
-        print('✅ saveLevelResult: level $levelNumber — total stars: $newTotal');
+        await fetchProgress(subjectId); // Refresh cache
+        print('✅ Saved level $levelNumber — total stars: $newTotal');
         return newTotal;
+      } else {
+        print('❌ saveLevelResult HTTP ${response.statusCode}');
+        return -1;
       }
-
-      print('❌ saveLevelResult HTTP ${response.statusCode}');
-      return -1;
     } catch (e) {
       print('❌ GameService.saveLevelResult error: $e');
       return -1;
     }
   }
 
-  // ── Convenience getters (read from cache — no network call) ───────────────
+  // ── Convenience wrappers ───────────────────────────────────
 
-  Future<int> getStars(String subjectId) => _cachedStars(subjectId);
+  Future<int> getStars(String subjectId) async => _cachedStars(subjectId);
 
-  Future<List<int>> getCompletedLevels(String subjectId) =>
+  Future<List<int>> getCompletedLevels(String subjectId) async =>
       _cachedLevels(subjectId);
 
   bool isLevelUnlocked(int starsEarned, int starsRequired) =>
@@ -201,8 +197,8 @@ class GameService {
     return levels.length / totalLevels;
   }
 
-  /// Warm up the cache for all known subjects at app start.
   Future<void> fetchAllProgress() async {
-    await Future.wait(_knownSubjects.map(fetchProgress));
+    final subjects = ['science', 'biology', 'history'];
+    await Future.wait(subjects.map((s) => fetchProgress(s)));
   }
 }
