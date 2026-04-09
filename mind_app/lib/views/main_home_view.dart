@@ -120,7 +120,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               Text(
                 'Little Minds',
                 style: const TextStyle(
-                  fontFamily: 'Recoleta', // 🔥 Recoleta Heading
+                  fontFamily: 'Recoleta',
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
