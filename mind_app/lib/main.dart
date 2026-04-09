@@ -6,6 +6,7 @@ import 'services/firebase_seeder.dart';
 import 'views/onboarding_view.dart';
 import 'views/login_view.dart';
 import 'views/sign_up_view.dart';
+import 'views/auth_wrapper.dart';
 
 void main() async {
   // Required for local storage and OCR plugins
@@ -57,9 +58,8 @@ class MindApp extends StatelessWidget {
       ),
 
       // ──  Navigation Routes ──
-      initialRoute: '/login',
+      home: const AuthWrapper(),
       routes: {
-        '/': (context) => const LoginView(),
         '/onboarding': (context) => const OnboardingView(),
         '/login': (context) => const LoginView(),
         '/register': (context) => const SignUpView(),

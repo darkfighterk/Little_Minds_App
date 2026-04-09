@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'story_player.dart';
 import '../models/user_model.dart';
-import 'bottom_nav_bar.dart';
 
 const Color mainBlue = Color(0xFF3AAFFF);
 const Color accentOrange = Color(0xFFFF8811);
@@ -113,33 +112,17 @@ class LibraryView extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavBar(
-        user: user,
-        primaryColor: mainBlue,
-        isDark: false,
-      ),
     );
   }
 
   Widget _buildTopBar(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.black87),
-          ),
-          const Text(
-            "Magic Library",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(width: 48),
-        ],
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+      child: Center(
+        child: Text(
+          "Magic Library",
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }

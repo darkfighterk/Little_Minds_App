@@ -90,7 +90,7 @@ class _TextFromImagePageState extends State<TextFromImagePage> {
             icon: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: Colors.black87),
             onPressed: () => Navigator.pop(context)),
-        title: const Text("Scan & Discover",
+        title: const Text("Scan Your Notes",
             style: TextStyle(
                 fontFamily: 'Recoleta',
                 fontWeight: FontWeight.bold,
@@ -136,7 +136,7 @@ class _TextFromImagePageState extends State<TextFromImagePage> {
 
   Widget _buildTextDisplay() {
     if (extractedText.isEmpty && !isLoading) {
-      return Text("Scan a book to see magic! ✨",
+      return Text("Scan your study notes to see magic! ✨",
           style: GoogleFonts.nunito(
               fontWeight: FontWeight.bold, color: Colors.black38));
     }

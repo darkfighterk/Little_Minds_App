@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -30,6 +33,7 @@ class AuthService {
           'id': user.uid,
           'isAdmin': false, // Default to non-admin
           'createdAt': FieldValue.serverTimestamp(),
+          'photoUrl': null,
         });
 
         debugPrint("✅ User registered in Firebase: ${user.uid}");
@@ -74,7 +78,8 @@ class AuthService {
             'id': user.uid,
             'email': email,
             'name': userData['name'] ?? '',
-            'token': 'firebase_token', // We don't need a custom JWT anymore
+            'photoUrl': userData['photoUrl'],
+            'token': 'firebase_token',
           }
         };
       }
@@ -87,6 +92,54 @@ class AuthService {
     } catch (e) {
       debugPrint("❌ Error logging in user: $e");
       return {'error': 'Network error'};
+    }
+    return null;
+  }
+
+  // ── PROFILE UPDATES ───────────────────────────────────────────────────
+
+  /// Updates user profile in Firestore
+  Future<bool> updateUserProfile(String userId, {String? name, String? photoUrl}) async {
+    try {
+      final Map<String, dynamic> updates = {};
+      if (name != null) updates['name'] = name;
+      if (photoUrl != null) updates['photoUrl'] = photoUrl;
+
+      if (updates.isEmpty) return true;
+
+      await _db.collection('users').doc(userId).update(updates);
+      debugPrint("✅ Profile updated in Firestore for: $userId");
+      return true;
+    } catch (e) {
+      debugPrint("❌ Error updating profile: $e");
+      return false;
+    }
+  }
+
+  /// Uploads a profile picture to Cloudinary
+  Future<String?> uploadProfilePicture(XFile imageFile) async {
+    try {
+      const String cloudName = "dwjc0mxyx";
+      const String uploadPreset = "ml_default";
+      
+      final url = Uri.parse("https://api.cloudinary.com/v1_1/$cloudName/image/upload");
+      
+      final request = http.MultipartRequest("POST", url)
+        ..fields['upload_preset'] = uploadPreset
+        ..files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+        
+      final response = await request.send();
+      final responseData = await response.stream.toBytes();
+      final responseString = String.fromCharCodes(responseData);
+      final jsonResponse = jsonDecode(responseString);
+      
+      if (response.statusCode == 200) {
+        return jsonResponse['secure_url'];
+      } else {
+        debugPrint('Cloudinary upload failed: ${jsonResponse['error']['message']}');
+      }
+    } catch (e) {
+      debugPrint('AuthService.uploadProfilePicture error: $e');
     }
     return null;
   }

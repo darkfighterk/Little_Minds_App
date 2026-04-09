@@ -3,11 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mind_app/views/text_to_image.dart';
 import '../models/user_model.dart';
 import 'home_view.dart';
-import 'bottom_nav_bar.dart';
 import 'puzzles_list_view.dart';
 import 'story_time_page.dart';
 import 'drawing_pad_view.dart';
 import 'admin_view.dart';
+import 'profile_view.dart';
 import 'package:mind_app/widgets/mindie_button.dart';
 
 class HomePage extends StatefulWidget {
@@ -20,6 +20,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _floatController;
+  late User _currentUser;
+  String _searchQuery = "";
 
   final Color mainBlue = const Color(0xFF3AAFFF);
   final Color secondaryPurple = const Color(0xFFA55FEF);
@@ -29,6 +31,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _currentUser = widget.user;
     _floatController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
@@ -47,13 +50,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // ── Header Blue Section (Reference style) ──
+          // ── Premium Gradient Header ──
           Container(
-            height: MediaQuery.of(context).size.height * 0.38,
+            height: MediaQuery.of(context).size.height * 0.42,
             decoration: BoxDecoration(
-              color: mainBlue,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  mainBlue,
+                  mainBlue.withValues(alpha: 0.8),
+                  secondaryPurple.withValues(alpha: 0.6),
+                ],
+              ),
               borderRadius:
-                  const BorderRadius.vertical(bottom: Radius.circular(45)),
+                  const BorderRadius.vertical(bottom: Radius.circular(50)),
+              boxShadow: [
+                BoxShadow(
+                  color: mainBlue.withValues(alpha: 0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
             ),
           ),
 
@@ -86,11 +104,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavBar(
-        user: widget.user,
-        primaryColor: mainBlue,
-        isDark: false,
-      ),
       floatingActionButton: const MindieButton(),
     );
   }
@@ -104,14 +117,31 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           // Profile Section or App Logo
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(2),
-                decoration: const BoxDecoration(
-                    color: Colors.white, shape: BoxShape.circle),
-                child: CircleAvatar(
-                  radius: 22,
-                  backgroundColor: const Color(0xFF3AAFFF).withValues(alpha: 0.1),
-                  child: const Icon(Icons.person_rounded, color: Color(0xFF3AAFFF), size: 28),
+              GestureDetector(
+                onTap: _goToProfile,
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  child: CircleAvatar(
+                    radius: 22,
+                    backgroundColor: const Color(0xFF3AAFFF).withValues(alpha: 0.1),
+                    backgroundImage: _currentUser.photoUrl != null && _currentUser.photoUrl!.isNotEmpty
+                        ? NetworkImage(_currentUser.photoUrl!)
+                        : null,
+                    child: _currentUser.photoUrl == null || _currentUser.photoUrl!.isEmpty
+                        ? const Icon(Icons.person_rounded, color: Color(0xFF3AAFFF), size: 28)
+                        : null,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -154,7 +184,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
           const SizedBox(height: 10),
           Text(
-            'Hi ${widget.user.name}, pick a fun activity! ✨',
+            'Hi ${_currentUser.name}, pick a fun activity! ✨',
             style: GoogleFonts.nunito(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -173,6 +203,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ],
             ),
             child: TextField(
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.toLowerCase();
+                });
+              },
+              style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
               decoration: InputDecoration(
                 hintText: 'Search adventure...',
                 hintStyle: GoogleFonts.nunito(
@@ -188,52 +224,105 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildMainButtonsGrid() {
-    return GridView.count(
-      crossAxisCount: 2,
-      mainAxisSpacing: 22,
-      crossAxisSpacing: 22,
+    final List<Map<String, dynamic>> allButtons = [
+      {
+        'title': 'Quiz Arena',
+        'icon': Icons.quiz_rounded,
+        'color': secondaryPurple,
+        'onTap': () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => HomeView(user: widget.user))),
+      },
+      {
+        'title': 'Note Scanner',
+        'icon': Icons.document_scanner_rounded,
+        'color': secondaryOrange,
+        'onTap': () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const TextFromImagePage())),
+      },
+      {
+        'title': 'Story Time',
+        'icon': Icons.menu_book_rounded,
+        'color': secondaryYellow,
+        'onTap': () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => StoryTimePage(user: widget.user))),
+      },
+      {
+        'title': 'Drawing',
+        'icon': Icons.brush_rounded,
+        'color': mainBlue,
+        'onTap': () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const DrawingPadView())),
+      },
+      {
+        'title': 'Puzzles',
+        'icon': Icons.extension_rounded,
+        'color': const Color(0xFF26A69A), // Teal
+        'onTap': () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => PuzzlesListView(user: widget.user))),
+      },
+    ];
+
+    final filteredButtons = allButtons
+        .where((btn) => btn['title'].toString().toLowerCase().contains(_searchQuery))
+        .toList();
+
+    if (filteredButtons.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40.0),
+          child: Column(
+            children: [
+              Icon(Icons.search_off_rounded, size: 60, color: Colors.grey[300]),
+              const SizedBox(height: 16),
+              Text(
+                'No adventures found!',
+                style: GoogleFonts.nunito(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[400],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 22,
+        crossAxisSpacing: 22,
+        childAspectRatio: 0.82,
+      ),
       shrinkWrap: true,
-      childAspectRatio: 0.82,
       physics: const NeverScrollableScrollPhysics(),
-      children: [
-        _buildRefCard(
-            'Quiz Arena',
-            Icons.quiz_rounded,
-            secondaryPurple,
-            () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => HomeView(user: widget.user)))),
-        _buildRefCard(
-            'Magic Art',
-            Icons.image_rounded,
-            secondaryOrange,
-            () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const TextFromImagePage()))),
-        _buildRefCard(
-            'Story Time',
-            Icons.menu_book_rounded,
-            secondaryYellow,
-            () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => StoryTimePage(user: widget.user)))),
-        _buildRefCard(
-            'Drawing',
-            Icons.brush_rounded,
-            mainBlue,
-            () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const DrawingPadView()))),
-        _buildRefCard(
-            'Puzzles',
-            Icons.extension_rounded,
-            Colors.teal[400]!,
-            () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => PuzzlesListView(user: widget.user)))),
-      ],
+      itemCount: filteredButtons.length,
+      itemBuilder: (context, index) {
+        final btn = filteredButtons[index];
+        return _buildRefCard(
+          btn['title'],
+          btn['icon'],
+          btn['color'],
+          btn['onTap'],
+        );
+      },
     );
+  }
+
+  Future<void> _goToProfile() async {
+    final updatedUser = await Navigator.push<User>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProfileView(user: _currentUser),
+      ),
+    );
+
+    if (updatedUser != null && mounted) {
+      setState(() {
+        _currentUser = updatedUser;
+      });
+    }
   }
 
   Widget _buildRefCard(

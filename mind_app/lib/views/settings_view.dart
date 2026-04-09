@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/user_model.dart';
 import 'help_us_page.dart';
 import 'admin_view.dart';
 import 'profile_view.dart';
@@ -12,55 +13,58 @@ const Color secondaryPurple = Color(0xFFA55FEF);
 const Color accentOrange = Color(0xFFFF8811);
 const Color softBlueBg = Color(0xFFF1F5F9);
 
-class SettingsView extends StatelessWidget {
-  const SettingsView({super.key});
+class SettingsView extends StatefulWidget {
+  final User user;
+  const SettingsView({required this.user, super.key});
+
+  @override
+  State<SettingsView> createState() => _SettingsViewState();
+}
+
+class _SettingsViewState extends State<SettingsView> {
+  late User _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentUser = widget.user;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'App Settings',
-          style: TextStyle(
-            fontFamily: 'Recoleta',
-            color: Colors.black87,
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline_rounded, color: mainBlue),
-            onPressed: () => Navigator.push(
-                context, MaterialPageRoute(builder: (_) => const HelpUsPage())),
-          ),
-        ],
-      ),
-      body: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [mainBlue.withValues(alpha: 0.05), Colors.white],
-          ),
-        ),
+      body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 140), // Increased bottom padding for nav bar clearance
           child: Column(
             children: [
+              // ──  Custom Header ──
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SizedBox(width: 48), // Balance for center alignment
+                  const Text(
+                    'App Settings',
+                    style: TextStyle(
+                      fontFamily: 'Recoleta',
+                      color: Colors.black87,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.help_outline_rounded, color: mainBlue),
+                    onPressed: () => Navigator.push(
+                        context, MaterialPageRoute(builder: (_) => const HelpUsPage())),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 30),
+
               // ──  Explorer Profile Header ──
               _buildModernProfileHeader(),
-              const SizedBox(height: 40),
+              const SizedBox(height: 50),
 
               // ──  Account Section ──
               _buildSectionHeader("MY ACCOUNT"),
@@ -69,8 +73,7 @@ class SettingsView extends StatelessWidget {
                 color: mainBlue,
                 title: "Profile Info",
                 subtitle: "Update your name and avatar",
-                onTap: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const ProfileView())),
+                onTap: _goToProfile,
               ),
               const SizedBox(height: 12),
               _buildSettingsTile(
@@ -108,20 +111,35 @@ class SettingsView extends StatelessWidget {
               // ──  Logout CTA ──
               _buildSignOutButton(context),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               Text(
                 "Little Minds v2.0.1\nMade with ❤️ for tiny explorers",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.nunito(
-                    color: Colors.black26,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold),
+                  color: Colors.black26,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold),
               ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _goToProfile() async {
+    final updatedUser = await Navigator.push<User>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProfileView(user: _currentUser),
+      ),
+    );
+
+    if (updatedUser != null && mounted) {
+      setState(() {
+        _currentUser = updatedUser;
+      });
+    }
   }
 
   Widget _buildModernProfileHeader() {
@@ -134,10 +152,15 @@ class SettingsView extends StatelessWidget {
               padding: const EdgeInsets.all(4),
               decoration:
                   const BoxDecoration(color: mainBlue, shape: BoxShape.circle),
-              child: const CircleAvatar(
+              child: CircleAvatar(
                 radius: 55,
-                backgroundImage: NetworkImage(
-                    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300'),
+                backgroundColor: mainBlue.withValues(alpha: 0.1),
+                backgroundImage: _currentUser.photoUrl != null && _currentUser.photoUrl!.isNotEmpty
+                    ? NetworkImage(_currentUser.photoUrl!)
+                    : null,
+                child: _currentUser.photoUrl == null || _currentUser.photoUrl!.isEmpty
+                    ? const Icon(Icons.person_rounded, color: Colors.white, size: 55)
+                    : null,
               ),
             ),
             Container(
@@ -150,8 +173,8 @@ class SettingsView extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        const Text("Hi, Little Explorer!",
-            style: TextStyle(
+        Text("Hi, ${_currentUser.name}!",
+            style: const TextStyle(
                 fontFamily: 'Recoleta',
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
