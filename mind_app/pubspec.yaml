@@ -60,13 +60,15 @@ dev_dependencies:
   flutter_lints: ^3.0.0
   build_runner: ^2.4.0
   json_serializable: ^6.8.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.0
 
 flutter:
   generate: true
   uses-material-design: true
 
   assets:
-    - assets/logo.png
+    - assets/brand/
     - assets/icons/
     - assets/illustrations/
     - assets/images/
@@ -80,3 +82,23 @@ flutter:
     - assets/story1/
     # Add more as needed
     # - assets/models/   # for future AR/3D models
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/brand/play_store_512.png"
+  adaptive_icon_background: "#A55FEF" # Brand purple
+  adaptive_icon_foreground: "assets/brand/play_store_512.png"
+  min_sdk_android: 21
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: "assets/brand/play_store_512.png"
+  android: true
+  ios: true
+  fullscreen: false
+  android_gravity: center
+  ios_content_mode: center
+  android_12:
+    color: "#FFFFFF"
+    image: "assets/brand/play_store_512.png"
