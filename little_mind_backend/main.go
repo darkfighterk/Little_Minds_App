@@ -71,7 +71,8 @@ func main() {
 	mux.HandleFunc("/", rootHandler)
 	mux.HandleFunc("/register", registerHandler)
 	mux.HandleFunc("/login", loginHandler)
-	mux.HandleFunc("/puzzles", puzzlesHandler) // Important for your current error
+	mux.HandleFunc("/puzzles", puzzlesHandler)
+	mux.HandleFunc("/crosswords", crosswordsHandler)
 	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
 	mux.HandleFunc("/admin/upload", adminUploadHandler)
 
@@ -199,6 +200,44 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		"email": dbUser.Email,
 		"token": tokenStr,
 	})
+}
+func crosswordsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeJSONError(w, "Method not allowed")
+		return
+	}
+
+	crosswords := []map[string]interface{}{
+		{
+			"id":           1,
+			"title":        "Basic Math Grid",
+			"category":     "General",
+			"difficulty":   "Easy",
+			"rows":         5,
+			"cols":         5,
+			"timerMinutes": 10,
+		},
+		{
+			"id":           2,
+			"title":        "Science Challenge",
+			"category":     "Science",
+			"difficulty":   "Medium",
+			"rows":         7,
+			"cols":         7,
+			"timerMinutes": 15,
+		},
+		{
+			"id":           3,
+			"title":        "History Puzzle",
+			"category":     "History",
+			"difficulty":   "Hard",
+			"rows":         10,
+			"cols":         10,
+			"timerMinutes": 20,
+		},
+	}
+
+	writeJSON(w, "Crosswords fetched successfully", "", crosswords)
 }
 
 // Puzzles Handler - Fixed to return proper structure
