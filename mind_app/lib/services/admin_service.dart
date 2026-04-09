@@ -302,15 +302,15 @@ class AdminService {
   }) async {
     try {
       final payload = jsonEncode({
-        'title':       title,
-        'author':      author,
+        'title': title,
+        'author': author,
         'description': description,
-        'cover_url':   coverUrl,
-        'category':    category,
-        'difficulty':  difficulty,
-        'age_range':   ageRange,
+        'cover_url': coverUrl,
+        'category': category,
+        'difficulty': difficulty,
+        'age_range': ageRange,
         'cover_emoji': coverEmoji,
-        'pages':       pages,
+        'pages': pages,
       });
       final resp = await http
           .post(

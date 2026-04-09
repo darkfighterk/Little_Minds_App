@@ -1,7 +1,9 @@
 // lib/models/puzzle_model.dart
-
 import 'dart:math';
 
+/// Jigsaw puzzle — matches backend JSON:
+/// { id, title, image_url, piece_count, category, difficulty }
+/// NOTE: backend sends id as a String (e.g. "1"), so we parse it safely.
 class PuzzleItem {
   final int id;
   final String title;
@@ -21,15 +23,26 @@ class PuzzleItem {
 
   factory PuzzleItem.fromJson(Map<String, dynamic> json) {
     return PuzzleItem(
-      id: (json['id'] as num?)?.toInt() ?? 0,
+      // Backend returns id as String ("1"), so handle both String and num
+      id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
       title: json['title'] as String? ?? 'Untitled',
       imageUrl: json['image_url'] as String? ?? '',
-      pieceCount: (json['piece_count'] as num?)?.toInt() ?? 16,
+      // piece_count may also be a String from backend
+      pieceCount: int.tryParse(json['piece_count']?.toString() ?? '16') ?? 16,
       category: json['category'] as String? ?? 'General',
       difficulty: json['difficulty'] as String? ?? 'Easy',
     );
   }
 
-  /// Number of columns (and rows) in the grid. E.g. 16 pieces → 4 cols.
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'image_url': imageUrl,
+        'piece_count': pieceCount,
+        'category': category,
+        'difficulty': difficulty,
+      };
+
+  /// Grid columns derived from piece count. E.g. 16 pieces → 4 cols.
   int get cols => sqrt(pieceCount).toInt();
 }

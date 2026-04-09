@@ -1,10 +1,11 @@
 // lib/models/puzzle.dart
+// Crossword puzzle model — Cell, Clue, and Puzzle.
 
 class Cell {
   bool isBlack;
   int? number;
   String solution;
-  String userInput; // player's typed letter — never sent to server
+  String userInput; // client-only, never sent to server
 
   Cell({
     this.isBlack = false,
@@ -27,10 +28,15 @@ class Cell {
         // userInput intentionally omitted — client-only
       };
 
+  bool get isEmpty => !isBlack && solution.isEmpty;
+
   bool get isCorrect =>
       solution.isNotEmpty && userInput.toUpperCase() == solution.toUpperCase();
 }
 
+// NOTE: number and text are intentionally non-final (mutable).
+// The admin editor (create_puzzle_screen.dart) updates these
+// in-place via onChanged callbacks like: clue.text = v
 class Clue {
   int number;
   String text;
@@ -57,7 +63,7 @@ class Puzzle {
   final List<Clue> downClues;
   final int timerMinutes;
 
-  Puzzle({
+  const Puzzle({
     this.id = 0,
     required this.title,
     this.category = 'General',
@@ -71,6 +77,7 @@ class Puzzle {
   });
 
   factory Puzzle.fromJson(Map<String, dynamic> json) {
+    // ── Grid ──────────────────────────────────────────────────
     List<List<Cell>> parsedGrid = [];
     final rawGrid = json['gridData'];
     if (rawGrid is List) {
@@ -88,6 +95,7 @@ class Puzzle {
           .toList();
     }
 
+    // ── Across clues ──────────────────────────────────────────
     List<Clue> parsedAcross = [];
     final rawAcross = json['acrossClues'];
     if (rawAcross is List) {
@@ -97,6 +105,7 @@ class Puzzle {
           .toList();
     }
 
+    // ── Down clues ────────────────────────────────────────────
     List<Clue> parsedDown = [];
     final rawDown = json['downClues'];
     if (rawDown is List) {
@@ -139,4 +148,7 @@ class Puzzle {
 
   int get correctLetters =>
       grid.expand((r) => r).where((c) => c.isCorrect).length;
+
+  double get completionPercent =>
+      totalLetters == 0 ? 0 : correctLetters / totalLetters;
 }
