@@ -90,6 +90,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ],
       ),
       bottomNavigationBar: BottomNavBar(
+        user: widget.user,
         primaryColor: mainBlue,
         isDark: false,
       ),

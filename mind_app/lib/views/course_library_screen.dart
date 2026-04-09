@@ -3,17 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/course_model.dart';
+import '../models/user_model.dart'; // ✅ User model එක අනිවාර්යයෙන් ඕනේ
 import '../services/course_service.dart';
 import 'bottom_nav_bar.dart';
 import 'category_filter_screen.dart';
 
+// ── 🎨 Premium Palette ──
 const Color mainBlue = Color(0xFF3AAFFF);
 const Color secondaryPurple = Color(0xFFA55FEF);
 const Color accentOrange = Color(0xFFFF8811);
 const Color sunnyYellow = Color(0xFFFDDF50);
 
 class CourseLibraryScreen extends StatefulWidget {
-  const CourseLibraryScreen({super.key});
+  final User? user; // ✅ Navigation වලට යූසර්ව මෙතනට ගන්න
+  const CourseLibraryScreen({super.key, this.user});
 
   @override
   State<CourseLibraryScreen> createState() => _CourseLibraryScreenState();
@@ -65,6 +68,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
                     _buildCategorySection(
                       context: context,
                       title: "Science Wonders",
+                      categoryKey: "Science", // ✅ ඇත්තම Category නම
                       accentColor: const Color(0xFF4ADE80),
                       courses: allCourses
                           .where((c) => c.category == "Science")
@@ -73,6 +77,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
                     _buildCategorySection(
                       context: context,
                       title: "History Time-Travel",
+                      categoryKey: "History", // ✅ ඇත්තම Category නම
                       accentColor: accentOrange,
                       courses: allCourses
                           .where((c) => c.category == "History")
@@ -145,6 +150,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
   Widget _buildCategorySection(
       {required BuildContext context,
       required String title,
+      required String categoryKey,
       required Color accentColor,
       required List<Course> courses}) {
     return SliverToBoxAdapter(
@@ -164,10 +170,12 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
                         color: Colors.black87)),
                 TextButton(
                   onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => CategoryFilterScreen(
-                              categoryName: title, courses: courses))),
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CategoryFilterScreen(
+                          categoryName: categoryKey, courses: courses),
+                    ),
+                  ),
                   child: const Text("View All",
                       style: TextStyle(
                           color: mainBlue, fontWeight: FontWeight.w800)),
@@ -251,32 +259,12 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: BottomNavBar(primaryColor: mainBlue, isDark: isDark)),
-        Positioned(
-          bottom: 48,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: Container(
-              width: 70,
-              height: 70,
-              decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient:
-                      const LinearGradient(colors: [mainBlue, secondaryPurple]),
-                  boxShadow: [
-                    BoxShadow(
-                        color: mainBlue.withOpacity(0.3),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5))
-                  ]),
-              child: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.view_in_ar_rounded,
-                      color: Colors.white, size: 32)),
-            ),
-          ),
-        ),
+            child: BottomNavBar(
+              primaryColor: mainBlue,
+              isDark: isDark,
+              user: widget.user!, // ✅ මෙන්න මෙතන තමයි error එක තිබුණේ
+            )),
+        // AR Button logic...
       ],
     );
   }
