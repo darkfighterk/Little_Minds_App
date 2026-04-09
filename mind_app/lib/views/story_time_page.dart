@@ -87,7 +87,8 @@ class _StoryTimePageState extends State<StoryTimePage> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavBar(primaryColor: mainBlue, isDark: false),
+      bottomNavigationBar: BottomNavBar(
+          primaryColor: mainBlue, isDark: false, user: widget.user),
     );
   }
 

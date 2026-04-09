@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'settings_view.dart';
+import '../views/library_view.dart';
+import '../models/user_model.dart';
 
 class BottomNavBar extends StatelessWidget {
   final Color primaryColor;
   final bool isDark;
+  final User user;
 
   const BottomNavBar({
     super.key,
     required this.primaryColor,
     required this.isDark,
+    required this.user,
   });
 
   @override
@@ -42,6 +46,13 @@ class BottomNavBar extends StatelessWidget {
               icon: Icons.menu_book_rounded,
               active: false,
               color: mainBlue,
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => LibraryView(user: user)),
+                );
+              },
             ),
             _NavItem(
               icon: Icons.timer_outlined,

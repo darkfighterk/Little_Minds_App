@@ -66,6 +66,7 @@ class _PuzzlesListViewState extends State<PuzzlesListView> {
         ),
       ),
       bottomNavigationBar: BottomNavBar(
+        user: widget.user,
         primaryColor: mainBlue,
         isDark: false,
       ),
