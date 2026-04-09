@@ -146,7 +146,7 @@ class _ForgotPasswordResetViewState extends State<ForgotPasswordResetView> {
           width: 300,
           height: 300,
           decoration: BoxDecoration(
-              color: mainBlue.withOpacity(0.06), shape: BoxShape.circle)),
+              color: mainBlue.withValues(alpha: 0.06), shape: BoxShape.circle)),
     );
   }
 
@@ -161,7 +161,7 @@ class _ForgotPasswordResetViewState extends State<ForgotPasswordResetView> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+                BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)
               ]),
           child: const Icon(Icons.arrow_back_ios_new_rounded,
               size: 20, color: Colors.black87),
@@ -174,7 +174,7 @@ class _ForgotPasswordResetViewState extends State<ForgotPasswordResetView> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-          color: sunnyYellow.withOpacity(0.1), shape: BoxShape.circle),
+          color: sunnyYellow.withValues(alpha: 0.1), shape: BoxShape.circle),
       child: Image.asset(
         'assets/illustrations/reset_password.png',
         height: 180,
@@ -198,7 +198,7 @@ class _ForgotPasswordResetViewState extends State<ForgotPasswordResetView> {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           elevation: 8,
-          shadowColor: secondaryPurple.withOpacity(0.4),
+          shadowColor: secondaryPurple.withValues(alpha: 0.4),
         ),
         child: isLoading
             ? const SizedBox(
@@ -248,7 +248,7 @@ class _InputField extends StatelessWidget {
             style: GoogleFonts.nunito(
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
-                color: mainBlue.withOpacity(0.6),
+                color: mainBlue.withValues(alpha: 0.6),
                 letterSpacing: 1.1)),
         const SizedBox(height: 8),
         Container(
@@ -257,7 +257,7 @@ class _InputField extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 15,
                   offset: const Offset(0, 5))
             ],
@@ -267,7 +267,7 @@ class _InputField extends StatelessWidget {
             obscureText: obscureText,
             style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
             decoration: InputDecoration(
-              prefixIcon: Icon(icon, color: mainBlue.withOpacity(0.5)),
+              prefixIcon: Icon(icon, color: mainBlue.withValues(alpha: 0.5)),
               suffixIcon: suffix != null
                   ? IconButton(
                       icon: Icon(suffix, color: Colors.black26),
@@ -276,11 +276,11 @@ class _InputField extends StatelessWidget {
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide:
-                      BorderSide(color: mainBlue.withOpacity(0.1), width: 2)),
+                      BorderSide(color: mainBlue.withValues(alpha: 0.1), width: 2)),
               enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide:
-                      BorderSide(color: mainBlue.withOpacity(0.08), width: 2)),
+                      BorderSide(color: mainBlue.withValues(alpha: 0.08), width: 2)),
               focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: const BorderSide(color: mainBlue, width: 2)),

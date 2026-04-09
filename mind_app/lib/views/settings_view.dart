@@ -51,7 +51,7 @@ class SettingsView extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withOpacity(0.05), Colors.white],
+            colors: [mainBlue.withValues(alpha: 0.05), Colors.white],
           ),
         ),
         child: SingleChildScrollView(
@@ -174,7 +174,7 @@ class SettingsView extends StatelessWidget {
             style: GoogleFonts.nunito(
                 fontWeight: FontWeight.w900,
                 fontSize: 12,
-                color: mainBlue.withOpacity(0.6),
+                color: mainBlue.withValues(alpha: 0.6),
                 letterSpacing: 1.5)),
       ),
     );
@@ -192,7 +192,7 @@ class SettingsView extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-              color: mainBlue.withOpacity(0.04),
+              color: mainBlue.withValues(alpha: 0.04),
               blurRadius: 15,
               offset: const Offset(0, 5))
         ],
@@ -203,7 +203,7 @@ class SettingsView extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(15)),
           child: Icon(icon, color: color, size: 24),
         ),

@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../controllers/login_controller.dart';
 import '../models/user_model.dart';
+import 'main_home_view.dart';
 
 const Color mainBlue = Color(0xFF3AAFFF);
 const Color secondaryPurple = Color(0xFFA55FEF);
@@ -54,7 +55,10 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
 
     if (user != null && mounted) {
       _showToast('Welcome to Adventure! 🎉', Colors.green);
-      Navigator.pushReplacementNamed(context, '/');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => HomePage(user: user)),
+      );
     } else if (mounted) {
       _showToast('Registration failed. Try again.', Colors.redAccent);
     }
@@ -153,7 +157,7 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
           width: 300,
           height: 300,
           decoration: BoxDecoration(
-              color: mainBlue.withOpacity(0.06), shape: BoxShape.circle)),
+              color: mainBlue.withValues(alpha: 0.06), shape: BoxShape.circle)),
     );
   }
 
@@ -166,7 +170,7 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
             color: Colors.white,
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)
             ]),
         child: const Icon(Icons.arrow_back_ios_new_rounded,
             size: 20, color: Colors.black87),
@@ -189,7 +193,7 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
             style: GoogleFonts.nunito(
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
-                color: mainBlue.withOpacity(0.6),
+                color: mainBlue.withValues(alpha: 0.6),
                 letterSpacing: 1.1)),
         const SizedBox(height: 8),
         TextField(
@@ -198,7 +202,7 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
           keyboardType: type,
           style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: mainBlue.withOpacity(0.4)),
+            prefixIcon: Icon(icon, color: mainBlue.withValues(alpha: 0.4)),
             suffixIcon: isPassword
                 ? IconButton(
                     icon: Icon(
@@ -207,11 +211,11 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
                     onPressed: onToggle)
                 : null,
             filled: true,
-            fillColor: mainBlue.withOpacity(0.03),
+            fillColor: mainBlue.withValues(alpha: 0.03),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide:
-                    BorderSide(color: mainBlue.withOpacity(0.08), width: 2)),
+                    BorderSide(color: mainBlue.withValues(alpha: 0.08), width: 2)),
             focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: const BorderSide(color: mainBlue, width: 2)),
@@ -234,7 +238,7 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           elevation: 8,
-          shadowColor: secondaryPurple.withOpacity(0.4),
+          shadowColor: secondaryPurple.withValues(alpha: 0.4),
         ),
         child: isLoading
             ? const SizedBox(
@@ -264,7 +268,7 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
               style: const TextStyle(
                   color: secondaryPurple, fontWeight: FontWeight.bold),
               recognizer: TapGestureRecognizer()
-                ..onTap = () => Navigator.pushReplacementNamed(context, '/'),
+                ..onTap = () => Navigator.pushReplacementNamed(context, '/login'),
             ),
           ],
         ),

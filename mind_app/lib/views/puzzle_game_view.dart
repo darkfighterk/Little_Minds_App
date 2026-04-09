@@ -142,7 +142,6 @@ class _PieceTile extends StatelessWidget {
     required this.cell,
     required this.nub,
     this.correct = false,
-    super.key,
   });
 
   @override
@@ -226,7 +225,6 @@ class _GhostSlot extends StatelessWidget {
     required this.nub,
     this.hovered = false,
     this.wrong   = false,
-    super.key,
   });
 
   @override
@@ -256,8 +254,8 @@ class _PieceOutline extends CustomPainter {
       _jigsawPath(edge, cell, nub),
       Paint()
         ..color       = correct
-            ? const Color(0xFF4CAF50).withOpacity(.95)
-            : Colors.white.withOpacity(.55)
+            ? const Color(0xFF4CAF50).withValues(alpha: .95)
+            : Colors.white.withValues(alpha: .55)
         ..style       = PaintingStyle.stroke
         ..strokeWidth = correct ? 2.4 : 1.4
         ..strokeJoin  = StrokeJoin.round,
@@ -281,10 +279,10 @@ class _GhostPainter extends CustomPainter {
 
     // Fill
     final fill = wrong
-        ? Colors.red.withOpacity(.18)
+        ? Colors.red.withValues(alpha: .18)
         : hovered
-            ? const Color(0xFFFF7043).withOpacity(.18)
-            : Colors.white.withOpacity(.05);
+            ? const Color(0xFFFF7043).withValues(alpha: .18)
+            : Colors.white.withValues(alpha: .05);
     canvas.drawPath(path, Paint()..color = fill..style = PaintingStyle.fill);
 
     // Centre icon
@@ -296,11 +294,11 @@ class _GhostPainter extends CustomPainter {
       ..style       = PaintingStyle.stroke;
 
     if (wrong) {
-      ip.color = Colors.red.withOpacity(.75);
+      ip.color = Colors.red.withValues(alpha: .75);
       canvas.drawLine(Offset(cx - ir, cy - ir), Offset(cx + ir, cy + ir), ip);
       canvas.drawLine(Offset(cx + ir, cy - ir), Offset(cx - ir, cy + ir), ip);
     } else if (hovered) {
-      ip.color = const Color(0xFFFF7043).withOpacity(.9);
+      ip.color = const Color(0xFFFF7043).withValues(alpha: .9);
       canvas.drawLine(Offset(cx - ir, cy), Offset(cx + ir, cy), ip);
       canvas.drawLine(Offset(cx, cy - ir), Offset(cx, cy + ir), ip);
     }
@@ -308,10 +306,10 @@ class _GhostPainter extends CustomPainter {
     // Outline
     canvas.drawPath(path, Paint()
       ..color       = wrong
-          ? Colors.red.withOpacity(.65)
+          ? Colors.red.withValues(alpha: .65)
           : hovered
-              ? const Color(0xFFFF7043).withOpacity(.85)
-              : Colors.white.withOpacity(.20)
+              ? const Color(0xFFFF7043).withValues(alpha: .85)
+              : Colors.white.withValues(alpha: .20)
       ..style       = PaintingStyle.stroke
       ..strokeWidth = hovered || wrong ? 1.8 : 1.2
       ..strokeJoin  = StrokeJoin.round);
@@ -564,9 +562,9 @@ class _PuzzleGameState extends State<PuzzleGameView>
       decoration: BoxDecoration(
         color: const Color(0xFF160830),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(.07)),
+        border: Border.all(color: Colors.white.withValues(alpha: .07)),
         boxShadow: [BoxShadow(
-            color: Colors.black.withOpacity(.55),
+            color: Colors.black.withValues(alpha: .55),
             blurRadius: 28, offset: const Offset(0, 10))],
       ),
       child: ClipRRect(
@@ -675,7 +673,7 @@ class _PuzzleGameState extends State<PuzzleGameView>
           child: Container(
             width: sz, height: sz,
             decoration: BoxDecoration(boxShadow: [
-              BoxShadow(color: const Color(0xFFFF7043).withOpacity(.65),
+              BoxShadow(color: const Color(0xFFFF7043).withValues(alpha: .65),
                   blurRadius: 28, spreadRadius: 4),
             ]),
             child: face))),
@@ -685,7 +683,7 @@ class _PuzzleGameState extends State<PuzzleGameView>
         child: Container(
           width: sz, height: sz,
           decoration: BoxDecoration(boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(.45),
+            BoxShadow(color: Colors.black.withValues(alpha: .45),
                 blurRadius: 10, offset: const Offset(0, 5)),
           ]),
           child: face)),
@@ -728,10 +726,10 @@ class _PuzzleGameState extends State<PuzzleGameView>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFD700).withOpacity(.12),
+            color: const Color(0xFFFFD700).withValues(alpha: .12),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-                color: const Color(0xFFFFD700).withOpacity(.4))),
+                color: const Color(0xFFFFD700).withValues(alpha: .4))),
           child: Text(
             '⏱  $m:$s   •   🧩  $_total pcs   •   ${widget.puzzle.difficulty}',
             style: GoogleFonts.fredoka(
@@ -744,7 +742,7 @@ class _PuzzleGameState extends State<PuzzleGameView>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             boxShadow: [BoxShadow(
-                color: const Color(0xFFFF7043).withOpacity(.55),
+                color: const Color(0xFFFF7043).withValues(alpha: .55),
                 blurRadius: 32, spreadRadius: 2)]),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
@@ -800,8 +798,9 @@ class _TimerState extends State<_Timer> {
   void initState() {
     super.initState();
     _t = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (widget.running && mounted)
+      if (widget.running && mounted) {
         setState(() => _e = DateTime.now().difference(widget.start));
+      }
     });
   }
 

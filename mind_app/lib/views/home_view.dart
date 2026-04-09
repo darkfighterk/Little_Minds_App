@@ -111,7 +111,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [mainBlue.withOpacity(0.08), Colors.white])),
+                colors: [mainBlue.withValues(alpha: 0.08), Colors.white])),
         child: SafeArea(
           child: Column(children: [
             _buildHeader(totalStars),
@@ -156,7 +156,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-            color: sunnyYellow.withOpacity(0.2),
+            color: sunnyYellow.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: sunnyYellow)),
         child: Row(children: [
@@ -238,11 +238,11 @@ class _SubjectCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(25),
             boxShadow: [
               BoxShadow(
-                  color: mainBlue.withOpacity(0.08),
+                  color: mainBlue.withValues(alpha: 0.08),
                   blurRadius: 15,
                   offset: const Offset(0, 8))
             ],
-            border: Border.all(color: Colors.black.withOpacity(0.03)),
+            border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
           ),
           child: Column(children: [
             Text(subject.emoji, style: const TextStyle(fontSize: 45)),
@@ -259,7 +259,7 @@ class _SubjectCard extends StatelessWidget {
                 child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 6,
-                    backgroundColor: mainBlue.withOpacity(0.1),
+                    backgroundColor: mainBlue.withValues(alpha: 0.1),
                     valueColor: const AlwaysStoppedAnimation(mainBlue))),
           ]),
         ),
@@ -284,7 +284,7 @@ class _PuzzlesCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
-                color: mainBlue.withOpacity(0.3),
+                color: mainBlue.withValues(alpha: 0.3),
                 blurRadius: 15,
                 offset: const Offset(0, 8))
           ],
@@ -293,7 +293,7 @@ class _PuzzlesCard extends StatelessWidget {
           Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(15)),
               child: const Text('🧩', style: TextStyle(fontSize: 30))),
           const SizedBox(width: 15),

@@ -340,8 +340,9 @@ class _QuizWizardState extends State<_QuizWizard> {
   String? _validateStep0() {
     if (_createNewSubject) {
       if (_subjectIdCtrl.text.trim().isEmpty) return 'Subject ID is required';
-      if (_subjectNameCtrl.text.trim().isEmpty)
+      if (_subjectNameCtrl.text.trim().isEmpty) {
         return 'Subject name is required';
+      }
     } else {
       if (_selectedSubjectId == null) return 'Please select a subject';
     }
@@ -464,7 +465,7 @@ class _QuizWizardState extends State<_QuizWizard> {
             })
         .toList();
 
-    final saved = await _svc.saveQuestions(levelId, questionsPayload);
+    final saved = await _svc.saveQuestions(subjectId, levelId, questionsPayload);
     if (!saved) {
       _publishFailed('Failed to save questions.');
       return;
@@ -480,11 +481,12 @@ class _QuizWizardState extends State<_QuizWizard> {
   }
 
   void _publishFailed(String msg) {
-    if (mounted)
+    if (mounted) {
       setState(() {
         _publishing = false;
         _publishStatus = '';
       });
+    }
     _showSnack(msg, isError: true);
   }
 
@@ -1653,9 +1655,9 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
   final _categoryCtrl = TextEditingController(text: 'General');
   int _pieceCount = 16;
   String _difficulty = 'Easy';
-  XFile? _imageFile;
   String? _uploadedImageUrl;
   bool _uploadingImage = false;
+
 
   // ── Existing puzzles list ───────────────────────────────────
   List<Map<String, dynamic>> _existingPuzzles = [];
@@ -1715,7 +1717,6 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
 
     setState(() {
       _uploadingImage = true;
-      _imageFile = picked;
     });
 
     final url = await _svc.uploadImage(picked);
@@ -1799,7 +1800,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
     ));
   }
 
-  Future<void> _deletePuzzle(int id, String title) async {
+  Future<void> _deletePuzzle(String id, String title) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -1922,7 +1923,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
           style: ElevatedButton.styleFrom(
             backgroundColor: isLast ? _gold : _accent,
             foregroundColor: isLast ? Colors.black87 : Colors.white,
-            disabledBackgroundColor: _accent.withOpacity(0.4),
+            disabledBackgroundColor: _accent.withValues(alpha: 0.4),
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -1976,7 +1977,6 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                   _step = 0;
                   _titleCtrl.clear();
                   _categoryCtrl.text = 'General';
-                  _imageFile = null;
                   _uploadedImageUrl = null;
                   _pieceCount = 16;
                   _difficulty = 'Easy';
@@ -2030,7 +2030,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.06),
+            color: Colors.white.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.white12),
           ),
@@ -2075,7 +2075,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                   decoration: BoxDecoration(
-                    color: active ? color.withOpacity(0.2) : _card,
+                    color: active ? color.withValues(alpha: 0.2) : _card,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                         color: active ? color : Colors.white12, width: 2),
@@ -2113,7 +2113,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: active ? _accent.withOpacity(0.2) : _card,
+                  color: active ? _accent.withValues(alpha: 0.2) : _card,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                       color: active ? _accent : Colors.white12, width: 2),
@@ -2143,7 +2143,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
               border: Border.all(
                 color: _uploadedImageUrl != null
                     ? _green
-                    : _accent.withOpacity(0.5),
+                    : _accent.withValues(alpha: 0.5),
                 width: 2,
               ),
             ),
@@ -2182,7 +2182,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 10, vertical: 5),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.08),
+                                    color: Colors.white.withValues(alpha: 0.08),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Row(children: [
@@ -2275,7 +2275,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
     final pieces = p['piece_count'] as int? ?? 0;
     final difficulty = p['difficulty'] as String? ?? '';
     final category = p['category'] as String? ?? '';
-    final id = p['id'] as int? ?? 0;
+    final id = p['id']?.toString() ?? '';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -2340,7 +2340,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
             hintText: hint,
             hintStyle: const TextStyle(color: Colors.white24, fontSize: 14),
             filled: true,
-            fillColor: Colors.white.withOpacity(0.06),
+            fillColor: Colors.white.withValues(alpha: 0.06),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: Colors.white12)),
@@ -2417,9 +2417,9 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: _gold.withOpacity(0.08),
+            color: _gold.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _gold.withOpacity(0.3)),
+            border: Border.all(color: _gold.withValues(alpha: 0.3)),
           ),
           child: Row(children: [
             const Icon(Icons.info_outline_rounded, color: _gold, size: 18),
@@ -2540,7 +2540,7 @@ class _PzOutline extends CustomPainter {
     canvas.drawPath(
       _pzPath(eT, eR, eB, eL, cell, nub),
       Paint()
-        ..color = Colors.white.withOpacity(.70)
+        ..color = Colors.white.withValues(alpha: .70)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.6
         ..strokeJoin = StrokeJoin.round,
@@ -2584,7 +2584,6 @@ class _PzTile extends StatelessWidget {
     required this.eL,
     required this.cell,
     required this.nub,
-    super.key,
   });
 
   @override
@@ -2671,7 +2670,6 @@ class _AdminPieceGrid extends StatelessWidget {
     required this.imageUrl,
     required this.cols,
     required this.pieceCount,
-    super.key,
   });
 
   /// Deterministic edge map — stable per (cols) so preview never jumps.
@@ -2700,8 +2698,7 @@ class _AdminPieceGrid extends StatelessWidget {
     final cell = gridW / cols;
     // Nub smaller than game view so preview fits on screen
     final nub = cell * .20;
-    final sz =
-        cell + 2 * nub; // single tile canvas size (includes tab overhang)
+    // final sz = cell + 2 * nub; // single tile canvas size (includes tab overhang)
 
     // The N×N grid of bodies occupies exactly gridW×gridW.
     // Each tile canvas is sz×sz but the body sits at (nub,nub) inside it.
@@ -2802,7 +2799,7 @@ class _StoryWizardState extends State<_StoryWizard> {
   int _step = 0;
   bool _loading = false;
   bool _published = false;
-  int? _createdStoryId;
+  String? _createdStoryId;
 
   final _picker = ImagePicker();
 
@@ -2813,7 +2810,9 @@ class _StoryWizardState extends State<_StoryWizard> {
     _descCtrl.dispose();
     _categoryCtrl.dispose();
     _ageRangeCtrl.dispose();
-    for (final p in _pages) p.dispose();
+    for (final p in _pages) {
+      p.dispose();
+    }
     super.dispose();
   }
 
@@ -2882,7 +2881,7 @@ class _StoryWizardState extends State<_StoryWizard> {
         return;
       }
 
-      final id = await _svc.createStory(
+      final storyId = await _svc.createStory(
         title: _titleCtrl.text.trim(),
         author: _authorCtrl.text.trim(),
         description: _descCtrl.text.trim(),
@@ -2907,10 +2906,10 @@ class _StoryWizardState extends State<_StoryWizard> {
 
       setState(() => _loading = false);
 
-      if (id != null) {
+      if (storyId != null) {
         setState(() {
           _published = true;
-          _createdStoryId = id;
+          _createdStoryId = storyId;
         });
       } else {
         _snack(
@@ -3022,7 +3021,8 @@ class _StoryWizardState extends State<_StoryWizard> {
   Widget _buildStep0() {
     const emojis = ['📖', '🐉', '🚀', '🌲', '🐠', '🤖', '🦕', '🦄', '⭐', '🌊'];
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _SectionHeader(icon: Icons.auto_stories_rounded, label: 'Story Details'),
+      const _SectionHeader(
+          icon: Icons.auto_stories_rounded, label: 'Story Details'),
       const SizedBox(height: 16),
 
       // Cover image
@@ -3141,7 +3141,7 @@ class _StoryWizardState extends State<_StoryWizard> {
   // ── STEP 1 — Pages ───────────────────────────────────────────────────
   Widget _buildStep1() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _SectionHeader(icon: Icons.menu_book_rounded, label: 'Story Pages'),
+      const _SectionHeader(icon: Icons.menu_book_rounded, label: 'Story Pages'),
       const SizedBox(height: 4),
       Text(
           'Add at least one page. Each page can have text and an optional image.',
@@ -3255,7 +3255,7 @@ class _StoryWizardState extends State<_StoryWizard> {
     final validPages =
         _pages.where((p) => p.bodyCtrl.text.trim().isNotEmpty).toList();
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _SectionHeader(icon: Icons.preview_rounded, label: 'Review & Publish'),
+      const _SectionHeader(icon: Icons.preview_rounded, label: 'Review & Publish'),
       const SizedBox(height: 16),
       _ReviewRow(label: 'Title', value: _titleCtrl.text),
       _ReviewRow(label: 'Author', value: _authorCtrl.text),
@@ -3317,7 +3317,9 @@ class _StoryWizardState extends State<_StoryWizard> {
                 _coverEmoji = '📖';
                 _coverFile = null;
                 _coverUrl = null;
-                for (final p in _pages) p.dispose();
+                for (final p in _pages) {
+                  p.dispose();
+                }
                 _pages
                   ..clear()
                   ..add(_StoryPageDraft());
@@ -3371,7 +3373,7 @@ class _StepIndicator extends StatelessWidget {
               color: done
                   ? _accent
                   : active
-                      ? _accent.withOpacity(0.3)
+                      ? _accent.withValues(alpha: 0.3)
                       : _card,
               border: Border.all(
                   color: done || active ? _accent : Colors.white24, width: 2),

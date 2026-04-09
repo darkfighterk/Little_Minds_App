@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -121,7 +120,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                  color: sunnyYellow.withOpacity(0.2),
+                  color: sunnyYellow.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: sunnyYellow)),
               child: const Text("1,250 💎",
@@ -137,7 +136,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
             hintStyle: GoogleFonts.nunito(color: Colors.black26),
             prefixIcon: const Icon(Icons.search_rounded, color: mainBlue),
             filled: true,
-            fillColor: mainBlue.withOpacity(0.05),
+            fillColor: mainBlue.withValues(alpha: 0.05),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: BorderSide.none),
@@ -208,7 +207,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 15,
               offset: const Offset(0, 8))
         ],
@@ -219,7 +218,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.1),
+                  color: accentColor.withValues(alpha: 0.1),
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(25))),
               child: Center(

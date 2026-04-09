@@ -35,7 +35,7 @@ class ProfileView extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withOpacity(0.05), Colors.white],
+            colors: [mainBlue.withValues(alpha: 0.05), Colors.white],
           ),
         ),
         child: SingleChildScrollView(
@@ -131,7 +131,7 @@ class ProfileView extends StatelessWidget {
           label: const Text("Edit Profile"),
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.black54,
-            side: BorderSide(color: Colors.black12, width: 2),
+            side: const BorderSide(color: Colors.black12, width: 2),
             shape: const StadiumBorder(),
             padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
           ),
@@ -172,7 +172,7 @@ class ProfileView extends StatelessWidget {
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-              color: mainBlue.withOpacity(0.04),
+              color: mainBlue.withValues(alpha: 0.04),
               blurRadius: 20,
               offset: const Offset(0, 8))
         ],
@@ -185,7 +185,7 @@ class ProfileView extends StatelessWidget {
               Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                      color: iconColor.withOpacity(0.1),
+                      color: iconColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(15)),
                   child: Icon(icon, color: iconColor, size: 24)),
               const SizedBox(width: 15),
@@ -216,7 +216,7 @@ class ProfileView extends StatelessWidget {
                 child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 8,
-                    backgroundColor: mainBlue.withOpacity(0.05),
+                    backgroundColor: mainBlue.withValues(alpha: 0.05),
                     valueColor: const AlwaysStoppedAnimation(mainBlue))),
           ],
         ],
@@ -242,9 +242,9 @@ class ProfileView extends StatelessWidget {
       margin: const EdgeInsets.only(right: 15),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.2))),
+          border: Border.all(color: color.withValues(alpha: 0.2))),
       child: Column(
         children: [
           Icon(icon, color: color, size: 40),
@@ -267,14 +267,14 @@ class ProfileView extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: color.withOpacity(0.1), width: 2),
+        border: Border.all(color: color.withValues(alpha: 0.1), width: 2),
       ),
       child: Row(
         children: [
           Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(15)),
               child: Icon(icon, color: color, size: 28)),
           const SizedBox(width: 16),

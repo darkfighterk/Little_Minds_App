@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'main_home_view.dart';
+
 import 'story_player.dart';
 import '../models/user_model.dart';
 import 'bottom_nav_bar.dart';
@@ -129,10 +129,7 @@ class LibraryView extends StatelessWidget {
         children: [
           IconButton(
             onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => HomePage(user: user)),
-              );
+              Navigator.pop(context);
             },
             icon: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: Colors.black87),
@@ -157,7 +154,7 @@ class LibraryView extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF712D).withOpacity(0.3),
+            color: const Color(0xFFFF712D).withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           )
@@ -173,7 +170,7 @@ class LibraryView extends StatelessWidget {
               child: Icon(
                 Icons.auto_stories_rounded,
                 size: 160,
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
               ),
             ),
             Padding(
@@ -269,7 +266,7 @@ class LibraryView extends StatelessWidget {
                     color: Colors.grey[100],
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 8,
                         offset: const Offset(4, 4),
                       )
@@ -299,7 +296,7 @@ class LibraryView extends StatelessWidget {
                                 begin: Alignment.centerLeft,
                                 end: Alignment.centerRight,
                                 colors: [
-                                  Colors.black.withOpacity(0.35),
+                                  Colors.black.withValues(alpha: 0.35),
                                   Colors.transparent,
                                 ],
                               ),

@@ -52,7 +52,7 @@ class _LevelMapViewState extends State<LevelMapView>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withOpacity(0.08), Colors.white],
+            colors: [mainBlue.withValues(alpha: 0.08), Colors.white],
           ),
         ),
         child: SafeArea(
@@ -105,9 +105,9 @@ class _LevelMapViewState extends State<LevelMapView>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: sunnyYellow.withOpacity(0.2),
+              color: sunnyYellow.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: sunnyYellow.withOpacity(0.5)),
+              border: Border.all(color: sunnyYellow.withValues(alpha: 0.5)),
             ),
             child: Row(children: [
               const Text('⭐', style: TextStyle(fontSize: 16)),
@@ -178,7 +178,7 @@ class _LevelMapViewState extends State<LevelMapView>
                   border: Border.all(color: nodeColor, width: 2.5),
                   boxShadow: [
                     BoxShadow(
-                        color: nodeColor.withOpacity(0.1),
+                        color: nodeColor.withValues(alpha: 0.1),
                         blurRadius: 20,
                         offset: const Offset(0, 8))
                   ],
@@ -234,7 +234,7 @@ class _LevelMapViewState extends State<LevelMapView>
                   height: 10,
                   margin: const EdgeInsets.symmetric(vertical: 3),
                   decoration: BoxDecoration(
-                      color: mainBlue.withOpacity(0.15),
+                      color: mainBlue.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(2))))),
     );
   }
@@ -268,17 +268,20 @@ class _LevelMapViewState extends State<LevelMapView>
           starsRequired: (l['stars_required'] as num?)?.toInt() ?? 0,
           questions: questions);
     }).toList();
-    if (mounted) setState(() => _dynamicLevels = levels);
+    if (mounted) {
+      setState(() => _dynamicLevels = levels);
+    }
   }
 
   Future<void> _loadProgress() async {
     final result = await _gameService.fetchProgress(widget.subject.id);
-    if (mounted)
+    if (mounted) {
       setState(() {
         _totalStars = result.stars;
         _completedLevels = result.completedLevels;
         _loading = false;
       });
+    }
   }
 
   void _openLevel(GameLevel level) async {

@@ -1,24 +1,25 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/course_model.dart';
 
 class CourseService {
-  final String baseUrl = "http://10.0.2.2:8080/courses";
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   Future<List<Course>> fetchCourses() async {
     try {
-      final response = await http.get(Uri.parse(baseUrl));
+      debugPrint('🔵 CourseService: Fetching from Firestore...');
+      final snapshot = await _db.collection('courses').get();
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> body = json.decode(response.body);
-        final List<dynamic> data = body['data'];
+      debugPrint('✅ CourseService: ${snapshot.docs.length} courses received');
 
-        return data.map((item) => Course.fromJson(item)).toList();
-      } else {
-        throw Exception("Server returned an error: ${response.statusCode}");
-      }
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id; // Use Firestore document ID
+        return Course.fromJson(data);
+      }).toList();
     } catch (e) {
-      throw Exception("Could not connect to backend: $e");
+      debugPrint("❌ CourseService.fetchCourses error: $e");
+      return [];
     }
   }
 }

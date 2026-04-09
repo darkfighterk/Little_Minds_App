@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -84,7 +83,7 @@ class _DrawingPadViewState extends State<DrawingPadView>
   final List<_Stroke> _redoStack = [];
   _Stroke? _currentStroke;
   Color _selectedColor = mainBlue;
-  double _strokeWidth = 6.0;
+  final double _strokeWidth = 6.0;
   bool _isEraser = false;
   String? _guideLetter;
   ui.Image? _backgroundImage;
@@ -127,11 +126,12 @@ class _DrawingPadViewState extends State<DrawingPadView>
           .toList()
         ..sort(
             (a, b) => b.statSync().modified.compareTo(a.statSync().modified));
-      if (mounted)
+      if (mounted) {
         setState(() => _savedDrawings = files
             .map((f) =>
                 SavedDrawing(path: f.path, createdAt: f.statSync().modified))
             .toList());
+      }
     } catch (_) {}
   }
 
@@ -139,10 +139,14 @@ class _DrawingPadViewState extends State<DrawingPadView>
     try {
       final boundary = _canvasKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
-      if (boundary == null) return;
+      if (boundary == null) {
+        return;
+      }
       final image = await boundary.toImage(pixelRatio: 2.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) return;
+      if (byteData == null) {
+        return;
+      }
 
       final dir = await _getDrawingsDir();
       final file = File(_backgroundImagePath ??
@@ -156,9 +160,10 @@ class _DrawingPadViewState extends State<DrawingPadView>
         _loadSavedDrawings();
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Save error: $e')));
+      }
     }
   }
 
@@ -218,7 +223,7 @@ class _DrawingPadViewState extends State<DrawingPadView>
               margin: const EdgeInsets.only(right: 10),
               width: 45,
               decoration: BoxDecoration(
-                  color: sel ? mainBlue : Colors.blue.withOpacity(0.05),
+                  color: sel ? mainBlue : Colors.blue.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(15)),
               child: Center(
                   child: Text(l,
@@ -242,7 +247,7 @@ class _DrawingPadViewState extends State<DrawingPadView>
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-                color: mainBlue.withOpacity(0.1),
+                color: mainBlue.withValues(alpha: 0.1),
                 blurRadius: 20,
                 spreadRadius: 5)
           ]),
@@ -267,11 +272,12 @@ class _DrawingPadViewState extends State<DrawingPadView>
                     width: _isEraser ? 35 : _strokeWidth);
               }),
               onPanUpdate: (d) => setState(() {
-                if (_currentStroke != null)
+                if (_currentStroke != null) {
                   _currentStroke = _Stroke(
                       points: [..._currentStroke!.points, d.localPosition],
                       color: _currentStroke!.color,
                       width: _currentStroke!.width);
+                }
               }),
               onPanEnd: (_) => setState(() {
                 if (_currentStroke != null) {
@@ -299,7 +305,7 @@ class _DrawingPadViewState extends State<DrawingPadView>
           color: Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15)
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15)
           ]),
       child: Column(children: [
         SingleChildScrollView(
@@ -365,10 +371,11 @@ class _DrawingPadViewState extends State<DrawingPadView>
   }
 
   Widget _buildGallery() {
-    if (_savedDrawings.isEmpty)
+    if (_savedDrawings.isEmpty) {
       return Center(
           child: Text("Your gallery is empty! 🎨",
               style: GoogleFonts.nunito(color: Colors.grey, fontSize: 18)));
+    }
     return GridView.builder(
       padding: const EdgeInsets.all(20),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -388,7 +395,7 @@ class _DrawingPadViewState extends State<DrawingPadView>
         child: Container(
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: mainBlue.withOpacity(0.1))),
+              border: Border.all(color: mainBlue.withValues(alpha: 0.1))),
           child: ClipRRect(
               borderRadius: BorderRadius.circular(23),
               child:

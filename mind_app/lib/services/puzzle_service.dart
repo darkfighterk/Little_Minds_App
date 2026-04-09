@@ -1,72 +1,38 @@
-// lib/services/puzzle_service.dart
-import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/puzzle_model.dart';
 
 class PuzzleService {
-  // ── Base URL ───────────────────────────────────────────────────────────────
-  static String get baseUrl {
-    if (kIsWeb) return 'http://localhost:8080';
-    return 'http://10.0.2.2:8080'; // Android emulator
-    // For real device use your PC IP: 'http://192.168.x.x:8080'
-  }
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // ── Image URL normaliser (keeps URLs working on both Web & Mobile) ─────────
-  static String normalizeImageUrl(String url) {
-    if (url.isEmpty) return url;
-    const mobileHost = '10.0.2.2:8080';
-    const webHost = 'localhost:8080';
-    if (kIsWeb) {
-      return url.replaceFirst('http://$mobileHost', 'http://$webHost');
-    } else {
-      return url.replaceFirst('http://$webHost', 'http://$mobileHost');
-    }
-  }
-
-  // ── Fetch all jigsaw puzzles ───────────────────────────────────────────────
-  // Backend response shape: { "data": { "puzzles": [ {...}, ... ] } }
+  // ── Fetch all jigsaw puzzles from Firestore ────────────────────────────────
   Future<List<PuzzleItem>> fetchPuzzles({String? category}) async {
     try {
-      final uri = (category != null && category.isNotEmpty)
-          ? Uri.parse(
-              '$baseUrl/puzzles?category=${Uri.encodeComponent(category)}')
-          : Uri.parse('$baseUrl/puzzles');
-
-      print('🔵 PuzzleService: GET $uri');
-
-      final response = await http.get(uri).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        final body = jsonDecode(response.body) as Map<String, dynamic>;
-
-        // Unwrap: { data: { puzzles: [...] } }
-        final data = body['data'] as Map<String, dynamic>? ?? {};
-        final rawList = data['puzzles'] as List<dynamic>? ?? [];
-
-        print('✅ PuzzleService: ${rawList.length} puzzles received');
-
-        return rawList.map((e) {
-          final json = Map<String, dynamic>.from(e as Map);
-
-          // Normalise image URL for current platform
-          if (json['image_url'] is String) {
-            json['image_url'] = normalizeImageUrl(json['image_url'] as String);
-          }
-
-          return PuzzleItem.fromJson(json);
-        }).toList();
+      debugPrint('🔵 PuzzleService: Fetching from Firestore...');
+      
+      Query query = _db.collection('puzzles');
+      
+      if (category != null && category.isNotEmpty && category.toLowerCase() != 'all') {
+        query = query.where('category', isEqualTo: category);
       }
 
-      print('⚠️ PuzzleService: HTTP ${response.statusCode} — ${response.body}');
+      final snapshot = await query.get();
+
+      debugPrint('✅ PuzzleService: ${snapshot.docs.length} puzzles received');
+
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id; // Use Firestore document ID
+        return PuzzleItem.fromJson(data);
+      }).toList();
     } catch (e, st) {
-      print('❌ PuzzleService.fetchPuzzles error: $e\n$st');
+      debugPrint('❌ PuzzleService.fetchPuzzles error: $e\n$st');
     }
 
     return [];
   }
 
-  // ── Utility: filter locally ────────────────────────────────────────────────
+  // ── Utility: filter locally (Still useful for some UI logic) ───────────────
   static List<PuzzleItem> filterByCategory(
     List<PuzzleItem> puzzles,
     String category,

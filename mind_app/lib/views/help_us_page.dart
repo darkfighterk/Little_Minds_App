@@ -34,7 +34,7 @@ class HelpUsPage extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withOpacity(0.05), Colors.white],
+            colors: [mainBlue.withValues(alpha: 0.05), Colors.white],
           ),
         ),
         child: SingleChildScrollView(
@@ -62,7 +62,7 @@ class HelpUsPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                        color: mainBlue.withOpacity(0.1),
+                        color: mainBlue.withValues(alpha: 0.1),
                         blurRadius: 20,
                         offset: const Offset(0, 8)),
                   ],
@@ -117,7 +117,7 @@ class HelpUsPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
-                        color: mainBlue.withOpacity(0.3),
+                        color: mainBlue.withValues(alpha: 0.3),
                         blurRadius: 25,
                         offset: const Offset(0, 10)),
                   ],
@@ -140,7 +140,7 @@ class HelpUsPage extends StatelessWidget {
                       "Your input helps us create a safer and more fun experience for curious little explorers.",
                       textAlign: TextAlign.center,
                       style: GoogleFonts.nunito(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 15,
                           height: 1.5),
                     ),
@@ -190,7 +190,7 @@ class HelpUsPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: color.withOpacity(0.1), width: 2),
+        border: Border.all(color: color.withValues(alpha: 0.1), width: 2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,7 +200,7 @@ class HelpUsPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12)),
                 child: Icon(icon, color: color, size: 24),
               ),
@@ -220,7 +220,7 @@ class HelpUsPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(Icons.check_circle_outline_rounded,
-                        color: color.withOpacity(0.5), size: 18),
+                        color: color.withValues(alpha: 0.5), size: 18),
                     const SizedBox(width: 10),
                     Expanded(
                         child: Text(item,

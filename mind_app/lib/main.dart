@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'services/firebase_seeder.dart';
 import 'views/onboarding_view.dart';
 import 'views/login_view.dart';
 import 'views/sign_up_view.dart';
@@ -7,6 +10,15 @@ import 'views/sign_up_view.dart';
 void main() async {
   // Required for local storage and OCR plugins
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Automatically seed the database if it's empty
+  await FirebaseSeeder.seedIfEmpty();
+
   runApp(const MindApp());
 }
 
@@ -47,6 +59,7 @@ class MindApp extends StatelessWidget {
       // ──  Navigation Routes ──
       initialRoute: '/login',
       routes: {
+        '/': (context) => const LoginView(),
         '/onboarding': (context) => const OnboardingView(),
         '/login': (context) => const LoginView(),
         '/register': (context) => const SignUpView(),

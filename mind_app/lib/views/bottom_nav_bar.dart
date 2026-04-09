@@ -17,18 +17,18 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color mainBlue = const Color(0xFF3AAFFF);
+    const Color mainBlue = Color(0xFF3AAFFF);
 
     return Container(
       height: 75,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black,
             blurRadius: 15,
-            offset: const Offset(0, -5),
+            offset: Offset(0, -5),
           ),
         ],
       ),
@@ -37,7 +37,7 @@ class BottomNavBar extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _NavItem(
+            const _NavItem(
               icon: Icons.home_rounded,
               active: true,
               color: mainBlue,
@@ -54,7 +54,7 @@ class BottomNavBar extends StatelessWidget {
                 );
               },
             ),
-            _NavItem(
+            const _NavItem(
               icon: Icons.timer_outlined,
               active: false,
               color: mainBlue,
@@ -64,10 +64,12 @@ class BottomNavBar extends StatelessWidget {
               active: false,
               color: mainBlue,
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SettingsView()),
-                );
+                if (true) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SettingsView()),
+                  );
+                }
               },
             ),
           ],

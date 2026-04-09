@@ -53,17 +53,23 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                 () async {
               final XFile? image =
                   await picker.pickImage(source: ImageSource.gallery);
-              if (image != null)
+              if (image != null) {
                 setState(() => _profileImage = File(image.path));
-              if (mounted) Navigator.pop(context);
+              }
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
             }),
             _buildPickerTile(Icons.camera_alt_rounded, 'Take Photo with Camera',
                 () async {
               final XFile? image =
                   await picker.pickImage(source: ImageSource.camera);
-              if (image != null)
+              if (image != null) {
                 setState(() => _profileImage = File(image.path));
-              if (mounted) Navigator.pop(context);
+              }
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
             }),
           ],
         ),
@@ -122,7 +128,7 @@ class _ProfileEditViewState extends State<ProfileEditView> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withOpacity(0.05), Colors.white],
+            colors: [mainBlue.withValues(alpha: 0.05), Colors.white],
           ),
         ),
         child: SingleChildScrollView(
@@ -167,7 +173,7 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20)),
                       elevation: 8,
-                      shadowColor: mainBlue.withOpacity(0.3),
+                      shadowColor: mainBlue.withValues(alpha: 0.3),
                     ),
                     child: const Text('Save Changes',
                         style: TextStyle(
@@ -230,7 +236,7 @@ class _ProfileEditViewState extends State<ProfileEditView> {
             style: GoogleFonts.nunito(
                 fontWeight: FontWeight.w900,
                 fontSize: 12,
-                color: mainBlue.withOpacity(0.6),
+                color: mainBlue.withValues(alpha: 0.6),
                 letterSpacing: 1.2)),
         const SizedBox(height: 8),
         TextFormField(
@@ -240,13 +246,13 @@ class _ProfileEditViewState extends State<ProfileEditView> {
           style: GoogleFonts.nunito(
               fontWeight: FontWeight.w700, color: Colors.black87),
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: mainBlue.withOpacity(0.5)),
+            prefixIcon: Icon(icon, color: mainBlue.withValues(alpha: 0.5)),
             filled: true,
             fillColor: Colors.white,
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide:
-                    BorderSide(color: mainBlue.withOpacity(0.1), width: 2)),
+                    BorderSide(color: mainBlue.withValues(alpha: 0.1), width: 2)),
             focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: const BorderSide(color: mainBlue, width: 2)),

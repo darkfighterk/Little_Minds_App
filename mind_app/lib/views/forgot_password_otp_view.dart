@@ -152,7 +152,7 @@ class _ForgotPasswordOtpViewState extends State<ForgotPasswordOtpView> {
           width: 300,
           height: 300,
           decoration: BoxDecoration(
-              color: mainBlue.withOpacity(0.06), shape: BoxShape.circle)),
+              color: mainBlue.withValues(alpha: 0.06), shape: BoxShape.circle)),
     );
   }
 
@@ -167,7 +167,7 @@ class _ForgotPasswordOtpViewState extends State<ForgotPasswordOtpView> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+                BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)
               ]),
           child: const Icon(Icons.arrow_back_ios_new_rounded,
               size: 20, color: Colors.black87),
@@ -180,7 +180,7 @@ class _ForgotPasswordOtpViewState extends State<ForgotPasswordOtpView> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-          color: secondaryPurple.withOpacity(0.05), shape: BoxShape.circle),
+          color: secondaryPurple.withValues(alpha: 0.05), shape: BoxShape.circle),
       child: Image.asset(
         'assets/illustrations/verification_code.png',
         height: 180,
@@ -212,12 +212,12 @@ class _ForgotPasswordOtpViewState extends State<ForgotPasswordOtpView> {
       height: 75,
       margin: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: mainBlue.withOpacity(0.03),
+        color: mainBlue.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
             color: _focusNodes[index].hasFocus
                 ? mainBlue
-                : mainBlue.withOpacity(0.1),
+                : mainBlue.withValues(alpha: 0.1),
             width: 2),
       ),
       child: Center(
@@ -250,7 +250,7 @@ class _ForgotPasswordOtpViewState extends State<ForgotPasswordOtpView> {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           elevation: 8,
-          shadowColor: secondaryPurple.withOpacity(0.4),
+          shadowColor: secondaryPurple.withValues(alpha: 0.4),
         ),
         child: const Text('Verify Code',
             style: TextStyle(
@@ -281,8 +281,12 @@ class _ForgotPasswordOtpViewState extends State<ForgotPasswordOtpView> {
   @override
   void dispose() {
     _timer?.cancel();
-    for (var c in _controllers) c.dispose();
-    for (var f in _focusNodes) f.dispose();
+    for (var c in _controllers) {
+      c.dispose();
+    }
+    for (var f in _focusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 }

@@ -45,7 +45,7 @@ class CategoryFilterScreen extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withOpacity(0.05), Colors.white],
+            colors: [mainBlue.withValues(alpha: 0.05), Colors.white],
           ),
         ),
         child: courses.isEmpty
@@ -97,12 +97,12 @@ class CategoryFilterScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-            color: cardColor.withOpacity(0.06),
+            color: cardColor.withValues(alpha: 0.06),
             blurRadius: 20,
             offset: const Offset(0, 8),
           )
         ],
-        border: Border.all(color: Colors.black.withOpacity(0.03)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -111,7 +111,7 @@ class CategoryFilterScreen extends StatelessWidget {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: cardColor.withOpacity(0.08),
+                color: cardColor.withValues(alpha: 0.08),
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(25)),
               ),
@@ -155,7 +155,7 @@ class CategoryFilterScreen extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: cardColor.withOpacity(0.1),
+                    color: cardColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(

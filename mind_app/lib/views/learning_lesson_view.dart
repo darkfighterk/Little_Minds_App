@@ -100,15 +100,15 @@ class _LearningLessonScreenState extends State<LearningLessonScreen> {
                 end: Alignment.bottomRight),
           ),
           padding: const EdgeInsets.fromLTRB(20, 80, 20, 0),
-          child: Column(
+          child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Pick a New",
+              Text("Pick a New",
                   style: TextStyle(
                       fontFamily: 'Recoleta',
                       color: Colors.white,
                       fontSize: 24)),
-              const Text("Learning Lesson",
+              Text("Learning Lesson",
                   style: TextStyle(
                       fontFamily: 'Recoleta',
                       color: Colors.white,
@@ -144,9 +144,10 @@ class _LearningLessonScreenState extends State<LearningLessonScreen> {
       sliver: FutureBuilder<List<Lesson>>(
         future: _repo.fetchLessons(query: _search.text, filter: _filter),
         builder: (context, snap) {
-          if (!snap.hasData)
+          if (!snap.hasData) {
             return const SliverToBoxAdapter(
                 child: Center(child: CircularProgressIndicator()));
+          }
           return SliverList(
             delegate: SliverChildBuilderDelegate(
               (ctx, i) => _LessonCard(lesson: snap.data![i]),
@@ -173,7 +174,7 @@ class _LessonCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 15,
               offset: const Offset(0, 5))
         ],
@@ -199,7 +200,7 @@ class _LessonCard extends StatelessWidget {
                       children: [
                         Container(
                             padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                                 color: softBlueBg, shape: BoxShape.circle),
                             child: Text("${lesson.completed}/${lesson.total}",
                                 style: const TextStyle(

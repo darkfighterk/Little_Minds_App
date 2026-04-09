@@ -58,7 +58,7 @@ class OnboardingView extends StatelessWidget {
         width: 300,
         height: 300,
         decoration: BoxDecoration(
-          color: mainBlue.withOpacity(0.05),
+          color: mainBlue.withValues(alpha: 0.05),
           shape: BoxShape.circle,
         ),
       ),
@@ -72,7 +72,7 @@ class OnboardingView extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: secondaryPurple.withOpacity(0.1),
+            color: secondaryPurple.withValues(alpha: 0.1),
             blurRadius: 50,
             spreadRadius: 2,
           ),
@@ -92,9 +92,9 @@ class OnboardingView extends StatelessWidget {
   }
 
   Widget _buildTitleSection() {
-    return Column(
+    return const Column(
       children: [
-        const Text(
+        Text(
           "Let’s Start Your",
           style: TextStyle(
             fontFamily: 'Recoleta',
@@ -167,7 +167,7 @@ class OnboardingView extends StatelessWidget {
                 backgroundColor: secondaryPurple,
                 foregroundColor: Colors.white,
                 elevation: 8,
-                shadowColor: secondaryPurple.withOpacity(0.4),
+                shadowColor: secondaryPurple.withValues(alpha: 0.4),
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),

@@ -49,17 +49,19 @@ class _StoryTimePageState extends State<StoryTimePage> {
       final stories = await StoryService.getStories(
         difficulty: _selectedDifficulty == 'All' ? null : _selectedDifficulty,
       );
-      if (mounted)
+      if (mounted) {
         setState(() {
           _stories = stories;
           _loading = false;
         });
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = 'Could not load stories. Please try again.';
           _loading = false;
         });
+      }
     }
   }
 
@@ -72,7 +74,7 @@ class _StoryTimePageState extends State<StoryTimePage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withOpacity(0.08), Colors.white],
+            colors: [mainBlue.withValues(alpha: 0.08), Colors.white],
           ),
         ),
         child: SafeArea(
@@ -155,12 +157,12 @@ class _StoryTimePageState extends State<StoryTimePage> {
                 color: active ? mainBlue : Colors.white,
                 borderRadius: BorderRadius.circular(15),
                 border: Border.all(
-                    color: active ? mainBlue : mainBlue.withOpacity(0.1),
+                    color: active ? mainBlue : mainBlue.withValues(alpha: 0.1),
                     width: 2),
                 boxShadow: active
                     ? [
                         BoxShadow(
-                            color: mainBlue.withOpacity(0.3),
+                            color: mainBlue.withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 4))
                       ]
@@ -181,10 +183,15 @@ class _StoryTimePageState extends State<StoryTimePage> {
   }
 
   Widget _buildStoryGrid() {
-    if (_loading)
+    if (_loading) {
       return const Center(child: CircularProgressIndicator(color: mainBlue));
-    if (_error != null) return _buildErrorState();
-    if (_stories.isEmpty) return _buildEmptyState();
+    }
+    if (_error != null) {
+      return _buildErrorState();
+    }
+    if (_stories.isEmpty) {
+      return _buildEmptyState();
+    }
 
     return GridView.builder(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
@@ -233,11 +240,11 @@ class _StoryCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
-                color: cardColor.withOpacity(0.12),
+                color: cardColor.withValues(alpha: 0.12),
                 blurRadius: 20,
                 offset: const Offset(0, 10))
           ],
-          border: Border.all(color: cardColor.withOpacity(0.15), width: 1.5),
+          border: Border.all(color: cardColor.withValues(alpha: 0.15), width: 1.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,7 +253,7 @@ class _StoryCard extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: cardColor.withOpacity(0.08),
+                  color: cardColor.withValues(alpha: 0.08),
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(25)),
                 ),
@@ -304,7 +311,7 @@ class _Badge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8)),
       child: Text(label,
           style: TextStyle(

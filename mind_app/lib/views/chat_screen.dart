@@ -1,5 +1,4 @@
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../services/ai_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
@@ -16,6 +15,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   final List<Map<String, dynamic>> _messages = [];
   bool _isLoading = false;
+  final AIService _aiService = AIService();
 
   final Color mainBlue = const Color(0xFF3AAFFF);
   final Color secondaryPurple = const Color(0xFFA55FEF);
@@ -70,8 +70,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       "5. Be exciting and encouraging!";
 
   Future<void> _handleSend() async {
-    if (_messageController.text.trim().isEmpty) return;
-    final userText = _messageController.text.trim();
+    final text = _messageController.text.trim();
+    if (text.isEmpty) {
+      return;
+    }
+    final userText = text;
 
     setState(() {
       _messages.add({"text": userText, "isMe": true});
@@ -81,23 +84,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _scrollToBottom();
 
     try {
-      final url = Uri.parse("http://10.0.2.2:8080/chat");
-      final response = await http.post(url,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            "message": userText,
-            "system": _systemPrompt // ✅ Sending instruction to AI
-          }));
+      final response = await _aiService.getAIResponse("$_systemPrompt\n\nUser: $userText");
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          _messages.add({"text": data['reply'], "isMe": false});
-          _isLoading = false;
-        });
-      } else {
-        throw Exception();
-      }
+      setState(() {
+        _messages.add({"text": response, "isMe": false});
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() {
         _messages.add({
@@ -253,7 +245,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           color: Colors.white,
           borderRadius: BorderRadius.circular(35),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20)
           ]),
       child: Row(
         children: [
@@ -286,8 +278,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients)
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     });
   }
 
@@ -330,9 +327,9 @@ class _MindieAvatar extends StatelessWidget {
       decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: color.withOpacity(0.1), width: 8),
+          border: Border.all(color: color.withValues(alpha: 0.1), width: 8),
           boxShadow: [
-            BoxShadow(color: color.withOpacity(0.1), blurRadius: 30)
+            BoxShadow(color: color.withValues(alpha: 0.1), blurRadius: 30)
           ]),
       child: const Center(child: Text('🦄', style: TextStyle(fontSize: 70))),
     );
@@ -352,8 +349,8 @@ class _TopicChip extends StatelessWidget {
         label: Text(label,
             style:
                 GoogleFonts.nunito(fontWeight: FontWeight.bold, color: color)),
-        backgroundColor: color.withOpacity(0.1),
-        shape: StadiumBorder(side: BorderSide(color: color.withOpacity(0.3))));
+        backgroundColor: color.withValues(alpha: 0.1),
+        shape: StadiumBorder(side: BorderSide(color: color.withValues(alpha: 0.3))));
   }
 }
 

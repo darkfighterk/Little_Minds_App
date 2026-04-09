@@ -57,7 +57,7 @@ class AboutView extends StatelessWidget {
                     const BorderRadius.vertical(bottom: Radius.circular(50)),
                 boxShadow: [
                   BoxShadow(
-                      color: mainBlue.withOpacity(0.3),
+                      color: mainBlue.withValues(alpha: 0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 10))
                 ],
@@ -166,9 +166,9 @@ class AboutView extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.06),
+        color: color.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: color.withOpacity(0.15), width: 2),
+        border: Border.all(color: color.withValues(alpha: 0.15), width: 2),
       ),
       child: Column(
         children: [
@@ -198,9 +198,9 @@ class AboutView extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: mainBlue.withOpacity(0.08),
+          color: mainBlue.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: mainBlue.withOpacity(0.1)),
+          border: Border.all(color: mainBlue.withValues(alpha: 0.1)),
         ),
         child: Row(
           children: [

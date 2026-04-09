@@ -123,7 +123,7 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withOpacity(0.1), Colors.white],
+            colors: [mainBlue.withValues(alpha: 0.1), Colors.white],
           ),
         ),
         child: SafeArea(
@@ -188,7 +188,7 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
         animation: _progressController,
         builder: (context, child) => LinearProgressIndicator(
           value: _progressController.value,
-          backgroundColor: mainBlue.withOpacity(0.1),
+          backgroundColor: mainBlue.withValues(alpha: 0.1),
           valueColor: const AlwaysStoppedAnimation<Color>(mainBlue),
           minHeight: 8,
           borderRadius: BorderRadius.circular(10),
@@ -234,7 +234,7 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20)),
                     elevation: 5,
-                    shadowColor: mainBlue.withOpacity(0.4),
+                    shadowColor: mainBlue.withValues(alpha: 0.4),
                   ),
                   child: Text(
                       _currentIndex < _totalQuestions - 1
@@ -260,10 +260,10 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
     if (_answered) {
       if (isCorrect) {
         borderCol = Colors.green;
-        bgCol = Colors.green.withOpacity(0.1);
+        bgCol = Colors.green.withValues(alpha: 0.1);
       } else if (isSelected) {
         borderCol = Colors.red;
-        bgCol = Colors.red.withOpacity(0.1);
+        bgCol = Colors.red.withValues(alpha: 0.1);
       }
     }
 
@@ -308,7 +308,7 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
       margin: const EdgeInsets.only(top: 20),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-          color: sunnyYellow.withOpacity(0.2),
+          color: sunnyYellow.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(15),
           border: Border.all(color: sunnyYellow)),
       child: Row(children: [

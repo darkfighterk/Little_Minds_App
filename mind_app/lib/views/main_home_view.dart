@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mind_app/views/text_to_image.dart';
@@ -8,8 +7,6 @@ import 'bottom_nav_bar.dart';
 import 'puzzles_list_view.dart';
 import 'story_time_page.dart';
 import 'drawing_pad_view.dart';
-import 'puzzle_list_screen.dart';
-import 'create_puzzle_screen.dart';
 import 'admin_view.dart';
 import 'package:mind_app/widgets/mindie_button.dart';
 
@@ -113,14 +110,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     color: Colors.white, shape: BoxShape.circle),
                 child: CircleAvatar(
                   radius: 22,
-                  backgroundColor: mainBlue.withOpacity(0.1),
-                  child: Icon(Icons.person_rounded, color: mainBlue, size: 28),
+                  backgroundColor: const Color(0xFF3AAFFF).withValues(alpha: 0.1),
+                  child: const Icon(Icons.person_rounded, color: Color(0xFF3AAFFF), size: 28),
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
+              const Text(
                 'Little Minds',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Recoleta',
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -145,9 +142,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Browse your\nadventure!',
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Recoleta',
               fontSize: 38,
               fontWeight: FontWeight.bold,
@@ -161,7 +158,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             style: GoogleFonts.nunito(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
             ),
           ),
           const SizedBox(height: 25),
@@ -169,10 +166,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.95),
+              color: Colors.white.withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+                BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)
               ],
             ),
             child: TextField(
@@ -235,12 +232,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 context,
                 MaterialPageRoute(
                     builder: (_) => PuzzlesListView(user: widget.user)))),
-        _buildRefCard(
-            'Crossword',
-            Icons.grid_on_rounded,
-            const Color(0xFF6C63FF),
-            () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const PuzzleListScreen()))),
       ],
     );
   }
@@ -252,7 +243,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: accentColor.withOpacity(0.12),
+          color: accentColor.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(32),
         ),
         child: Column(
@@ -314,23 +305,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       color: Colors.grey[300],
                       borderRadius: BorderRadius.circular(10))),
               const SizedBox(height: 20),
-              Text('Admin Tools 🛠️',
-                  style: const TextStyle(
+              const Text('Admin Tools 🛠️',
+                  style: TextStyle(
                       fontFamily: 'Recoleta',
                       fontSize: 22,
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: 20),
-              _buildAdminTile('Quiz Admin', Icons.quiz_rounded, mainBlue, () {
+              _buildAdminTile('Admin Control Panel', Icons.admin_panel_settings_rounded, mainBlue, () {
                 Navigator.pop(ctx);
                 Navigator.push(context,
                     MaterialPageRoute(builder: (_) => const AdminGateView()));
-              }),
-              _buildAdminTile(
-                  'Crossword Admin', Icons.grid_4x4_rounded, secondaryPurple,
-                  () {
-                Navigator.pop(ctx);
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const AdminGateScreen()));
               }),
             ],
           ),
@@ -346,7 +330,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12)),
           child: Icon(icon, color: color)),
       title:

@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../controllers/login_controller.dart';
 import 'main_home_view.dart';
 import '../models/user_model.dart';
-import 'forgot_password_email_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -75,7 +74,7 @@ class _LoginViewState extends State<LoginView> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withOpacity(0.15), Colors.white],
+            colors: [mainBlue.withValues(alpha: 0.15), Colors.white],
           ),
         ),
         child: SafeArea(
@@ -101,7 +100,7 @@ class _LoginViewState extends State<LoginView> {
                   style: GoogleFonts.nunito(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: secondaryPurple.withOpacity(0.7),
+                    color: secondaryPurple.withValues(alpha: 0.7),
                   ),
                 ),
 
@@ -127,7 +126,7 @@ class _LoginViewState extends State<LoginView> {
                         _passwordVisible
                             ? Icons.visibility
                             : Icons.visibility_off,
-                        color: secondaryPurple.withOpacity(0.4)),
+                        color: secondaryPurple.withValues(alpha: 0.4)),
                     onPressed: () =>
                         setState(() => _passwordVisible = !_passwordVisible),
                   ),
@@ -227,11 +226,11 @@ class _KidField extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4))
         ],
-        border: Border.all(color: color.withOpacity(0.15), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.15), width: 1.5),
       ),
       child: TextField(
         controller: controller,
@@ -273,7 +272,7 @@ class _ActionButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-                color: color.withOpacity(0.3),
+                color: color.withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 6))
           ],
@@ -304,7 +303,7 @@ class _SocialIcon extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white,
-        border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2), width: 1),
       ),
       child: Image.asset(asset,
           height: 28,

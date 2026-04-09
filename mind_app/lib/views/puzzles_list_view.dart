@@ -55,7 +55,7 @@ class _PuzzlesListViewState extends State<PuzzlesListView> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withOpacity(0.08), Colors.white],
+            colors: [mainBlue.withValues(alpha: 0.08), Colors.white],
           ),
         ),
         child: SafeArea(
@@ -86,7 +86,7 @@ class _PuzzlesListViewState extends State<PuzzlesListView> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+                BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)
               ],
             ),
             child: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -124,8 +124,9 @@ class _PuzzlesListViewState extends State<PuzzlesListView> {
   }
 
   Widget _buildBody() {
-    if (_loading)
+    if (_loading) {
       return const Center(child: CircularProgressIndicator(color: mainBlue));
+    }
 
     if (_error != null && _puzzles.isEmpty) {
       return Center(
@@ -204,12 +205,12 @@ class _PuzzleCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
-              color: mainBlue.withOpacity(0.08),
+              color: mainBlue.withValues(alpha: 0.08),
               blurRadius: 20,
               offset: const Offset(0, 10),
             )
           ],
-          border: Border.all(color: Colors.black.withOpacity(0.03)),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,7 +226,7 @@ class _PuzzleCard extends StatelessWidget {
                     height: double.infinity,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
-                      color: mainBlue.withOpacity(0.1),
+                      color: mainBlue.withValues(alpha: 0.1),
                       child: const Center(
                           child: Text('🧩', style: TextStyle(fontSize: 40))),
                     ),
@@ -286,7 +287,7 @@ class _PuzzleCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                            color: accentOrange.withOpacity(0.3),
+                            color: accentOrange.withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 4))
                       ],

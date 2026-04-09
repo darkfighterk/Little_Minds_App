@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -57,11 +57,12 @@ class _TextFromImagePageState extends State<TextFromImagePage> {
       text = "OCR is best on Mobile! 🚀";
     }
 
-    if (mounted)
+    if (mounted) {
       setState(() {
         extractedText = text;
         isLoading = false;
       });
+    }
   }
 
   Future<void> saveAndSharePDF() async {
@@ -121,9 +122,9 @@ class _TextFromImagePageState extends State<TextFromImagePage> {
       height: 320,
       width: double.infinity,
       decoration: BoxDecoration(
-          color: mainBlue.withOpacity(0.05),
+          color: mainBlue.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(25),
-          border: Border.all(color: mainBlue.withOpacity(0.1))),
+          border: Border.all(color: mainBlue.withValues(alpha: 0.1))),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(25),
         child: imageBytes != null
@@ -134,17 +135,18 @@ class _TextFromImagePageState extends State<TextFromImagePage> {
   }
 
   Widget _buildTextDisplay() {
-    if (extractedText.isEmpty && !isLoading)
+    if (extractedText.isEmpty && !isLoading) {
       return Text("Scan a book to see magic! ✨",
           style: GoogleFonts.nunito(
               fontWeight: FontWeight.bold, color: Colors.black38));
+    }
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: mainBlue.withOpacity(0.1))),
+          border: Border.all(color: mainBlue.withValues(alpha: 0.1))),
       child: SelectableText(extractedText,
           style: GoogleFonts.nunito(fontSize: 16, height: 1.5)),
     );
@@ -155,7 +157,7 @@ class _TextFromImagePageState extends State<TextFromImagePage> {
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
       decoration: BoxDecoration(color: Colors.white, boxShadow: [
         BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, -5))
       ]),

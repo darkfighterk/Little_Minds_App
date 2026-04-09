@@ -10,7 +10,7 @@ const Color sunnyYellow = Color(0xFFFDDF50);
 const Color accentOrange = Color(0xFFFF8811);
 
 class StoryReaderPage extends StatefulWidget {
-  final int storyId;
+  final String storyId;
   final User user;
 
   const StoryReaderPage({
@@ -140,7 +140,7 @@ class _StoryReaderPageState extends State<StoryReaderPage>
         gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withOpacity(0.1), Colors.white]),
+            colors: [mainBlue.withValues(alpha: 0.1), Colors.white]),
       ),
       child: SafeArea(
         child: Column(
@@ -200,7 +200,7 @@ class _StoryReaderPageState extends State<StoryReaderPage>
         gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withOpacity(0.05), Colors.white]),
+            colors: [mainBlue.withValues(alpha: 0.05), Colors.white]),
       ),
       child: SafeArea(
         child: FadeTransition(
@@ -262,7 +262,7 @@ class _StoryReaderPageState extends State<StoryReaderPage>
       padding: const EdgeInsets.symmetric(horizontal: 25),
       child: LinearProgressIndicator(
         value: total > 0 ? (_currentPage + 1) / total : 0,
-        backgroundColor: mainBlue.withOpacity(0.1),
+        backgroundColor: mainBlue.withValues(alpha: 0.1),
         valueColor: const AlwaysStoppedAnimation<Color>(mainBlue),
         minHeight: 6,
         borderRadius: BorderRadius.circular(10),
@@ -283,7 +283,7 @@ class _StoryReaderPageState extends State<StoryReaderPage>
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(
                       height: 200,
-                      color: mainBlue.withOpacity(0.05),
+                      color: mainBlue.withValues(alpha: 0.05),
                       child: const Icon(Icons.menu_book_rounded,
                           size: 50, color: mainBlue))),
             ),
@@ -329,7 +329,7 @@ class _StoryReaderPageState extends State<StoryReaderPage>
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20)),
                   elevation: 5,
-                  shadowColor: accentOrange.withOpacity(0.4),
+                  shadowColor: accentOrange.withValues(alpha: 0.4),
                 ),
                 child: Text(
                     _currentPage < total - 1 ? "Next Page" : "Finish Story",
@@ -358,7 +358,7 @@ class _CircleNavButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-            color: enabled ? mainBlue.withOpacity(0.1) : Colors.grey.shade100,
+            color: enabled ? mainBlue.withValues(alpha: 0.1) : Colors.grey.shade100,
             shape: BoxShape.circle),
         child: Icon(icon,
             color: enabled ? mainBlue : Colors.grey.shade400, size: 20),

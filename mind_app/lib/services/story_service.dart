@@ -1,20 +1,10 @@
-// ============================================================
-// story_service.dart
-// Place in: lib/services/story_service.dart
-//
-// Public story endpoints — no admin key required.
-// Uses GET /stories          → list of stories (no pages)
-// Uses GET /stories/{id}     → full story with pages
-// ============================================================
-
-import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 // ── Models ────────────────────────────────────────────────────────────
 
 class Story {
-  final int id;
+  final String id;
   final String title;
   final String author;
   final String description;
@@ -39,7 +29,7 @@ class Story {
   });
 
   factory Story.fromJson(Map<String, dynamic> j) => Story(
-        id:          (j['id'] as num?)?.toInt() ?? 0,
+        id:          j['id']?.toString() ?? '',
         title:       j['title'] as String? ?? '',
         author:      j['author'] as String? ?? '',
         description: j['description'] as String? ?? '',
@@ -53,7 +43,7 @@ class Story {
 }
 
 class StoryPage {
-  final int id;
+  final String id;
   final int pageNumber;
   final String title;
   final String body;
@@ -68,7 +58,7 @@ class StoryPage {
   });
 
   factory StoryPage.fromJson(Map<String, dynamic> j) => StoryPage(
-        id:         (j['id'] as num?)?.toInt() ?? 0,
+        id:         j['id']?.toString() ?? '',
         pageNumber: (j['page_number'] as num?)?.toInt() ?? 0,
         title:      j['title'] as String? ?? '',
         body:       j['body'] as String? ?? '',
@@ -85,14 +75,7 @@ class StoryDetail {
 // ── Service ────────────────────────────────────────────────────────────
 
 class StoryService {
-  static String get baseUrl {
-    if (kIsWeb) return 'http://localhost:8080';
-    return 'http://10.0.2.2:8080'; // Android emulator
-  }
-
-  static const Map<String, String> _headers = {
-    'Content-Type': 'application/json',
-  };
+  static final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   /// Fetches all stories (no pages). Optionally filter by [category] or [difficulty].
   static Future<List<Story>> getStories({
@@ -100,53 +83,47 @@ class StoryService {
     String? difficulty,
   }) async {
     try {
-      var url = '$baseUrl/stories';
-      final params = <String>[];
-      if (category != null && category.isNotEmpty) params.add('category=$category');
-      if (difficulty != null && difficulty.isNotEmpty) params.add('difficulty=$difficulty');
-      if (params.isNotEmpty) url += '?${params.join('&')}';
-
-      final resp = await http
-          .get(Uri.parse(url), headers: _headers)
-          .timeout(const Duration(seconds: 10));
-
-      if (resp.statusCode == 200) {
-        final body = jsonDecode(resp.body);
-        final data = body['data'] as List<dynamic>? ?? [];
-        return data
-            .cast<Map<String, dynamic>>()
-            .map(Story.fromJson)
-            .toList();
+      debugPrint('🔵 StoryService: Fetching stories from Firestore...');
+      Query query = _db.collection('stories');
+      
+      if (category != null && category.isNotEmpty && category.toLowerCase() != 'all') {
+        query = query.where('category', isEqualTo: category);
       }
-      print('StoryService.getStories HTTP ${resp.statusCode}: ${resp.body}');
+      if (difficulty != null && difficulty.isNotEmpty && difficulty.toLowerCase() != 'all') {
+        query = query.where('difficulty', isEqualTo: difficulty);
+      }
+
+      final snapshot = await query.get();
+      return snapshot.docs
+          .map((doc) => Story.fromJson({...doc.data() as Map<String, dynamic>, 'id': doc.id}))
+          .toList();
     } catch (e) {
-      print('StoryService.getStories error: $e');
+      debugPrint('StoryService.getStories error: $e');
     }
     return [];
   }
 
-  /// Fetches a single story with all its pages.
-  static Future<StoryDetail?> getStoryDetail(int id) async {
+  /// Fetches a single story with all its pages from its subcollection.
+  static Future<StoryDetail?> getStoryDetail(String id) async {
     try {
-      final resp = await http
-          .get(Uri.parse('$baseUrl/stories/$id'), headers: _headers)
-          .timeout(const Duration(seconds: 10));
+      debugPrint('🔵 StoryService: Fetching story detail for $id...');
+      final doc = await _db.collection('stories').doc(id).get();
+      if (!doc.exists) return null;
 
-      if (resp.statusCode == 200) {
-        final body = jsonDecode(resp.body);
-        final data = body['data'] as Map<String, dynamic>;
-        final story = Story.fromJson(data);
-        final rawPages = data['pages'] as List<dynamic>? ?? [];
-        final pages = rawPages
-            .cast<Map<String, dynamic>>()
-            .map(StoryPage.fromJson)
-            .toList()
-          ..sort((a, b) => a.pageNumber.compareTo(b.pageNumber));
-        return StoryDetail(story: story, pages: pages);
-      }
-      print('StoryService.getStoryDetail HTTP ${resp.statusCode}: ${resp.body}');
+      final story = Story.fromJson({...doc.data()!, 'id': doc.id});
+      
+      final pagesSnapshot = await doc.reference
+          .collection('pages')
+          .orderBy('page_number')
+          .get();
+
+      final pages = pagesSnapshot.docs
+          .map((d) => StoryPage.fromJson({...d.data(), 'id': d.id}))
+          .toList();
+
+      return StoryDetail(story: story, pages: pages);
     } catch (e) {
-      print('StoryService.getStoryDetail error: $e');
+      debugPrint('StoryService.getStoryDetail error: $e');
     }
     return null;
   }
