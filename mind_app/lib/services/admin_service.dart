@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../helpers/config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
@@ -20,7 +21,7 @@ class AdminService {
   }
 
   static bool verifyKey(String key) {
-    return key == 'littleminds_admin_2024';
+    return key == Config.adminGateKey;
   }
 
   /// Fetches the entire quiz structure for a subject.
@@ -180,8 +181,8 @@ class AdminService {
   /// Uploads an image to Cloudinary. Returns the secure download URL.
   Future<String?> uploadImage(XFile imageFile) async {
     try {
-      const String cloudName = "dwjc0mxyx";
-      const String uploadPreset = "ml_default";
+      final String cloudName = Config.cloudinaryCloudName;
+      final String uploadPreset = Config.cloudinaryUploadPreset;
       
       final url = Uri.parse("https://api.cloudinary.com/v1_1/$cloudName/image/upload");
       

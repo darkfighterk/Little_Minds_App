@@ -3,6 +3,7 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'helpers/config.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -50,35 +51,35 @@ class DefaultFirebaseOptions {
     measurementId: 'G-F4NXH7PDEJ',
   );
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDZNwK7J65kuD0gLBsOINXHCQDRGuTNDiE',
-    appId: '1:59908804787:android:e2c06aa8a5111b565f20c6',
+  static FirebaseOptions get android => FirebaseOptions(
+    apiKey: Config.firebaseAndroidApiKey.isNotEmpty ? Config.firebaseAndroidApiKey : 'AIzaSyDZNwK7J65kuD0gLBsOINXHCQDRGuTNDiE',
+    appId: Config.firebaseAndroidAppId.isNotEmpty ? Config.firebaseAndroidAppId : '1:59908804787:android:e2c06aa8a5111b565f20c6',
     messagingSenderId: '59908804787',
     projectId: 'little-minds-352e3',
     storageBucket: 'little-minds-352e3.appspot.com',
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCrD984qgr0aYHgMB0IZ6S-REi38qPSIFk',
-    appId: '1:59908804787:ios:352c8ceec7eea0265f20c6',
-    messagingSenderId: '59908804787',
-    projectId: 'little-minds-352e3',
-    storageBucket: 'little-minds-352e3.appspot.com',
-    iosBundleId: 'com.example.mindApp',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCrD984qgr0aYHgMB0IZ6S-REi38qPSIFk',
-    appId: '1:59908804787:ios:352c8ceec7eea0265f20c6',
+  static FirebaseOptions get ios => FirebaseOptions(
+    apiKey: Config.firebaseIosApiKey.isNotEmpty ? Config.firebaseIosApiKey : 'AIzaSyCrD984qgr0aYHgMB0IZ6S-REi38qPSIFk',
+    appId: Config.firebaseIosAppId.isNotEmpty ? Config.firebaseIosAppId : '1:59908804787:ios:352c8ceec7eea0265f20c6',
     messagingSenderId: '59908804787',
     projectId: 'little-minds-352e3',
     storageBucket: 'little-minds-352e3.appspot.com',
     iosBundleId: 'com.example.mindApp',
   );
 
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyD7c64rxLk0hl_7tUnnPuznvbpJg-wLirM',
-    appId: '1:59908804787:web:f1c230415f9db5bf5f20c6',
+  static FirebaseOptions get macos => FirebaseOptions(
+    apiKey: Config.firebaseIosApiKey.isNotEmpty ? Config.firebaseIosApiKey : 'AIzaSyCrD984qgr0aYHgMB0IZ6S-REi38qPSIFk',
+    appId: Config.firebaseIosAppId.isNotEmpty ? Config.firebaseIosAppId : '1:59908804787:ios:352c8ceec7eea0265f20c6',
+    messagingSenderId: '59908804787',
+    projectId: 'little-minds-352e3',
+    storageBucket: 'little-minds-352e3.appspot.com',
+    iosBundleId: 'com.example.mindApp',
+  );
+
+  static FirebaseOptions get windows => FirebaseOptions(
+    apiKey: Config.firebaseAndroidApiKey.isNotEmpty ? Config.firebaseAndroidApiKey : 'AIzaSyD7c64rxLk0hl_7tUnnPuznvbpJg-wLirM',
+    appId: Config.firebaseAndroidAppId.isNotEmpty ? Config.firebaseAndroidAppId : '1:59908804787:web:f1c230415f9db5bf5f20c6',
     messagingSenderId: '59908804787',
     projectId: 'little-minds-352e3',
     authDomain: 'little-minds-352e3.firebaseapp.com',

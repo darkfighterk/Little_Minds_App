@@ -59,6 +59,7 @@ dependencies:
   # ── Internationalization & Utilities ────────────────────────────────────────
   intl: ^0.19.0
   json_annotation: ^4.9.0
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:
@@ -86,6 +87,7 @@ flutter:
     - assets/learn_pic.png
     - assets/images/category_engineering_gears.png
     - assets/story1/
+    - .env
     # Add more as needed
     # - assets/models/   # for future AR/3D models
 

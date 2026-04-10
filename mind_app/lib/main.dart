@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'views/onboarding_view.dart';
 import 'views/login_view.dart';
@@ -11,6 +12,9 @@ import 'theme/app_theme.dart';
 void main() async {
   // Required for local storage and OCR plugins
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
 
   // Initialize Firebase
   await Firebase.initializeApp(
