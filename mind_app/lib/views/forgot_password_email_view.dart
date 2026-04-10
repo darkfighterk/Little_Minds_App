@@ -51,12 +51,36 @@ class _ForgotPasswordEmailViewState extends State<ForgotPasswordEmailView> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
-          //  Soft Brand Background Decor
-          _buildBackgroundDecor(),
+          // ── Premium Gradient Header ──
+          Container(
+            height: MediaQuery.of(context).size.height * 0.45,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  mainBlue,
+                  mainBlue.withValues(alpha: 0.8),
+                  secondaryPurple.withValues(alpha: isDark ? 0.3 : 0.6),
+                ],
+              ),
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(50)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
+            ),
+          ),
 
           SafeArea(
             child: SingleChildScrollView(
@@ -69,18 +93,18 @@ class _ForgotPasswordEmailViewState extends State<ForgotPasswordEmailView> {
                   const SizedBox(height: 35),
 
                   //  Illustration Section
-                  _buildIllustration(),
+                  _buildIllustration(context),
                   const SizedBox(height: 40),
 
-                  //  Header Text in Recoleta
+                  //  Header Text in Fredoka/Premium style
                   const Center(
                     child: Text(
                       'Forgot Password?',
                       style: TextStyle(
-                          fontFamily: 'Recoleta',
+                          fontFamily: 'Fredoka',
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87),
+                          color: Colors.white),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -89,7 +113,7 @@ class _ForgotPasswordEmailViewState extends State<ForgotPasswordEmailView> {
                       'Enter your email address to receive a magic verification code! ✨',
                       style: GoogleFonts.nunito(
                           fontSize: 15,
-                          color: Colors.black38,
+                          color: Colors.white.withValues(alpha: 0.85),
                           fontWeight: FontWeight.w600),
                       textAlign: TextAlign.center,
                     ),
@@ -112,7 +136,7 @@ class _ForgotPasswordEmailViewState extends State<ForgotPasswordEmailView> {
                   _buildSendButton(),
 
                   const SizedBox(height: 25),
-                  _buildFooterActions(),
+                  _buildFooterActions(context),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -123,46 +147,41 @@ class _ForgotPasswordEmailViewState extends State<ForgotPasswordEmailView> {
     );
   }
 
-  Widget _buildBackgroundDecor() {
-    return Positioned(
-      top: -100,
-      right: -50,
-      child: Container(
-          width: 300,
-          height: 300,
-          decoration: BoxDecoration(
-              color: mainBlue.withValues(alpha: 0.06), shape: BoxShape.circle)),
-    );
-  }
 
   Widget _buildBackButton() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () => Navigator.pop(context),
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)
             ]),
-        child: const Icon(Icons.arrow_back_ios_new_rounded,
-            size: 20, color: Colors.black87),
+        child: Icon(Icons.arrow_back_ios_new_rounded,
+            size: 20, color: isDark ? Colors.white : Colors.black87),
       ),
     );
   }
 
-  Widget _buildIllustration() {
+  Widget _buildIllustration(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Container(
         padding: const EdgeInsets.all(25),
         decoration: BoxDecoration(
-            color: mainBlue.withValues(alpha: 0.05), shape: BoxShape.circle),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : mainBlue.withValues(alpha: 0.05),
+            shape: BoxShape.circle),
         child: Image.asset(
           'assets/illustrations/forgot_password.png',
           height: 200,
-          errorBuilder: (_, __, ___) =>
-              const Icon(Icons.lock_open_rounded, size: 100, color: mainBlue),
+          errorBuilder: (_, __, ___) => Icon(Icons.lock_open_rounded,
+              size: 100, color: isDark ? Colors.white : mainBlue),
         ),
       ),
     );
@@ -197,13 +216,14 @@ class _ForgotPasswordEmailViewState extends State<ForgotPasswordEmailView> {
     );
   }
 
-  Widget _buildFooterActions() {
+  Widget _buildFooterActions(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: TextButton(
         onPressed: () => Navigator.pop(context),
         child: Text('Try another way',
             style: GoogleFonts.nunito(
-                color: secondaryPurple,
+                color: isDark ? Colors.blueAccent : secondaryPurple,
                 fontWeight: FontWeight.w800,
                 fontSize: 15)),
       ),
@@ -233,6 +253,8 @@ class _InputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -240,16 +262,16 @@ class _InputField extends StatelessWidget {
             style: GoogleFonts.nunito(
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
-                color: mainBlue.withValues(alpha: 0.6),
+                color: isDark ? mainBlue : mainBlue.withValues(alpha: 0.6),
                 letterSpacing: 1.1)),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
                   blurRadius: 15,
                   offset: const Offset(0, 5))
             ],
@@ -257,19 +279,31 @@ class _InputField extends StatelessWidget {
           child: TextField(
             controller: controller,
             keyboardType: type,
-            style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+            style: GoogleFonts.nunito(
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : Colors.black87),
             decoration: InputDecoration(
-              prefixIcon: Icon(icon, color: mainBlue.withValues(alpha: 0.5)),
+              prefixIcon: Icon(icon,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.4)
+                      : mainBlue.withValues(alpha: 0.5)),
               hintText: hint,
-              hintStyle: GoogleFonts.nunito(color: Colors.black26),
+              hintStyle: GoogleFonts.nunito(
+                  color: isDark ? Colors.white24 : Colors.black26),
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
-                  borderSide:
-                      BorderSide(color: mainBlue.withValues(alpha: 0.1), width: 2)),
+                  borderSide: BorderSide(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : mainBlue.withValues(alpha: 0.1),
+                      width: 2)),
               enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
-                  borderSide:
-                      BorderSide(color: mainBlue.withValues(alpha: 0.08), width: 2)),
+                  borderSide: BorderSide(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : mainBlue.withValues(alpha: 0.08),
+                      width: 2)),
               focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: const BorderSide(color: mainBlue, width: 2)),

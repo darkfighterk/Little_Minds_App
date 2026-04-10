@@ -10,6 +10,8 @@ const Color accentOrange = Color(0xFFFF8811);
 class LibraryView extends StatelessWidget {
   final User user;
 
+  static const Color secondaryPurple = Color(0xFFA55FEF);
+
   // Story List with Image Paths
   final List<Map<String, dynamic>> staticStories = const [
     {
@@ -76,41 +78,72 @@ class LibraryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildTopBar(context),
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 10),
-                    _buildLibraryBanner(context),
-                    const SizedBox(height: 25),
-                    _buildCategoryCircles(),
-                    const SizedBox(height: 30),
-                    Text(
-                      "New Adventures",
-                      style: GoogleFonts.poppins(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    _buildBookGrid(context),
-                    const SizedBox(height: 100),
-                  ],
-                ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Stack(
+        children: [
+          // ── Premium Gradient Header ──
+          Container(
+            height: MediaQuery.of(context).size.height * 0.42,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  mainBlue,
+                  mainBlue.withValues(alpha: 0.8),
+                  secondaryPurple.withValues(alpha: isDark ? 0.3 : 0.6),
+                ],
               ),
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(50)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
             ),
-          ],
-        ),
+          ),
+
+          SafeArea(
+            child: Column(
+              children: [
+                _buildTopBar(context),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 10),
+                        _buildLibraryBanner(context),
+                        const SizedBox(height: 25),
+                        _buildCategoryCircles(context),
+                        const SizedBox(height: 30),
+                        Text(
+                          "New Adventures",
+                          style: GoogleFonts.poppins(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        _buildBookGrid(context),
+                        const SizedBox(height: 100),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -121,7 +154,8 @@ class LibraryView extends StatelessWidget {
       child: Center(
         child: Text(
           "Magic Library",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
     );
@@ -190,7 +224,7 @@ class LibraryView extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryCircles() {
+  Widget _buildCategoryCircles(BuildContext context) {
     final List<Map<String, dynamic>> cats = [
       {'n': 'Biology', 'i': '🧬', 'c': const Color(0xFFE1F5FE)},
       {'n': 'Animals', 'i': '🐰', 'c': const Color(0xFFFFF3E0)},
@@ -214,7 +248,11 @@ class LibraryView extends StatelessWidget {
                     style: GoogleFonts.nunito(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black45)),
+                        color: Theme.of(context)
+                            .textTheme
+                            .bodyLarge
+                            ?.color
+                            ?.withValues(alpha: 0.6))),
               ]))
           .toList(),
     );
@@ -302,13 +340,19 @@ class LibraryView extends StatelessWidget {
               Text(staticStories[index]['title'],
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 13)),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: Theme.of(context).textTheme.bodyLarge?.color)),
               Text(staticStories[index]['author'],
                   maxLines: 1,
                   style: GoogleFonts.nunito(
                       fontSize: 11,
-                      color: Colors.black38,
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.color
+                          ?.withValues(alpha: 0.5),
                       fontWeight: FontWeight.w700)),
             ],
           ),

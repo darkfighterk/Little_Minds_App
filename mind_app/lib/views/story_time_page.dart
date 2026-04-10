@@ -67,72 +67,123 @@ class _StoryTimePageState extends State<StoryTimePage> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [mainBlue.withValues(alpha: 0.08), Colors.white],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Stack(
+        children: [
+          // ── Premium Gradient Header ──
+          Container(
+            height: MediaQuery.of(context).size.height * 0.35,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  mainBlue,
+                  mainBlue.withValues(alpha: 0.8),
+                  secondaryPurple.withValues(alpha: isDark ? 0.3 : 0.6),
+                ],
+              ),
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(50)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildModernHeader(),
-              _buildDifficultyFilters(),
-              Expanded(child: _buildStoryGrid()),
-            ],
+
+          SafeArea(
+            bottom: false,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildStandardHeader(),
+                const SizedBox(height: 10),
+                _buildDifficultyFilters(),
+                Expanded(child: _buildStoryGrid()),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
       bottomNavigationBar: BottomNavBar(
-          primaryColor: mainBlue, isDark: false, user: widget.user),
+        primaryColor: mainBlue,
+        isDark: isDark,
+        user: widget.user,
+      ),
     );
   }
 
-  Widget _buildModernHeader() {
+  Widget _buildStandardHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 15),
       child: Row(
         children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.black87, size: 22),
-          ),
-          const SizedBox(width: 8),
+          _buildCircleBackButton(),
+          const SizedBox(width: 15),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Story Time 📖',
-                    style: TextStyle(
-                        fontFamily: 'Recoleta',
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87)),
-                Text('Pick a magic book to read!',
-                    style: GoogleFonts.nunito(
-                        fontSize: 14,
-                        color: Colors.black45,
-                        fontWeight: FontWeight.w700)),
+                const Text(
+                  'Story Time 📖',
+                  style: TextStyle(
+                    fontFamily: 'Fredoka',
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  'Pick a magic book to read!',
+                  style: GoogleFonts.nunito(
+                    fontSize: 16,
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
-          IconButton(
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
               onPressed: _loadStories,
-              icon:
-                  const Icon(Icons.refresh_rounded, color: mainBlue, size: 28)),
+              icon: const Icon(Icons.refresh_rounded,
+                  color: Colors.white, size: 28),
+            ),
+          ),
         ],
       ),
     );
   }
 
+  Widget _buildCircleBackButton() {
+    return GestureDetector(
+      onTap: () => Navigator.pop(context),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: const Icon(Icons.arrow_back_ios_new_rounded,
+            size: 20, color: Colors.white),
+      ),
+    );
+  }
+
   Widget _buildDifficultyFilters() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       height: 45,
       margin: const EdgeInsets.only(bottom: 10),
@@ -154,10 +205,10 @@ class _StoryTimePageState extends State<StoryTimePage> {
               margin: const EdgeInsets.only(right: 10),
               padding: const EdgeInsets.symmetric(horizontal: 22),
               decoration: BoxDecoration(
-                color: active ? mainBlue : Colors.white,
+                color: active ? mainBlue : (isDark ? const Color(0xFF2A2A2A) : Colors.white),
                 borderRadius: BorderRadius.circular(15),
                 border: Border.all(
-                    color: active ? mainBlue : mainBlue.withValues(alpha: 0.1),
+                    color: active ? mainBlue : (isDark ? Colors.white10 : mainBlue.withValues(alpha: 0.1)),
                     width: 2),
                 boxShadow: active
                     ? [
@@ -232,19 +283,20 @@ class _StoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
-                color: cardColor.withValues(alpha: 0.12),
+                color: isDark ? Colors.black26 : cardColor.withValues(alpha: 0.12),
                 blurRadius: 20,
                 offset: const Offset(0, 10))
           ],
-          border: Border.all(color: cardColor.withValues(alpha: 0.15), width: 1.5),
+          border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : cardColor.withValues(alpha: 0.15), width: 1.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,11 +331,11 @@ class _StoryCard extends StatelessWidget {
                   Text(story.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontFamily: 'Recoleta',
+                      style: TextStyle(
+                          fontFamily: 'Fredoka',
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87)),
+                          color: isDark ? Colors.white : Colors.black87)),
                   const SizedBox(height: 5),
                   Row(
                     children: [
@@ -308,6 +360,7 @@ class _Badge extends StatelessWidget {
   const _Badge({required this.label, required this.color});
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
@@ -315,7 +368,9 @@ class _Badge extends StatelessWidget {
           borderRadius: BorderRadius.circular(8)),
       child: Text(label,
           style: TextStyle(
-              color: color == Colors.black26 ? Colors.black45 : color,
+              color: color == Colors.black26
+                  ? (isDark ? Colors.white38 : Colors.black45)
+                  : color,
               fontSize: 10,
               fontWeight: FontWeight.bold)),
     );

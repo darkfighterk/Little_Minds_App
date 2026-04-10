@@ -21,6 +21,7 @@ class BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const Color mainBlue = Color(0xFF3AAFFF);
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(24, 0, 24, 30),
@@ -34,12 +35,17 @@ class BottomNavBar extends StatelessWidget {
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.85),
+                  color: isDark 
+                      ? const Color(0xFF1E1E1E).withValues(alpha: 0.85) 
+                      : Colors.white.withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(35),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                  border: Border.all(
+                      color: isDark 
+                          ? Colors.white.withValues(alpha: 0.1) 
+                          : Colors.white.withValues(alpha: 0.2)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -107,6 +113,8 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -122,7 +130,9 @@ class _NavItem extends StatelessWidget {
             ),
             child: Icon(
               icon,
-              color: active ? color : Colors.blueGrey[200],
+              color: active 
+                  ? color 
+                  : (isDark ? Colors.white24 : Colors.blueGrey[200]),
               size: 28,
             ),
           ),

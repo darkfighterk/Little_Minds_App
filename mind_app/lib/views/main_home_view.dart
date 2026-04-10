@@ -46,8 +46,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // ── Premium Gradient Header ──
@@ -60,14 +62,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 colors: [
                   mainBlue,
                   mainBlue.withValues(alpha: 0.8),
-                  secondaryPurple.withValues(alpha: 0.6),
+                  secondaryPurple.withValues(alpha: isDark ? 0.3 : 0.6),
                 ],
               ),
               borderRadius:
                   const BorderRadius.vertical(bottom: Radius.circular(50)),
               boxShadow: [
                 BoxShadow(
-                  color: mainBlue.withValues(alpha: 0.2),
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 )
@@ -167,6 +169,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildSearchAndFilters() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 28),
       child: Column(
@@ -196,10 +200,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.95),
+              color: isDark ? const Color(0xFF2A2A2A) : Colors.white.withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)
+                BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)
               ],
             ),
             child: TextField(
@@ -208,11 +212,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   _searchQuery = value.toLowerCase();
                 });
               },
-              style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
+              style: GoogleFonts.nunito(
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
               decoration: InputDecoration(
                 hintText: 'Search adventure...',
                 hintStyle: GoogleFonts.nunito(
-                    color: Colors.grey[400], fontWeight: FontWeight.bold),
+                    color: isDark ? Colors.white38 : Colors.grey[400], 
+                    fontWeight: FontWeight.bold),
                 border: InputBorder.none,
                 icon: Icon(Icons.search, color: mainBlue),
               ),

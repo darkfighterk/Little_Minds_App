@@ -429,11 +429,16 @@ class _PuzzleGameState extends State<PuzzleGameView>
   }
 
   void _exitOrPop() {
-    if (_done || _placed == 0) { Navigator.pop(context); return; }
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    if (_done || _placed == 0) {
+      Navigator.pop(context);
+      return;
+    }
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1040),
+        backgroundColor:
+            isDark ? const Color(0xFF1A1A1A) : const Color(0xFF1E1040),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('Leave Puzzle?',
             style: GoogleFonts.fredoka(fontSize: 22, color: Colors.white)),
@@ -441,17 +446,18 @@ class _PuzzleGameState extends State<PuzzleGameView>
             style: GoogleFonts.nunito(fontSize: 15, color: Colors.white70)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Keep Playing', style: GoogleFonts.nunito(
-                color: const Color(0xFFFF7043),
-                fontWeight: FontWeight.w700))),
+              onPressed: () => Navigator.pop(context),
+              child: Text('Keep Playing',
+                  style: GoogleFonts.nunito(
+                      color: const Color(0xFFFF7043),
+                      fontWeight: FontWeight.w700))),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: Text('Leave',
-                style: GoogleFonts.nunito(color: Colors.white38))),
+              onPressed: () {
+                Navigator.pop(context); // close dialog
+                Navigator.pop(context); // exit game
+              },
+              child: Text('Leave',
+                  style: GoogleFonts.nunito(color: Colors.white38))),
         ],
       ),
     );
@@ -463,50 +469,54 @@ class _PuzzleGameState extends State<PuzzleGameView>
 
   @override
   Widget build(BuildContext context) {
-    final sw       = MediaQuery.of(context).size.width;
-    final boardPx  = (sw - 24.0).clamp(180.0, 480.0);
-    final cell     = boardPx / _cols;
-    final nub      = cell * .22;
+    final sw = MediaQuery.of(context).size.width;
+    final boardPx = (sw - 40).clamp(280.0, 500.0);
+    final cell = boardPx / _cols;
+    final nub = cell * 0.22;
 
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0520),
+      backgroundColor:
+          isDark ? const Color(0xFF0A0A0A) : const Color(0xFF0D0520),
       appBar: _appBar(),
-      body: _done
-          ? _winScreen()
-          : _gameBody(cell, nub, boardPx),
+      body: _done ? _winScreen() : _gameBody(cell, nub, boardPx),
     );
   }
 
   // ── AppBar ────────────────────────────────────────────────
 
-  AppBar _appBar() => AppBar(
-    backgroundColor: const Color(0xFF1E1040),
-    foregroundColor: Colors.white,
-    elevation: 0,
-    leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded),
-        onPressed: _exitOrPop),
-    title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(widget.puzzle.title,
-          style: GoogleFonts.fredoka(fontSize: 18, color: Colors.white),
-          overflow: TextOverflow.ellipsis),
-      Text('$_placed / $_total pieces placed',
-          style: GoogleFonts.nunito(fontSize: 11, color: Colors.white54)),
-    ]),
-    actions: [
-      if (_tray.length > 1)
-        IconButton(
-          icon: const Icon(Icons.shuffle_rounded, color: Colors.white54),
-          tooltip: 'Shuffle tray',
-          onPressed: () {
-            HapticFeedback.selectionClick();
-            setState(() => _tray.shuffle(_rng));
-          }),
-      Padding(
-        padding: const EdgeInsets.only(right: 12),
-        child: _Timer(start: _t0, running: !_done)),
-    ],
-  );
+  AppBar _appBar() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    return AppBar(
+      backgroundColor:
+          isDark ? const Color(0xFF161616) : const Color(0xFF1E1040),
+      foregroundColor: Colors.white,
+      elevation: 0,
+      leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: _exitOrPop),
+      title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(widget.puzzle.title,
+            style: GoogleFonts.fredoka(fontSize: 18, color: Colors.white),
+            overflow: TextOverflow.ellipsis),
+        Text('$_placed / $_total pieces placed',
+            style: GoogleFonts.nunito(fontSize: 11, color: Colors.white54)),
+      ]),
+      actions: [
+        if (_tray.length > 1)
+          IconButton(
+              icon: const Icon(Icons.shuffle_rounded, color: Colors.white54),
+              tooltip: 'Shuffle tray',
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                setState(() => _tray.shuffle(_rng));
+              }),
+        Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: _Timer(start: _t0, running: !_done)),
+      ],
+    );
+  }
 
   // ─────────────────────────────────────────────────────────
   // GAME BODY
@@ -641,8 +651,9 @@ class _PuzzleGameState extends State<PuzzleGameView>
     final pxH  = tc + 2 * tn;
     final vPad = max(6.0, (100.0 - pxH) / 2);
 
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      color: const Color(0xFF080215),
+      color: isDark ? const Color(0xFF080808) : const Color(0xFF080215),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.fromLTRB(14, vPad, 14, vPad),

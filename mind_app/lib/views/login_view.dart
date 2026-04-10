@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../controllers/login_controller.dart';
-import 'main_home_view.dart';
+import 'main_tab_view.dart';
 import '../models/user_model.dart';
 
 class LoginView extends StatefulWidget {
@@ -51,7 +51,7 @@ class _LoginViewState extends State<LoginView> {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => HomePage(user: user)),
+        MaterialPageRoute(builder: (_) => MainTabView(user: user)),
       );
     } else {
       if (!mounted) return;
@@ -65,20 +65,38 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [mainBlue.withValues(alpha: 0.15), Colors.white],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Stack(
+        children: [
+          // ── Premium Gradient Header ──
+          Container(
+            height: MediaQuery.of(context).size.height * 0.45,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  mainBlue,
+                  mainBlue.withValues(alpha: 0.8),
+                  secondaryPurple.withValues(alpha: isDark ? 0.3 : 0.6),
+                ],
+              ),
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(50)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
+          SafeArea(
+            child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 30),
             child: Column(
               children: [
@@ -89,7 +107,7 @@ class _LoginViewState extends State<LoginView> {
                   style: GoogleFonts.fredoka(
                     fontSize: 52,
                     fontWeight: FontWeight.bold,
-                    color: mainBlue,
+                    color: Colors.white,
                     letterSpacing: -1,
                   ),
                 ),
@@ -100,7 +118,7 @@ class _LoginViewState extends State<LoginView> {
                   style: GoogleFonts.nunito(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: secondaryPurple.withValues(alpha: 0.7),
+                    color: Colors.white.withValues(alpha: 0.85),
                   ),
                 ),
 
@@ -138,7 +156,8 @@ class _LoginViewState extends State<LoginView> {
                     onPressed: () {},
                     child: Text("Forgot Password?",
                         style: GoogleFonts.nunito(
-                            color: mainBlue, fontWeight: FontWeight.bold)),
+                            color: isDark ? Colors.white70 : mainBlue,
+                            fontWeight: FontWeight.bold)),
                   ),
                 ),
 
@@ -156,7 +175,12 @@ class _LoginViewState extends State<LoginView> {
 
                 // Social Login Section
                 Text("Or continue with",
-                    style: GoogleFonts.nunito(color: Colors.grey[500])),
+                    style: GoogleFonts.nunito(
+                        color: Theme.of(context)
+                            .textTheme
+                            .bodyLarge
+                            ?.color
+                            ?.withValues(alpha: 0.5))),
                 const SizedBox(height: 25),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -175,12 +199,17 @@ class _LoginViewState extends State<LoginView> {
                   text: TextSpan(
                     text: "Don't have an account? ",
                     style: GoogleFonts.nunito(
-                        color: Colors.grey[600], fontSize: 16),
+                        color: Theme.of(context)
+                            .textTheme
+                            .bodyLarge
+                            ?.color
+                            ?.withValues(alpha: 0.6),
+                        fontSize: 16),
                     children: [
                       TextSpan(
                         text: 'Sign Up',
                         style: TextStyle(
-                            color: secondaryPurple,
+                            color: isDark ? Colors.blueAccent : secondaryPurple,
                             fontWeight: FontWeight.bold),
                         recognizer: TapGestureRecognizer()
                           ..onTap =
@@ -193,8 +222,9 @@ class _LoginViewState extends State<LoginView> {
             ),
           ),
         ),
-      ),
-    );
+      ],
+    ),
+  );
   }
 }
 
@@ -220,24 +250,32 @@ class _KidField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-              color: color.withValues(alpha: 0.1),
+              color: color.withValues(alpha: isDark ? 0.3 : 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4))
         ],
-        border: Border.all(color: color.withValues(alpha: 0.15), width: 1.5),
+        border: Border.all(
+            color: color.withValues(alpha: isDark ? 0.3 : 0.15), width: 1.5),
       ),
       child: TextField(
         controller: controller,
         obscureText: obscureText,
-        style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+        style: GoogleFonts.nunito(
+          fontWeight: FontWeight.w700,
+          color: isDark ? Colors.white : Colors.black87,
+        ),
         decoration: InputDecoration(
           hintText: hint,
+          hintStyle: GoogleFonts.nunito(
+              color: isDark ? Colors.white38 : Colors.grey[400]),
           prefixIcon: Icon(icon, color: color),
           suffixIcon: suffix,
           border: InputBorder.none,
@@ -298,12 +336,18 @@ class _SocialIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2), width: 1),
+        color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+        border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.grey.withValues(alpha: 0.2),
+            width: 1),
       ),
       child: Image.asset(asset,
           height: 28,

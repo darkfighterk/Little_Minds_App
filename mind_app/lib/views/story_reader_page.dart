@@ -93,7 +93,7 @@ class _StoryReaderPageState extends State<StoryReaderPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: _loading
           ? _buildLoader()
           : _error != null
@@ -134,13 +134,17 @@ class _StoryReaderPageState extends State<StoryReaderPage>
 
   Widget _buildFinished() {
     final story = _detail!.story;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withValues(alpha: 0.1), Colors.white]),
+            colors: [
+              mainBlue.withValues(alpha: 0.15),
+              Theme.of(context).scaffoldBackgroundColor
+            ]),
       ),
       child: SafeArea(
         child: Column(
@@ -150,15 +154,15 @@ class _StoryReaderPageState extends State<StoryReaderPage>
             const SizedBox(height: 20),
             const Text('The End! 🎉',
                 style: TextStyle(
-                    fontFamily: 'Recoleta',
+                    fontFamily: 'Fredoka',
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87)),
+                    color: Colors.white)),
             const SizedBox(height: 10),
             Text('You read "${story.title}"!',
                 style: GoogleFonts.nunito(
                     fontSize: 18,
-                    color: Colors.black54,
+                    color: isDark ? Colors.white70 : Colors.black54,
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 40),
             ElevatedButton.icon(
@@ -200,7 +204,10 @@ class _StoryReaderPageState extends State<StoryReaderPage>
         gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withValues(alpha: 0.05), Colors.white]),
+            colors: [
+              mainBlue.withValues(alpha: 0.1),
+              Theme.of(context).scaffoldBackgroundColor
+            ]),
       ),
       child: SafeArea(
         child: FadeTransition(
@@ -226,20 +233,23 @@ class _StoryReaderPageState extends State<StoryReaderPage>
   }
 
   Widget _buildModernHeader(Story story, int total) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
           IconButton(
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.close_rounded, color: Colors.black87)),
+              icon: Icon(Icons.close_rounded,
+                  color: isDark ? Colors.white : Colors.black87)),
           const SizedBox(width: 8),
           Expanded(
               child: Text(story.title,
-                  style: const TextStyle(
-                      fontFamily: 'Recoleta',
+                  style: TextStyle(
+                      fontFamily: 'Fredoka',
                       fontSize: 20,
-                      fontWeight: FontWeight.bold),
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis)),
           Container(
@@ -271,6 +281,7 @@ class _StoryReaderPageState extends State<StoryReaderPage>
   }
 
   Widget _buildPageContent(StoryPage page) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(25),
       child: Column(
@@ -291,7 +302,7 @@ class _StoryReaderPageState extends State<StoryReaderPage>
           if (page.title.isNotEmpty)
             Text(page.title,
                 style: const TextStyle(
-                    fontFamily: 'Recoleta',
+                    fontFamily: 'Fredoka',
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: secondaryPurple)),
@@ -299,7 +310,7 @@ class _StoryReaderPageState extends State<StoryReaderPage>
           Text(page.body,
               style: GoogleFonts.nunito(
                   fontSize: 18,
-                  color: Colors.black87,
+                  color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87,
                   height: 1.6,
                   fontWeight: FontWeight.w600)),
         ],
@@ -353,15 +364,20 @@ class _CircleNavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: enabled ? onTap : null,
       child: Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-            color: enabled ? mainBlue.withValues(alpha: 0.1) : Colors.grey.shade100,
+            color: enabled 
+                ? mainBlue.withValues(alpha: 0.1) 
+                : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100),
             shape: BoxShape.circle),
         child: Icon(icon,
-            color: enabled ? mainBlue : Colors.grey.shade400, size: 20),
+            color: enabled 
+                ? mainBlue 
+                : (isDark ? Colors.white12 : Colors.grey.shade400), size: 20),
       ),
     );
   }

@@ -6,6 +6,7 @@ import 'admin_view.dart';
 import 'profile_view.dart';
 import 'about_view.dart';
 import 'login_view.dart';
+import 'appearance_view.dart';
 import '../services/game_service.dart';
 
 const Color mainBlue = Color(0xFF3AAFFF);
@@ -32,35 +33,64 @@ class _SettingsViewState extends State<SettingsView> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 140), // Increased bottom padding for nav bar clearance
-          child: Column(
-            children: [
-              // ──  Custom Header ──
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const SizedBox(width: 48), // Balance for center alignment
-                  const Text(
-                    'App Settings',
-                    style: TextStyle(
-                      fontFamily: 'Recoleta',
-                      color: Colors.black87,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.help_outline_rounded, color: mainBlue),
-                    onPressed: () => Navigator.push(
-                        context, MaterialPageRoute(builder: (_) => const HelpUsPage())),
-                  ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Stack(
+        children: [
+          // ── Premium Gradient Header ──
+          Container(
+            height: MediaQuery.of(context).size.height * 0.42,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  mainBlue,
+                  mainBlue.withValues(alpha: 0.8),
+                  secondaryPurple.withValues(alpha: isDark ? 0.3 : 0.6),
                 ],
               ),
-              const SizedBox(height: 30),
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(50)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
+            ),
+          ),
+
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 140),
+              child: Column(
+                children: [
+                  // ──  Custom Header ──
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const SizedBox(width: 48), // Balance for center alignment
+                      const Text(
+                        'App Settings',
+                        style: TextStyle(
+                          fontFamily: 'Recoleta',
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.help_outline_rounded, color: Colors.white),
+                        onPressed: () => Navigator.push(
+                            context, MaterialPageRoute(builder: (_) => const HelpUsPage())),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
 
               // ──  Explorer Profile Header ──
               _buildModernProfileHeader(),
@@ -69,6 +99,7 @@ class _SettingsViewState extends State<SettingsView> {
               // ──  Account Section ──
               _buildSectionHeader("MY ACCOUNT"),
               _buildSettingsTile(
+                context,
                 icon: Icons.person_outline_rounded,
                 color: mainBlue,
                 title: "Profile Info",
@@ -77,6 +108,7 @@ class _SettingsViewState extends State<SettingsView> {
               ),
               const SizedBox(height: 12),
               _buildSettingsTile(
+                context,
                 icon: Icons.admin_panel_settings_outlined,
                 color: Colors.redAccent,
                 title: "Admin Gate",
@@ -90,14 +122,17 @@ class _SettingsViewState extends State<SettingsView> {
               // ──  Preferences Section ──
               _buildSectionHeader("EXPERIENCE"),
               _buildSettingsTile(
+                context,
                 icon: Icons.palette_outlined,
                 color: secondaryPurple,
                 title: "Appearance",
                 subtitle: "Customize themes and colors",
-                onTap: () {},
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const AppearanceView())),
               ),
               const SizedBox(height: 12),
               _buildSettingsTile(
+                context,
                 icon: Icons.info_outline_rounded,
                 color: accentOrange,
                 title: "About Little Minds",
@@ -116,13 +151,15 @@ class _SettingsViewState extends State<SettingsView> {
                 "Little Minds v2.0.1\nMade with ❤️ for tiny explorers",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.nunito(
-                  color: Colors.black26,
+                  color: isDark ? Colors.white30 : Colors.black26,
                   fontSize: 12,
                   fontWeight: FontWeight.bold),
               ),
             ],
           ),
         ),
+          ),
+        ],
       ),
     );
   }
@@ -178,10 +215,10 @@ class _SettingsViewState extends State<SettingsView> {
                 fontFamily: 'Recoleta',
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87)),
+                color: Colors.white)),
         Text("Customize your learning adventure",
             style: GoogleFonts.nunito(
-                color: Colors.black45,
+                color: Colors.white70,
                 fontWeight: FontWeight.w700,
                 fontSize: 14)),
       ],
@@ -204,18 +241,21 @@ class _SettingsViewState extends State<SettingsView> {
   }
 
   Widget _buildSettingsTile(
+      BuildContext context,
       {required IconData icon,
       required Color color,
       required String title,
       required String subtitle,
       required VoidCallback onTap}) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-              color: mainBlue.withValues(alpha: 0.04),
+              color: isDark ? Colors.black26 : mainBlue.withValues(alpha: 0.04),
               blurRadius: 15,
               offset: const Offset(0, 5))
         ],
@@ -231,18 +271,18 @@ class _SettingsViewState extends State<SettingsView> {
           child: Icon(icon, color: color, size: 24),
         ),
         title: Text(title,
-            style: const TextStyle(
+            style: TextStyle(
                 fontFamily: 'Recoleta',
                 fontWeight: FontWeight.bold,
                 fontSize: 17,
-                color: Colors.black87)),
+                color: Theme.of(context).textTheme.bodyLarge?.color)),
         subtitle: Text(subtitle,
             style: GoogleFonts.nunito(
                 fontSize: 13,
-                color: Colors.black38,
+                color: isDark ? Colors.white54 : Colors.black38,
                 fontWeight: FontWeight.w600)),
-        trailing: const Icon(Icons.arrow_forward_ios_rounded,
-            size: 16, color: Colors.black12),
+        trailing: Icon(Icons.arrow_forward_ios_rounded,
+            size: 16, color: isDark ? Colors.white24 : Colors.black12),
       ),
     );
   }
@@ -256,10 +296,10 @@ class _SettingsViewState extends State<SettingsView> {
         label: const Text("Sign Out Explorer",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).cardColor,
           foregroundColor: Colors.redAccent,
           elevation: 0,
-          side: const BorderSide(color: Color(0xFFFFEBEE), width: 2),
+          side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.2), width: 2),
           padding: const EdgeInsets.symmetric(vertical: 18),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
@@ -276,8 +316,9 @@ class _SettingsViewState extends State<SettingsView> {
         title: const Text('Sign Out?',
             style:
                 TextStyle(fontFamily: 'Recoleta', fontWeight: FontWeight.bold)),
-        content: const Text(
-            'Are you sure you want to take a break, Little Explorer?'),
+        content: Text(
+            'Are you sure you want to take a break, Little Explorer?',
+            style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),

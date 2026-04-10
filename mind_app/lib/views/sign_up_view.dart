@@ -3,7 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../controllers/login_controller.dart';
 import '../models/user_model.dart';
-import 'main_home_view.dart';
+import 'main_tab_view.dart';
 
 const Color mainBlue = Color(0xFF3AAFFF);
 const Color secondaryPurple = Color(0xFFA55FEF);
@@ -24,7 +24,7 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
   final LoginController _loginController = LoginController();
 
   bool isLoading = false;
-  bool _passwordVisible = false;
+  bool _obscurePassword = true;
 
   late AnimationController _fadeController;
   late Animation<double> _fadeIn;
@@ -57,7 +57,7 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
       _showToast('Welcome to Adventure! 🎉', Colors.green);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => HomePage(user: user)),
+        MaterialPageRoute(builder: (_) => MainTabView(user: user)),
       );
     } else if (mounted) {
       _showToast('Registration failed. Try again.', Colors.redAccent);
@@ -73,12 +73,36 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
-          //  Modern Brand Gradient Background
-          _buildBackgroundDecor(),
+          // ── Premium Gradient Header ──
+          Container(
+            height: MediaQuery.of(context).size.height * 0.45,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  mainBlue,
+                  mainBlue.withValues(alpha: 0.8),
+                  secondaryPurple.withValues(alpha: isDark ? 0.3 : 0.6),
+                ],
+              ),
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(50)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
+            ),
+          ),
 
           SafeArea(
             child: FadeTransition(
@@ -92,43 +116,48 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
                     _buildBackButton(),
                     const SizedBox(height: 35),
 
-                    //  Heading in Recoleta
+                    //  Heading in fredoka/Premium style
                     const Text("Create\nAccount",
                         style: TextStyle(
-                            fontFamily: 'Recoleta',
+                            fontFamily: 'Fredoka',
                             fontSize: 42,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: Colors.white,
                             height: 1.1)),
                     const SizedBox(height: 10),
                     Text("Start your learning adventure today ✨",
                         style: GoogleFonts.nunito(
                             fontSize: 15,
-                            color: Colors.black38,
+                            color: Colors.white.withValues(alpha: 0.85),
                             fontWeight: FontWeight.w600)),
 
-                    const SizedBox(height: 45),
+                    const SizedBox(height: 70),
 
                     //  Input Section
-                    _buildInputField(
-                        controller: firstNameController,
-                        label: 'Full Name',
-                        icon: Icons.person_rounded),
+                    _buildKidField(
+                      controller: firstNameController,
+                      hint: 'Full Name',
+                      icon: Icons.person_rounded,
+                      color: mainBlue,
+                    ),
                     const SizedBox(height: 20),
-                    _buildInputField(
-                        controller: emailController,
-                        label: 'Email Address',
-                        icon: Icons.email_rounded,
-                        type: TextInputType.emailAddress),
+                    _buildKidField(
+                      controller: emailController,
+                      hint: 'Email Address',
+                      icon: Icons.email_rounded,
+                      color: mainBlue,
+                      type: TextInputType.emailAddress,
+                    ),
                     const SizedBox(height: 20),
-                    _buildInputField(
+                    _buildKidField(
                       controller: passwordController,
-                      label: 'Password',
-                      icon: Icons.lock_rounded,
+                      hint: 'Password',
+                      icon: Icons.vpn_key_rounded,
+                      color: secondaryPurple,
                       isPassword: true,
-                      obscure: !_passwordVisible,
+                      obscure: _obscurePassword,
                       onToggle: () =>
-                          setState(() => _passwordVisible = !_passwordVisible),
+                          setState(() => _obscurePassword = !_obscurePassword),
                     ),
 
                     const SizedBox(height: 40),
@@ -138,7 +167,7 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
 
                     const SizedBox(height: 30),
                     _buildLoginRedirect(),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
@@ -149,77 +178,93 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildBackgroundDecor() {
-    return Positioned(
-      top: -100,
-      right: -50,
-      child: Container(
-          width: 300,
-          height: 300,
-          decoration: BoxDecoration(
-              color: mainBlue.withValues(alpha: 0.06), shape: BoxShape.circle)),
-    );
-  }
 
   Widget _buildBackButton() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () => Navigator.pop(context),
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)
             ]),
-        child: const Icon(Icons.arrow_back_ios_new_rounded,
-            size: 20, color: Colors.black87),
+        child: Icon(Icons.arrow_back_ios_new_rounded,
+            size: 20, color: isDark ? Colors.white : Colors.black87),
       ),
     );
   }
 
-  Widget _buildInputField(
-      {required TextEditingController controller,
-      required String label,
-      required IconData icon,
-      bool isPassword = false,
-      bool obscure = false,
-      VoidCallback? onToggle,
-      TextInputType type = TextInputType.text}) {
+  Widget _buildKidField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    required Color color,
+    bool isPassword = false,
+    bool obscure = false,
+    VoidCallback? onToggle,
+    TextInputType type = TextInputType.text,
+  }) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label.toUpperCase(),
+        Padding(
+          padding: const EdgeInsets.only(left: 10, bottom: 8),
+          child: Text(
+            hint.toUpperCase(),
             style: GoogleFonts.nunito(
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                color: mainBlue.withValues(alpha: 0.6),
-                letterSpacing: 1.1)),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          obscureText: obscure,
-          keyboardType: type,
-          style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
-          decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: mainBlue.withValues(alpha: 0.4)),
-            suffixIcon: isPassword
-                ? IconButton(
-                    icon: Icon(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: isDark ? color : color.withValues(alpha: 0.7),
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: isDark ? 0.1 : 0.05),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              )
+            ],
+          ),
+          child: TextField(
+            controller: controller,
+            obscureText: obscure,
+            keyboardType: type,
+            style: GoogleFonts.nunito(
+              fontWeight: FontWeight.w700,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: GoogleFonts.nunito(
+                color: isDark ? Colors.white24 : Colors.black26,
+                fontWeight: FontWeight.w600,
+              ),
+              prefixIcon: Icon(icon, color: color.withValues(alpha: 0.5)),
+              suffixIcon: isPassword
+                  ? IconButton(
+                      icon: Icon(
                         obscure ? Icons.visibility_off : Icons.visibility,
-                        color: Colors.black26),
-                    onPressed: onToggle)
-                : null,
-            filled: true,
-            fillColor: mainBlue.withValues(alpha: 0.03),
-            enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide:
-                    BorderSide(color: mainBlue.withValues(alpha: 0.08), width: 2)),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: const BorderSide(color: mainBlue, width: 2)),
-            contentPadding: const EdgeInsets.all(20),
+                        color: isDark ? Colors.white24 : Colors.black26,
+                      ),
+                      onPressed: onToggle,
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            ),
           ),
         ),
       ],
@@ -256,17 +301,21 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
   }
 
   Widget _buildLoginRedirect() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: RichText(
         text: TextSpan(
           text: "Already have an account? ",
           style: GoogleFonts.nunito(
-              color: Colors.black38, fontWeight: FontWeight.w600),
+              color: isDark ? Colors.white38 : Colors.black38,
+              fontWeight: FontWeight.w600),
           children: [
             TextSpan(
               text: 'Login',
-              style: const TextStyle(
-                  color: secondaryPurple, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: isDark ? Colors.blueAccent : secondaryPurple,
+                  fontWeight: FontWeight.bold),
               recognizer: TapGestureRecognizer()
                 ..onTap = () => Navigator.pushReplacementNamed(context, '/login'),
             ),

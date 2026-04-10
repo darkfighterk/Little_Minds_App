@@ -17,12 +17,15 @@ import 'package:image_picker/image_picker.dart';
 import '../services/admin_service.dart';
 
 // ── Colours ────────────────────────────────────────────────
+// These will be used for accents but backgrounds will be theme-aware.
 const _bg = Color(0xFF0D0520);
 const _card = Color(0xFF1E1040);
 const _accent = Color(0xFF7C3AED);
 const _gold = Color(0xFFFFD700);
 const _green = Color(0xFF4CAF50);
 const _red = Color(0xFFE53935);
+const Color mainBlue = Color(0xFF3AAFFF);
+const Color secondaryPurple = Color(0xFFA55FEF);
 
 // ── Local model for building a question before submission ──
 class _QuestionDraft {
@@ -78,74 +81,181 @@ class _AdminGateViewState extends State<AdminGateView> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: _bg,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('🛡️', style: TextStyle(fontSize: 64)),
-                const SizedBox(height: 16),
-                Text('Admin Access',
-                    style:
-                        GoogleFonts.fredoka(fontSize: 32, color: Colors.white)),
-                const SizedBox(height: 8),
-                Text('Enter your admin key to continue',
-                    style: GoogleFonts.nunito(
-                        fontSize: 14, color: Colors.white54)),
-                const SizedBox(height: 40),
-                TextField(
-                  controller: _keyCtrl,
-                  obscureText: _obscure,
-                  style: const TextStyle(color: Colors.white),
-                  onSubmitted: (_) => _submit(),
-                  decoration: InputDecoration(
-                    hintText: 'Admin key',
-                    hintStyle: const TextStyle(color: Colors.white38),
-                    filled: true,
-                    fillColor: _card,
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: _accent, width: 2)),
-                    prefixIcon:
-                        const Icon(Icons.key_rounded, color: Colors.white38),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                          _obscure
-                              ? Icons.visibility_rounded
-                              : Icons.visibility_off_rounded,
-                          color: Colors.white38),
-                      onPressed: () => setState(() => _obscure = !_obscure),
-                    ),
-                    errorText: _error,
-                    errorStyle: const TextStyle(color: _red),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _accent,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                    ),
-                    child: Text('Enter Admin Panel',
-                        style: GoogleFonts.fredoka(fontSize: 18)),
-                  ),
-                ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Stack(
+        children: [
+          // ── Premium Gradient Header ──
+          Container(
+            height: MediaQuery.of(context).size.height * 0.45,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  mainBlue,
+                  mainBlue.withValues(alpha: 0.8),
+                  secondaryPurple.withValues(alpha: isDark ? 0.3 : 0.6),
+                ],
+              ),
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(50)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
               ],
             ),
           ),
+
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  _buildBackButton(),
+                  const SizedBox(height: 40),
+                  const Text('🛡️', style: TextStyle(fontSize: 64)),
+                  const SizedBox(height: 16),
+                  const Text('Admin\nAccess',
+                      style: TextStyle(
+                          fontFamily: 'Fredoka',
+                          fontSize: 42,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          height: 1.1)),
+                  const SizedBox(height: 10),
+                  Text('Enter your admin key to continue ✨',
+                      style: GoogleFonts.nunito(
+                          fontSize: 16,
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 60),
+
+                  // Admin Pin Field
+                  _buildKidField(
+                    controller: _keyCtrl,
+                    hint: 'Admin Secret Key',
+                    icon: Icons.vpn_key_rounded,
+                    color: mainBlue,
+                    obscure: _obscure,
+                    isPassword: true,
+                    onToggle: () => setState(() => _obscure = !_obscure),
+                  ),
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12, top: 8),
+                      child: Text(_error!,
+                          style: GoogleFonts.nunito(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14)),
+                    ),
+
+                  const SizedBox(height: 40),
+                  _buildSubmitButton(),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBackButton() {
+    return GestureDetector(
+      onTap: () => Navigator.pop(context),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: const Icon(Icons.arrow_back_ios_new_rounded,
+            size: 20, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _submit,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: secondaryPurple,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          elevation: 8,
+          shadowColor: secondaryPurple.withValues(alpha: 0.4),
+        ),
+        child: const Text('Enter Admin Panel',
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5)),
+      ),
+    );
+  }
+
+  Widget _buildKidField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    required Color color,
+    bool isPassword = false,
+    bool obscure = false,
+    VoidCallback? onToggle,
+  }) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: isDark ? 0.1 : 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          )
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscure,
+        style: GoogleFonts.nunito(
+          fontWeight: FontWeight.w700,
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: GoogleFonts.nunito(
+            color: isDark ? Colors.white24 : Colors.black26,
+            fontWeight: FontWeight.w600,
+          ),
+          prefixIcon: Icon(icon, color: color.withValues(alpha: 0.5)),
+          suffixIcon: isPassword
+              ? IconButton(
+                  icon: Icon(
+                    obscure ? Icons.visibility_off : Icons.visibility,
+                    color: isDark ? Colors.white24 : Colors.black26,
+                  ),
+                  onPressed: onToggle,
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         ),
       ),
     );
@@ -169,11 +279,13 @@ class _AdminModeState extends State<AdminView> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: _card,
-        foregroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF161616) : Colors.white,
+        foregroundColor: isDark ? Colors.white : Colors.black87,
         elevation: 0,
         title: Text(
           _mode == _AdminMode.quiz
@@ -181,7 +293,11 @@ class _AdminModeState extends State<AdminView> {
               : _mode == _AdminMode.puzzle
                   ? 'Puzzle Creator'
                   : 'Story Creator',
-          style: GoogleFonts.fredoka(fontSize: 22, color: Colors.white),
+          style: GoogleFonts.fredoka(
+            fontSize: 22, 
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black87
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
@@ -190,7 +306,7 @@ class _AdminModeState extends State<AdminView> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(52),
           child: Container(
-            color: _card,
+            color: isDark ? const Color(0xFF161616) : Colors.white,
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
             child: Row(children: [
               _TabChip(

@@ -93,38 +93,64 @@ class _ForgotPasswordOtpViewState extends State<ForgotPasswordOtpView> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
-          _buildBackgroundDecor(),
+          // ── Premium Gradient Header ──
+          Container(
+            height: MediaQuery.of(context).size.height * 0.45,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  mainBlue,
+                  mainBlue.withValues(alpha: 0.8),
+                  secondaryPurple.withValues(alpha: isDark ? 0.3 : 0.6),
+                ],
+              ),
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(50)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
+            ),
+          ),
+
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 28),
               child: Column(
                 children: [
                   const SizedBox(height: 15),
-                  _buildBackButton(),
+                  _buildBackButton(context),
                   const SizedBox(height: 35),
-                  _buildIllustration(),
+                  _buildIllustration(context),
                   const SizedBox(height: 30),
 
-                  //  Header Text in Recoleta
+                  //  Header Text in Fredoka/Premium style
                   const Text('Verification Code',
                       style: TextStyle(
-                          fontFamily: 'Recoleta',
+                          fontFamily: 'Fredoka',
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87)),
+                          color: Colors.white)),
                   const SizedBox(height: 12),
-                  _buildSubtitle(),
+                  _buildSubtitle(context),
 
                   const SizedBox(height: 40),
 
                   //  OTP Input Grid
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(4, (i) => _buildOtpBox(i)),
+                    children: List.generate(4, (i) => _buildOtpBox(i, context)),
                   ),
 
                   const SizedBox(height: 45),
@@ -133,7 +159,7 @@ class _ForgotPasswordOtpViewState extends State<ForgotPasswordOtpView> {
                   _buildVerifyButton(),
 
                   const SizedBox(height: 30),
-                  _buildTimerSection(),
+                  _buildTimerSection(context),
                   const SizedBox(height: 30),
                 ],
               ),
@@ -144,19 +170,9 @@ class _ForgotPasswordOtpViewState extends State<ForgotPasswordOtpView> {
     );
   }
 
-  Widget _buildBackgroundDecor() {
-    return Positioned(
-      top: -100,
-      right: -50,
-      child: Container(
-          width: 300,
-          height: 300,
-          decoration: BoxDecoration(
-              color: mainBlue.withValues(alpha: 0.06), shape: BoxShape.circle)),
-    );
-  }
 
-  Widget _buildBackButton() {
+  Widget _buildBackButton(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Align(
       alignment: Alignment.centerLeft,
       child: GestureDetector(
@@ -164,60 +180,71 @@ class _ForgotPasswordOtpViewState extends State<ForgotPasswordOtpView> {
         child: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)
               ]),
-          child: const Icon(Icons.arrow_back_ios_new_rounded,
-              size: 20, color: Colors.black87),
+          child: Icon(Icons.arrow_back_ios_new_rounded,
+              size: 20, color: isDark ? Colors.white : Colors.black87),
         ),
       ),
     );
   }
 
-  Widget _buildIllustration() {
+  Widget _buildIllustration(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-          color: secondaryPurple.withValues(alpha: 0.05), shape: BoxShape.circle),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : secondaryPurple.withValues(alpha: 0.05),
+          shape: BoxShape.circle),
       child: Image.asset(
         'assets/illustrations/verification_code.png',
         height: 180,
-        errorBuilder: (_, __, ___) => const Icon(Icons.mark_email_read_rounded,
-            size: 100, color: secondaryPurple),
+        errorBuilder: (_, __, ___) => Icon(Icons.mark_email_read_rounded,
+            size: 100, color: isDark ? Colors.white : secondaryPurple),
       ),
     );
   }
 
-  Widget _buildSubtitle() {
+  Widget _buildSubtitle(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
         Text('Please enter the 4 digit code sent to',
             style: GoogleFonts.nunito(
                 fontSize: 15,
-                color: Colors.black38,
+                color: Colors.white.withValues(alpha: 0.85),
                 fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
         Text(widget.email,
             style: GoogleFonts.nunito(
-                fontSize: 16, fontWeight: FontWeight.w800, color: mainBlue)),
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: isDark ? Colors.blueAccent : Colors.white)),
       ],
     );
   }
 
-  Widget _buildOtpBox(int index) {
+  Widget _buildOtpBox(int index, BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: 65,
       height: 75,
       margin: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: mainBlue.withValues(alpha: 0.03),
+        color: isDark ? const Color(0xFF2A2A2A) : mainBlue.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
             color: _focusNodes[index].hasFocus
                 ? mainBlue
-                : mainBlue.withValues(alpha: 0.1),
+                : (isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : mainBlue.withValues(alpha: 0.1)),
             width: 2),
       ),
       child: Center(
@@ -229,7 +256,9 @@ class _ForgotPasswordOtpViewState extends State<ForgotPasswordOtpView> {
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           maxLength: 1,
           style: GoogleFonts.nunito(
-              fontSize: 28, fontWeight: FontWeight.w900, color: Colors.black87),
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: isDark ? Colors.white : Colors.black87),
           decoration:
               const InputDecoration(counterText: "", border: InputBorder.none),
           onChanged: (_) => setState(() {}), // Refresh border highlight
@@ -259,18 +288,23 @@ class _ForgotPasswordOtpViewState extends State<ForgotPasswordOtpView> {
     );
   }
 
-  Widget _buildTimerSection() {
+  Widget _buildTimerSection(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
         Text('00:${_secondsRemaining.toString().padLeft(2, '0')}',
             style: GoogleFonts.nunito(
-                color: mainBlue, fontWeight: FontWeight.w800, fontSize: 16)),
+                color: isDark ? Colors.blueAccent : mainBlue,
+                fontWeight: FontWeight.w800,
+                fontSize: 16)),
         const SizedBox(height: 5),
         TextButton(
           onPressed: _canResend ? _onResendPressed : null,
           child: Text('Resend magic code',
               style: TextStyle(
-                  color: _canResend ? secondaryPurple : Colors.black26,
+                  color: _canResend
+                      ? (isDark ? Colors.blueAccent : secondaryPurple)
+                      : (isDark ? Colors.white24 : Colors.black26),
                   fontWeight: FontWeight.bold,
                   fontSize: 15)),
         ),

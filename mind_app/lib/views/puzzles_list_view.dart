@@ -48,51 +48,57 @@ class _PuzzlesListViewState extends State<PuzzlesListView> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [mainBlue.withValues(alpha: 0.08), Colors.white],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Stack(
+        children: [
+          // ── Premium Gradient Header ──
+          Container(
+            height: MediaQuery.of(context).size.height * 0.35,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  mainBlue,
+                  mainBlue.withValues(alpha: 0.8),
+                  secondaryPurple.withValues(alpha: isDark ? 0.3 : 0.6),
+                ],
+              ),
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(50)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(children: [
-            _buildHeader(),
-            Expanded(child: _buildBody()),
-          ]),
-        ),
+
+          SafeArea(
+            child: Column(children: [
+              _buildStandardHeader(),
+              Expanded(child: _buildBody()),
+            ]),
+          ),
+        ],
       ),
       bottomNavigationBar: BottomNavBar(
         user: widget.user,
         primaryColor: mainBlue,
-        isDark: false,
+        isDark: isDark,
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildStandardHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 15),
       child: Row(children: [
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)
-              ],
-            ),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.black87, size: 18),
-          ),
-        ),
+        _buildCircleBackButton(),
         const SizedBox(width: 15),
         Expanded(
           child:
@@ -100,26 +106,47 @@ class _PuzzlesListViewState extends State<PuzzlesListView> {
             const Text(
               'Puzzle Arena 🧩',
               style: TextStyle(
-                fontFamily: 'Recoleta',
-                fontSize: 28,
+                fontFamily: 'Fredoka',
+                fontSize: 32,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Colors.white,
               ),
             ),
             Text(
               'Solve and earn stars!',
               style: GoogleFonts.nunito(
-                  fontSize: 14,
-                  color: Colors.black45,
-                  fontWeight: FontWeight.w700),
+                  fontSize: 16,
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontWeight: FontWeight.w600),
             ),
           ]),
         ),
-        IconButton(
-          onPressed: _load,
-          icon: const Icon(Icons.refresh_rounded, color: mainBlue, size: 28),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.2),
+            shape: BoxShape.circle,
+          ),
+          child: IconButton(
+            onPressed: _load,
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 28),
+          ),
         ),
       ]),
+    );
+  }
+
+  Widget _buildCircleBackButton() {
+    return GestureDetector(
+      onTap: () => Navigator.pop(context),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: const Icon(Icons.arrow_back_ios_new_rounded,
+            size: 20, color: Colors.white),
+      ),
     );
   }
 
@@ -191,26 +218,26 @@ class _PuzzleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color diffColor = puzzle.difficulty == 'Easy'
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color diffColor = puzzle.difficulty.toLowerCase() == 'easy'
         ? Colors.green
-        : puzzle.difficulty == 'Medium'
-            ? accentOrange
-            : Colors.redAccent;
-
+        : puzzle.difficulty.toLowerCase() == 'medium'
+            ? Colors.orange
+            : Colors.red;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
-              color: mainBlue.withValues(alpha: 0.08),
+              color: isDark ? Colors.black26 : mainBlue.withValues(alpha: 0.08),
               blurRadius: 20,
               offset: const Offset(0, 10),
             )
           ],
-          border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
+          border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,18 +290,18 @@ class _PuzzleCard extends StatelessWidget {
                     puzzle.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontFamily: 'Recoleta',
+                    style: TextStyle(
+                        fontFamily: 'Fredoka',
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87),
+                        color: isDark ? Colors.white : Colors.black87),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     puzzle.category,
                     style: GoogleFonts.nunito(
                         fontSize: 12,
-                        color: Colors.black38,
+                        color: isDark ? Colors.white38 : Colors.black38,
                         fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 12),
