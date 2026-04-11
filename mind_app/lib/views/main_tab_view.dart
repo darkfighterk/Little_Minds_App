@@ -20,8 +20,6 @@ class _MainTabViewState extends State<MainTabView>
 
   // ── Shared brand palette ──
   static const Color mainBlue = Color(0xFF3AAFFF);
-  static const Color secondaryPurple = Color(0xFFA55FEF);
-  static const Color sunnyYellow = Color(0xFFFDDF50);
 
   void _onTabSelected(int index) => setState(() => _currentIndex = index);
 

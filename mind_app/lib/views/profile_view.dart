@@ -10,7 +10,6 @@ import '../services/auth_service.dart';
 const Color _mainBlue = Color(0xFF3AAFFF);
 const Color _secondaryPurple = Color(0xFFA55FEF);
 const Color _sunnyYellow = Color(0xFFFDDF50);
-const Color _accentOrange = Color(0xFFFF8811);
 
 class ProfileView extends StatefulWidget {
   final User user;

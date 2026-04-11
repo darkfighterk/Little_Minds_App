@@ -456,7 +456,7 @@ class _SubjectCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.stars_rounded, color: sunnyYellow, size: 14),
+                  const Icon(Icons.stars_rounded, color: sunnyYellow, size: 14),
                   const SizedBox(width: 3),
                   Text(
                     '$stars',

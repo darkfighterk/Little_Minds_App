@@ -25,7 +25,6 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
   static const Color mainBlue = Color(0xFF3AAFFF);
   static const Color secondaryPurple = Color(0xFFA55FEF);
   static const Color secondaryOrange = Color(0xFFFF8811);
-  static const Color secondaryYellow = Color(0xFFFDDF50);
 
   late AnimationController _floatController;
   late AnimationController _entryController;
@@ -231,9 +230,9 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
                       _GradientButton(
                         onTap: isLoading ? null : _onLoginPressed,
                         text: "Login",
-                        gradientColors: [
+                        gradientColors: const [
                           secondaryOrange,
-                          const Color(0xFFFF5F5F)
+                          Color(0xFFFF5F5F)
                         ],
                         isLoading: isLoading,
                       ),

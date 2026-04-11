@@ -18,13 +18,15 @@ import '../services/admin_service.dart';
 
 extension AdminThemeContext on BuildContext {
   bool get isDark => Theme.of(this).brightness == Brightness.dark;
+  // Warm cream (light) / rich dark (dark) — matching login & home
   Color get adminBg =>
-      isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA);
-  Color get adminCard => isDark ? const Color(0xFF1E1E1E) : Colors.white;
+      isDark ? const Color(0xFF12111A) : const Color(0xFFFFF8EE);
+  Color get adminCard => isDark ? const Color(0xFF1E1C2A) : Colors.white;
   Color get adminText => isDark ? Colors.white : Colors.black87;
   Color get adminSubtext => isDark ? Colors.white70 : Colors.black54;
   Color get adminMuted => isDark ? Colors.white38 : Colors.black38;
-  Color get adminBorder => isDark ? Colors.white12 : Colors.black12;
+  Color get adminBorder =>
+      isDark ? const Color(0xFFA55FEF).withValues(alpha: 0.18) : Colors.black12;
 }
 
 // ── Colours ────────────────────────────────────────────────
@@ -91,11 +93,16 @@ class _AdminGateViewState extends State<AdminGateView> {
   @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color scaffoldBg =
+        isDark ? const Color(0xFF12111A) : const Color(0xFFFFF8EE);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: scaffoldBg,
       body: Stack(
         children: [
+          // ── Ambient blobs matching login ──
+          _AdminAmbientBlobs(isDark: isDark),
+
           // ── Premium Gradient Header ──
           Container(
             height: MediaQuery.of(context).size.height * 0.45,
@@ -104,21 +111,60 @@ class _AdminGateViewState extends State<AdminGateView> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  mainBlue,
-                  mainBlue.withValues(alpha: 0.8),
-                  secondaryPurple.withValues(alpha: isDark ? 0.3 : 0.6),
+                  const Color(0xFF2B9FFF),
+                  const Color(0xFF3AAFFF),
+                  const Color(0xFFA55FEF)
+                      .withValues(alpha: isDark ? 0.55 : 0.75),
                 ],
               ),
               borderRadius:
-                  const BorderRadius.vertical(bottom: Radius.circular(50)),
+                  const BorderRadius.vertical(bottom: Radius.circular(52)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.12),
+                  blurRadius: 24,
+                  offset: const Offset(0, 12),
                 )
               ],
             ),
+            child: Stack(children: [
+              Positioned(
+                top: -40,
+                right: -40,
+                child: Container(
+                  width: 180,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.07),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: -20,
+                left: -30,
+                child: Container(
+                  width: 130,
+                  height: 130,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.06),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 70,
+                right: 90,
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFFDDF50),
+                  ),
+                ),
+              ),
+            ]),
           ),
 
           SafeArea(
@@ -130,21 +176,47 @@ class _AdminGateViewState extends State<AdminGateView> {
                   const SizedBox(height: 20),
                   _buildBackButton(),
                   const SizedBox(height: 40),
-                  const Text('🛡️', style: TextStyle(fontSize: 64)),
+                  // Shield badge — matches login logo badge style
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFDDF50), Color(0xFFFF8811)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF8811).withValues(alpha: 0.4),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                        child: Text('🛡️', style: TextStyle(fontSize: 36))),
+                  ),
                   const SizedBox(height: 16),
-                  Text('Admin\nAccess',
-                      style: TextStyle(
-                          fontFamily: 'Fredoka',
-                          fontSize: 42,
-                          fontWeight: FontWeight.bold,
-                          color: context.adminText,
-                          height: 1.1)),
+                  Text(
+                    'Admin\nAccess',
+                    style: GoogleFonts.fredoka(
+                      fontSize: 42,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      height: 1.1,
+                    ),
+                  ),
                   const SizedBox(height: 10),
-                  Text('Enter your admin key to continue ✨',
-                      style: GoogleFonts.nunito(
-                          fontSize: 16,
-                          color: context.adminText.withValues(alpha: 0.85),
-                          fontWeight: FontWeight.w600)),
+                  Text(
+                    'Enter your admin key to continue ✨',
+                    style: GoogleFonts.nunito(
+                      fontSize: 16,
+                      color: Colors.white.withValues(alpha: 0.85),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: 60),
 
                   // Admin Pin Field
@@ -152,7 +224,7 @@ class _AdminGateViewState extends State<AdminGateView> {
                     controller: _keyCtrl,
                     hint: 'Admin Secret Key',
                     icon: Icons.vpn_key_rounded,
-                    color: mainBlue,
+                    color: const Color(0xFF3AAFFF),
                     obscure: _obscure,
                     isPassword: true,
                     onToggle: () => setState(() => _obscure = !_obscure),
@@ -160,11 +232,14 @@ class _AdminGateViewState extends State<AdminGateView> {
                   if (_error != null)
                     Padding(
                       padding: const EdgeInsets.only(left: 12, top: 8),
-                      child: Text(_error!,
-                          style: GoogleFonts.nunito(
-                              color: Colors.redAccent,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14)),
+                      child: Text(
+                        _error!,
+                        style: GoogleFonts.nunito(
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
 
                   const SizedBox(height: 40),
@@ -182,36 +257,58 @@ class _AdminGateViewState extends State<AdminGateView> {
     return GestureDetector(
       onTap: () => Navigator.pop(context),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: context.adminText.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(15),
+          color: Colors.white.withValues(alpha: 0.22),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+              color: Colors.white.withValues(alpha: 0.3), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        child: Icon(Icons.arrow_back_ios_new_rounded,
-            size: 20, color: context.adminText),
+        child: const Icon(Icons.arrow_back_ios_new_rounded,
+            size: 18, color: Colors.white),
       ),
     );
   }
 
   Widget _buildSubmitButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _submit,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: secondaryPurple,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          elevation: 8,
-          shadowColor: secondaryPurple.withValues(alpha: 0.4),
+    return GestureDetector(
+      onTap: _submit,
+      child: Container(
+        width: double.infinity,
+        height: 60,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFF8811), Color(0xFFFF5F5F)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFF5F5F).withValues(alpha: 0.45),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
-        child: const Text('Enter Admin Panel',
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5)),
+        child: Center(
+          child: Text(
+            'Enter Admin Panel',
+            style: GoogleFonts.fredoka(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -226,17 +323,21 @@ class _AdminGateViewState extends State<AdminGateView> {
     VoidCallback? onToggle,
   }) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color fieldBg = isDark ? const Color(0xFF1E1C2A) : Colors.white;
+    final Color borderColor =
+        isDark ? color.withValues(alpha: 0.35) : color.withValues(alpha: 0.6);
 
     return Container(
       decoration: BoxDecoration(
-        color: context.adminCard,
-        borderRadius: BorderRadius.circular(22),
+        color: fieldBg,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: borderColor, width: 1.8),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: isDark ? 0.1 : 0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          )
+            color: color.withValues(alpha: 0.12),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
         ],
       ),
       child: TextField(
@@ -244,20 +345,22 @@ class _AdminGateViewState extends State<AdminGateView> {
         obscureText: obscure,
         style: GoogleFonts.nunito(
           fontWeight: FontWeight.w700,
-          color: context.adminText,
+          color: isDark ? Colors.white : Colors.black87,
+          fontSize: 15,
         ),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: GoogleFonts.nunito(
-            color: isDark ? context.adminBorder : Colors.black26,
+            color: isDark ? Colors.white24 : Colors.black26,
             fontWeight: FontWeight.w600,
           ),
-          prefixIcon: Icon(icon, color: color.withValues(alpha: 0.5)),
+          prefixIcon: Icon(icon, color: color, size: 22),
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
                     obscure ? Icons.visibility_off : Icons.visibility,
-                    color: isDark ? context.adminBorder : Colors.black26,
+                    color: color.withValues(alpha: 0.5),
+                    size: 20,
                   ),
                   onPressed: onToggle,
                 )
@@ -289,34 +392,66 @@ class _AdminModeState extends State<AdminView> {
   @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color scaffoldBg =
+        isDark ? const Color(0xFF12111A) : const Color(0xFFFFF8EE);
+    final Color headerBg = isDark ? const Color(0xFF1A1828) : Colors.white;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF161616) : Colors.white,
+        backgroundColor: headerBg,
         foregroundColor: context.adminText,
         elevation: 0,
-        title: Text(
-          _mode == _AdminMode.quiz
-              ? 'Quiz Creator'
-              : _mode == _AdminMode.puzzle
-                  ? 'Puzzle Creator'
-                  : 'Story Creator',
-          style: GoogleFonts.fredoka(
-            fontSize: 22, 
-            fontWeight: FontWeight.bold,
-            color: context.adminText
-          ),
+        shadowColor: Colors.transparent,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF3AAFFF), Color(0xFFA55FEF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.admin_panel_settings_rounded,
+                  color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              _mode == _AdminMode.quiz
+                  ? 'Quiz Creator'
+                  : _mode == _AdminMode.puzzle
+                      ? 'Puzzle Creator'
+                      : 'Story Creator',
+              style: GoogleFonts.fredoka(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: context.adminText,
+              ),
+            ),
+          ],
         ),
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child:
+                Icon(Icons.close_rounded, size: 18, color: context.adminText),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(52),
+          preferredSize: const Size.fromHeight(58),
           child: Container(
-            color: isDark ? const Color(0xFF161616) : Colors.white,
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+            color: headerBg,
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
             child: Row(children: [
               _TabChip(
                 label: '📝  Quiz',
@@ -590,7 +725,8 @@ class _QuizWizardState extends State<_QuizWizard> {
             })
         .toList();
 
-    final saved = await _svc.saveQuestions(subjectId, levelId, questionsPayload);
+    final saved =
+        await _svc.saveQuestions(subjectId, levelId, questionsPayload);
     if (!saved) {
       _publishFailed('Failed to save questions.');
       return;
@@ -674,7 +810,8 @@ class _QuizWizardState extends State<_QuizWizard> {
             const Text('🎉', style: TextStyle(fontSize: 80)),
             const SizedBox(height: 20),
             Text('Quiz Published!',
-                style: GoogleFonts.fredoka(fontSize: 36, color: context.adminText)),
+                style: GoogleFonts.fredoka(
+                    fontSize: 36, color: context.adminText)),
             const SizedBox(height: 12),
             Text(
               '${_questions.length} question${_questions.length == 1 ? '' : 's'} saved to Level $_levelNumber\n"${_levelTitleCtrl.text}"',
@@ -729,8 +866,9 @@ class _QuizWizardState extends State<_QuizWizard> {
 
   Widget _buildStepIndicator() {
     final steps = ['Subject', 'Level', 'Questions', 'Review'];
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      color: context.adminCard,
+      color: isDark ? const Color(0xFF1A1828) : Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       child: Row(
         children: steps.asMap().entries.map((e) {
@@ -800,37 +938,67 @@ class _QuizWizardState extends State<_QuizWizard> {
 
   Widget _buildBottomBar() {
     final isLast = _step == 3;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final List<Color> gradColors = isLast
+        ? [const Color(0xFFFFD700), const Color(0xFFFF8811)]
+        : [const Color(0xFF3AAFFF), const Color(0xFFA55FEF)];
     return Container(
-      color: context.adminCard,
+      color: isDark ? const Color(0xFF1A1828) : Colors.white,
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: _publishing ? null : _nextStep,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: isLast ? _gold : _accent,
-            foregroundColor: isLast ? Colors.black87 : Colors.white,
-            disabledBackgroundColor: _accent.withValues(alpha: 0.4),
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: GestureDetector(
+        onTap: _publishing ? null : _nextStep,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: double.infinity,
+          height: 60,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: _publishing
+                  ? [Colors.grey.shade400, Colors.grey.shade500]
+                  : gradColors,
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: _publishing
+                ? []
+                : [
+                    BoxShadow(
+                      color: gradColors.last.withValues(alpha: 0.4),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
           ),
-          child: _publishing
-              ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  SizedBox(
+          child: Center(
+            child: _publishing
+                ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: isLast ? Colors.black87 : Colors.white)),
-                  const SizedBox(width: 12),
-                  Text(_publishStatus,
+                        strokeWidth: 2,
+                        color: isLast ? Colors.black87 : Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      _publishStatus,
                       style: GoogleFonts.fredoka(
-                          fontSize: 16, color: isLast ? Colors.black87 : Colors.white)),
-                ])
-              : Text(
-                  isLast ? '🚀  Publish Quiz' : 'Continue →',
-                  style: GoogleFonts.fredoka(fontSize: 18),
-                ),
+                        fontSize: 16,
+                        color: isLast ? Colors.black87 : Colors.white,
+                      ),
+                    ),
+                  ])
+                : Text(
+                    isLast ? '🚀  Publish Quiz' : 'Continue →',
+                    style: GoogleFonts.fredoka(
+                      fontSize: 18,
+                      color: isLast ? Colors.black87 : Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+          ),
         ),
       ),
     );
@@ -848,7 +1016,8 @@ class _QuizWizardState extends State<_QuizWizard> {
         _sectionTitle('📚', 'Choose a Subject'),
         const SizedBox(height: 8),
         Text('Select an existing subject or create a new one.',
-            style: GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
+            style:
+                GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
         const SizedBox(height: 20),
 
         // Toggle
@@ -884,24 +1053,82 @@ class _QuizWizardState extends State<_QuizWizard> {
                   margin: const EdgeInsets.only(bottom: 10),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: selected ? _accent.withValues(alpha: 0.2) : context.adminCard,
-                    borderRadius: BorderRadius.circular(16),
+                    color: selected
+                        ? const Color(0xFF3AAFFF).withValues(alpha: 0.12)
+                        : context.adminCard,
+                    borderRadius: BorderRadius.circular(18),
                     border: Border.all(
-                      color: selected ? _accent : context.adminBorder,
-                      width: selected ? 2 : 1,
+                      color: selected
+                          ? const Color(0xFF3AAFFF)
+                          : context.adminBorder,
+                      width: selected ? 2 : 1.5,
                     ),
+                    boxShadow: selected
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFF3AAFFF)
+                                  .withValues(alpha: 0.18),
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
+                            )
+                          ]
+                        : [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            )
+                          ],
                   ),
                   child: Row(children: [
-                    Text(s['emoji'] as String,
-                        style: const TextStyle(fontSize: 28)),
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: selected
+                              ? [
+                                  const Color(0xFF3AAFFF)
+                                      .withValues(alpha: 0.25),
+                                  const Color(0xFFA55FEF)
+                                      .withValues(alpha: 0.15),
+                                ]
+                              : [
+                                  const Color(0xFFA55FEF)
+                                      .withValues(alpha: 0.12),
+                                  const Color(0xFF3AAFFF)
+                                      .withValues(alpha: 0.08),
+                                ],
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(s['emoji'] as String,
+                            style: const TextStyle(fontSize: 24)),
+                      ),
+                    ),
                     const SizedBox(width: 14),
-                    Text(s['name'] as String,
+                    Expanded(
+                      child: Text(
+                        s['name'] as String,
                         style: GoogleFonts.fredoka(
-                            fontSize: 18,
-                            color: selected ? context.adminText : context.adminSubtext)),
-                    const Spacer(),
+                          fontSize: 18,
+                          color: selected
+                              ? const Color(0xFF3AAFFF)
+                              : context.adminSubtext,
+                        ),
+                      ),
+                    ),
                     if (selected)
-                      const Icon(Icons.check_circle_rounded, color: _accent),
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0xFF3AAFFF),
+                        ),
+                        child: const Icon(Icons.check_rounded,
+                            color: Colors.white, size: 14),
+                      ),
                   ]),
                 ),
               );
@@ -960,7 +1187,8 @@ class _QuizWizardState extends State<_QuizWizard> {
         _sectionTitle('📋', 'Level Details'),
         const SizedBox(height: 8),
         Text('Define the level that will contain your questions.',
-            style: GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
+            style:
+                GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
         const SizedBox(height: 20),
 
         // FIX: show existing levels for the selected subject
@@ -1026,13 +1254,13 @@ class _QuizWizardState extends State<_QuizWizard> {
         ),
         const SizedBox(height: 12),
         Row(children: [
-          Icon(Icons.info_outline_rounded,
-              size: 14, color: context.adminMuted),
+          Icon(Icons.info_outline_rounded, size: 14, color: context.adminMuted),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
               'Level 1 should be 0 stars. Each subsequent level is typically +30 stars.',
-              style: GoogleFonts.nunito(fontSize: 12, color: context.adminMuted),
+              style:
+                  GoogleFonts.nunito(fontSize: 12, color: context.adminMuted),
             ),
           ),
         ]),
@@ -1088,8 +1316,8 @@ class _QuizWizardState extends State<_QuizWizard> {
               Expanded(
                 child: Text(
                   title,
-                  style:
-                      GoogleFonts.nunito(fontSize: 13, color: context.adminSubtext),
+                  style: GoogleFonts.nunito(
+                      fontSize: 13, color: context.adminSubtext),
                 ),
               ),
               Row(children: [
@@ -1137,7 +1365,8 @@ class _QuizWizardState extends State<_QuizWizard> {
         _sectionTitle('❓', 'Add Questions'),
         const SizedBox(height: 4),
         Text('Minimum 1 question. Each question has 4 options.',
-            style: GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
+            style:
+                GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
         const SizedBox(height: 20),
         ..._questions.asMap().entries.map((entry) {
           final i = entry.key;
@@ -1162,24 +1391,41 @@ class _QuizWizardState extends State<_QuizWizard> {
 
   Widget _buildQuestionCard(int index) {
     final q = _questions[index];
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: context.adminCard,
+        color: isDark ? const Color(0xFF1E1C2A) : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: context.adminBorder),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF3AAFFF).withValues(alpha: 0.18)
+              : const Color(0xFF3AAFFF).withValues(alpha: 0.25),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF3AAFFF).withValues(alpha: 0.07),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         // Card header
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: const BoxDecoration(
-            color: Color(0xFF2A1050),
+            gradient: LinearGradient(
+              colors: [Color(0xFF3AAFFF), Color(0xFFA55FEF)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Row(children: [
             Text('Question ${index + 1}',
-                style: GoogleFonts.fredoka(fontSize: 16, color: _gold)),
+                style: GoogleFonts.fredoka(fontSize: 16, color: Colors.white)),
             const Spacer(),
             // Toggle text / image
             GestureDetector(
@@ -1190,12 +1436,10 @@ class _QuizWizardState extends State<_QuizWizard> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: q.isImageQuestion
-                      ? Colors.blue.withValues(alpha: 0.2)
-                      : _accent.withValues(alpha: 0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: q.isImageQuestion ? Colors.blue : _accent,
+                    color: Colors.white.withValues(alpha: 0.5),
                   ),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -1204,14 +1448,14 @@ class _QuizWizardState extends State<_QuizWizard> {
                         ? Icons.image_rounded
                         : Icons.text_fields_rounded,
                     size: 14,
-                    color: q.isImageQuestion ? Colors.blue : _accent,
+                    color: Colors.white,
                   ),
                   const SizedBox(width: 5),
                   Text(
                     q.isImageQuestion ? 'Image Q' : 'Text Q',
                     style: GoogleFonts.nunito(
                       fontSize: 12,
-                      color: q.isImageQuestion ? Colors.blue : _accent,
+                      color: Colors.white,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -1225,7 +1469,8 @@ class _QuizWizardState extends State<_QuizWizard> {
                   _questions[index].dispose();
                   _questions.removeAt(index);
                 }),
-                child: const Icon(Icons.delete_rounded, color: _red, size: 20),
+                child: const Icon(Icons.delete_rounded,
+                    color: Colors.white70, size: 20),
               ),
             ],
           ]),
@@ -1439,7 +1684,8 @@ class _QuizWizardState extends State<_QuizWizard> {
         _sectionTitle('🔍', 'Review & Publish'),
         const SizedBox(height: 8),
         Text('Check your quiz before publishing.',
-            style: GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
+            style:
+                GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
         const SizedBox(height: 20),
 
         // Subject card
@@ -1473,8 +1719,8 @@ class _QuizWizardState extends State<_QuizWizard> {
               const SizedBox(width: 10),
               Text(
                   '${_questions.length} Question${_questions.length == 1 ? '' : 's'}',
-                  style:
-                      GoogleFonts.fredoka(fontSize: 18, color: context.adminText)),
+                  style: GoogleFonts.fredoka(
+                      fontSize: 18, color: context.adminText)),
             ]),
             const SizedBox(height: 12),
             ..._questions.asMap().entries.map((e) {
@@ -1514,7 +1760,8 @@ class _QuizWizardState extends State<_QuizWizard> {
                             children: [
                               Text(preview,
                                   style: GoogleFonts.nunito(
-                                      fontSize: 13, color: context.adminSubtext),
+                                      fontSize: 13,
+                                      color: context.adminSubtext),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis),
                               Text('Correct: Option $correct',
@@ -1565,17 +1812,63 @@ class _QuizWizardState extends State<_QuizWizard> {
     TextInputType keyboardType = TextInputType.text,
     void Function(String)? onChanged,
   }) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color fieldBg = isDark ? const Color(0xFF1E1C2A) : Colors.white;
+    const Color accentColor = Color(0xFF3AAFFF);
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _inputLabel(label),
-        const SizedBox(height: 6),
-        TextField(
-          controller: ctrl,
-          keyboardType: keyboardType,
-          style: TextStyle(color: context.adminText),
-          onChanged: onChanged,
-          decoration: _inputDecoration(hint),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 7),
+          child: Text(
+            label.toUpperCase(),
+            style: GoogleFonts.nunito(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.5,
+              color: isDark ? accentColor.withValues(alpha: 0.8) : accentColor,
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: fieldBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark
+                  ? accentColor.withValues(alpha: 0.30)
+                  : accentColor.withValues(alpha: 0.45),
+              width: 1.6,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: TextField(
+            controller: ctrl,
+            keyboardType: keyboardType,
+            style: GoogleFonts.nunito(
+              fontWeight: FontWeight.w700,
+              color: isDark ? Colors.white : Colors.black87,
+              fontSize: 14,
+            ),
+            onChanged: onChanged,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: GoogleFonts.nunito(
+                color: isDark ? Colors.white24 : Colors.black26,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+              border: InputBorder.none,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+          ),
         ),
       ]),
     );
@@ -1606,33 +1899,58 @@ class _QuizWizardState extends State<_QuizWizard> {
   Widget _inputLabel(String text) => Text(
         text,
         style: GoogleFonts.nunito(
-            fontSize: 13, color: context.adminSubtext, fontWeight: FontWeight.w700),
+            fontSize: 13,
+            color: context.adminSubtext,
+            fontWeight: FontWeight.w700),
       );
 
   Widget _sectionTitle(String emoji, String title) => Row(children: [
-        Text(emoji, style: const TextStyle(fontSize: 24)),
-        const SizedBox(width: 10),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF3AAFFF), Color(0xFFA55FEF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(emoji, style: const TextStyle(fontSize: 18)),
+        ),
+        const SizedBox(width: 12),
         Text(title,
             style: GoogleFonts.fredoka(fontSize: 22, color: context.adminText)),
       ]);
 
-  InputDecoration _inputDecoration(String hint) => InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: context.adminBorder, fontSize: 14),
-        filled: true,
-        fillColor: context.adminText.withValues(alpha: 0.06),
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: context.adminBorder)),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: context.adminBorder)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _accent, width: 2)),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      );
+  InputDecoration _inputDecoration(String hint) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color fieldBg = isDark ? const Color(0xFF1E1C2A) : Colors.white;
+    final Color borderColor = isDark
+        ? const Color(0xFFA55FEF).withValues(alpha: 0.22)
+        : Colors.black.withValues(alpha: 0.10);
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: GoogleFonts.nunito(
+        color: isDark ? Colors.white24 : Colors.black26,
+        fontSize: 13,
+      ),
+      filled: true,
+      fillColor: fieldBg,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: borderColor),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: borderColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFF3AAFFF), width: 2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+    );
+  }
 }
 
 // =====================================================================
@@ -1652,17 +1970,39 @@ class _TabChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
         decoration: BoxDecoration(
-          color: active ? _accent : context.adminCard,
+          gradient: active
+              ? const LinearGradient(
+                  colors: [Color(0xFF3AAFFF), Color(0xFFA55FEF)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                )
+              : null,
+          color: active ? null : context.adminCard,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: active ? _accent : context.adminBorder),
+          border: Border.all(
+            color: active ? Colors.transparent : context.adminBorder,
+            width: 1.5,
+          ),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFFA55FEF).withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : null,
         ),
-        child: Text(label,
-            style: GoogleFonts.nunito(
-                fontSize: 13,
-                color: active ? Colors.white : context.adminSubtext,
-                fontWeight: FontWeight.w700)),
+        child: Text(
+          label,
+          style: GoogleFonts.nunito(
+            fontSize: 13,
+            color: active ? Colors.white : context.adminSubtext,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
     );
   }
@@ -1718,7 +2058,8 @@ class _StepBtn extends StatelessWidget {
               ? _accent.withValues(alpha: 0.2)
               : context.adminText.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: onTap != null ? _accent : context.adminBorder),
+          border:
+              Border.all(color: onTap != null ? _accent : context.adminBorder),
         ),
         child: Icon(icon,
             size: 20, color: onTap != null ? _accent : context.adminBorder),
@@ -1736,24 +2077,54 @@ class _ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: context.adminCard,
+        color: isDark ? const Color(0xFF1E1C2A) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.adminBorder),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF3AAFFF).withValues(alpha: 0.22)
+              : const Color(0xFF3AAFFF).withValues(alpha: 0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF3AAFFF).withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(icon, style: const TextStyle(fontSize: 24)),
-        const SizedBox(width: 12),
+        // Accent emoji bubble
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF3AAFFF), Color(0xFFA55FEF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Text(icon, style: const TextStyle(fontSize: 22)),
+          ),
+        ),
+        const SizedBox(width: 14),
         Expanded(
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(title,
-                style: GoogleFonts.fredoka(fontSize: 16, color: context.adminText)),
+                style: GoogleFonts.fredoka(
+                    fontSize: 16, color: context.adminText)),
             const SizedBox(height: 4),
             Text(content,
-                style: GoogleFonts.nunito(fontSize: 13, color: context.adminSubtext)),
+                style: GoogleFonts.nunito(
+                    fontSize: 13, color: context.adminSubtext)),
           ]),
         ),
       ]),
@@ -1782,7 +2153,6 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
   String _difficulty = 'Easy';
   String? _uploadedImageUrl;
   bool _uploadingImage = false;
-
 
   // ── Existing puzzles list ───────────────────────────────────
   List<Map<String, dynamic>> _existingPuzzles = [];
@@ -2008,7 +2378,9 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                         : Text('${i + 1}',
                             style: GoogleFonts.fredoka(
                                 fontSize: 14,
-                                color: active ? context.adminText : context.adminMuted)),
+                                color: active
+                                    ? context.adminText
+                                    : context.adminMuted)),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -2059,11 +2431,13 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: isLast ? Colors.black87 : Colors.white)),
+                          strokeWidth: 2,
+                          color: isLast ? Colors.black87 : Colors.white)),
                   const SizedBox(width: 12),
                   Text(_publishStatus,
                       style: GoogleFonts.fredoka(
-                          fontSize: 16, color: isLast ? Colors.black87 : Colors.white)),
+                          fontSize: 16,
+                          color: isLast ? Colors.black87 : Colors.white)),
                 ])
               : Text(
                   isLast ? '🚀  Publish Puzzle' : 'Continue →',
@@ -2086,7 +2460,8 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
             const Text('🧩', style: TextStyle(fontSize: 80)),
             const SizedBox(height: 20),
             Text('Puzzle Published!',
-                style: GoogleFonts.fredoka(fontSize: 36, color: context.adminText)),
+                style: GoogleFonts.fredoka(
+                    fontSize: 36, color: context.adminText)),
             const SizedBox(height: 12),
             Text(
               '"${_titleCtrl.text}" with $_pieceCount pieces is now live!',
@@ -2138,11 +2513,13 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
           const Text('🧩', style: TextStyle(fontSize: 24)),
           const SizedBox(width: 10),
           Text('Puzzle Details',
-              style: GoogleFonts.fredoka(fontSize: 22, color: context.adminText)),
+              style:
+                  GoogleFonts.fredoka(fontSize: 22, color: context.adminText)),
         ]),
         const SizedBox(height: 6),
         Text('Fill in the puzzle info and upload the image.',
-            style: GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
+            style:
+                GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
         const SizedBox(height: 20),
 
         // Title
@@ -2171,7 +2548,8 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                   .map((c) => DropdownMenuItem(
                         value: c,
                         child: Text(c,
-                            style: GoogleFonts.nunito(color: context.adminText)),
+                            style:
+                                GoogleFonts.nunito(color: context.adminText)),
                       ))
                   .toList(),
               onChanged: (v) => setState(() => _categoryCtrl.text = v!),
@@ -2200,7 +2578,9 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                   decoration: BoxDecoration(
-                    color: active ? color.withValues(alpha: 0.2) : context.adminCard,
+                    color: active
+                        ? color.withValues(alpha: 0.2)
+                        : context.adminCard,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                         color: active ? color : context.adminBorder, width: 2),
@@ -2238,7 +2618,9 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: active ? _accent.withValues(alpha: 0.2) : context.adminCard,
+                  color: active
+                      ? _accent.withValues(alpha: 0.2)
+                      : context.adminCard,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                       color: active ? _accent : context.adminBorder, width: 2),
@@ -2307,7 +2689,8 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 10, vertical: 5),
                                   decoration: BoxDecoration(
-                                    color: context.adminText.withValues(alpha: 0.08),
+                                    color: context.adminText
+                                        .withValues(alpha: 0.08),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Row(children: [
@@ -2348,7 +2731,8 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                               const SizedBox(height: 12),
                               Text('Tap to upload puzzle image',
                                   style: GoogleFonts.nunito(
-                                      fontSize: 14, color: context.adminSubtext)),
+                                      fontSize: 14,
+                                      color: context.adminSubtext)),
                               const SizedBox(height: 4),
                               Text('JPG, PNG, WEBP — max 10 MB',
                                   style: GoogleFonts.nunito(
@@ -2364,7 +2748,8 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
           const Text('📋', style: TextStyle(fontSize: 22)),
           const SizedBox(width: 10),
           Text('Existing Puzzles',
-              style: GoogleFonts.fredoka(fontSize: 20, color: context.adminText)),
+              style:
+                  GoogleFonts.fredoka(fontSize: 20, color: context.adminText)),
           const SizedBox(width: 10),
           if (_loadingPuzzles)
             const SizedBox(
@@ -2384,8 +2769,8 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
             ),
             child: Center(
               child: Text('No puzzles yet. Create your first one!',
-                  style:
-                      GoogleFonts.nunito(fontSize: 14, color: context.adminMuted)),
+                  style: GoogleFonts.nunito(
+                      fontSize: 14, color: context.adminMuted)),
             ),
           ),
         ..._existingPuzzles.map((p) => _buildPuzzleListItem(p)),
@@ -2433,13 +2818,14 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(title,
-                  style: GoogleFonts.fredoka(fontSize: 16, color: context.adminText),
+                  style: GoogleFonts.fredoka(
+                      fontSize: 16, color: context.adminText),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis),
               const SizedBox(height: 4),
               Text('$pieces pieces  •  $difficulty  •  $category',
-                  style:
-                      GoogleFonts.nunito(fontSize: 12, color: context.adminSubtext)),
+                  style: GoogleFonts.nunito(
+                      fontSize: 12, color: context.adminSubtext)),
             ]),
           ),
         ),
@@ -2485,7 +2871,9 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
 
   Widget _buildLabel(String text) => Text(text,
       style: GoogleFonts.nunito(
-          fontSize: 13, color: context.adminSubtext, fontWeight: FontWeight.w700));
+          fontSize: 13,
+          color: context.adminSubtext,
+          fontWeight: FontWeight.w700));
 
   // =====================================================================
   // STEP 1 — Review
@@ -2499,11 +2887,13 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
           const Text('🔍', style: TextStyle(fontSize: 24)),
           const SizedBox(width: 10),
           Text('Review & Publish',
-              style: GoogleFonts.fredoka(fontSize: 22, color: context.adminText)),
+              style:
+                  GoogleFonts.fredoka(fontSize: 22, color: context.adminText)),
         ]),
         const SizedBox(height: 6),
         Text('Double-check everything before publishing.',
-            style: GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
+            style:
+                GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
         const SizedBox(height: 24),
 
         // Puzzle piece grid preview
@@ -2575,9 +2965,11 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
         const SizedBox(width: 12),
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(title,
-              style: GoogleFonts.fredoka(fontSize: 14, color: context.adminSubtext)),
+              style: GoogleFonts.fredoka(
+                  fontSize: 14, color: context.adminSubtext)),
           Text(value,
-              style: GoogleFonts.fredoka(fontSize: 17, color: context.adminText)),
+              style:
+                  GoogleFonts.fredoka(fontSize: 17, color: context.adminText)),
         ]),
       ]),
     );
@@ -2659,8 +3051,8 @@ class _PzOutline extends CustomPainter {
   final int eT, eR, eB, eL;
   final double cell, nub;
   final Color outlineColor;
-  const _PzOutline(
-      this.eT, this.eR, this.eB, this.eL, this.cell, this.nub, this.outlineColor);
+  const _PzOutline(this.eT, this.eR, this.eB, this.eL, this.cell, this.nub,
+      this.outlineColor);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -3188,10 +3580,8 @@ class _StoryWizardState extends State<_StoryWizard> {
                   borderRadius: BorderRadius.circular(16),
                   child: Image.network(_coverUrl ?? '',
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Icon(
-                          Icons.broken_image,
-                          color: context.adminMuted,
-                          size: 48)),
+                      errorBuilder: (_, __, ___) => Icon(Icons.broken_image,
+                          color: context.adminMuted, size: 48)),
                 )
               : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Icon(Icons.add_photo_alternate_rounded,
@@ -3220,7 +3610,8 @@ class _StoryWizardState extends State<_StoryWizard> {
                       color: _coverEmoji == e ? _accent : context.adminCard,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                          color: _coverEmoji == e ? _accent : context.adminBorder),
+                          color:
+                              _coverEmoji == e ? _accent : context.adminBorder),
                     ),
                     child: Text(e, style: const TextStyle(fontSize: 22)),
                   ),
@@ -3271,12 +3662,15 @@ class _StoryWizardState extends State<_StoryWizard> {
                           color: _difficulty == d ? _accent : context.adminCard,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                              color:
-                                  _difficulty == d ? _accent : context.adminBorder),
+                              color: _difficulty == d
+                                  ? _accent
+                                  : context.adminBorder),
                         ),
                         child: Text(d,
                             style: GoogleFonts.nunito(
-                                color: _difficulty == d ? Colors.white : context.adminText,
+                                color: _difficulty == d
+                                    ? Colors.white
+                                    : context.adminText,
                                 fontWeight: FontWeight.w700)),
                       ),
                     ),
@@ -3295,8 +3689,7 @@ class _StoryWizardState extends State<_StoryWizard> {
           const SizedBox(
               width: 16,
               height: 16,
-              child:
-                  CircularProgressIndicator(strokeWidth: 2, color: _accent)),
+              child: CircularProgressIndicator(strokeWidth: 2, color: _accent)),
       ]),
       const SizedBox(height: 12),
       if (!_loadingStories && _existingStories.isEmpty)
@@ -3309,8 +3702,8 @@ class _StoryWizardState extends State<_StoryWizard> {
           ),
           child: Center(
             child: Text('No stories yet. Create your first one!',
-                style:
-                    GoogleFonts.nunito(fontSize: 14, color: context.adminMuted)),
+                style: GoogleFonts.nunito(
+                    fontSize: 14, color: context.adminMuted)),
           ),
         ),
       ..._existingStories.map((s) => _buildStoryListItem(s)),
@@ -3377,9 +3770,11 @@ class _StoryWizardState extends State<_StoryWizard> {
                 ? Image.network(imageUrl,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Center(
-                        child: Text(coverEmoji, style: const TextStyle(fontSize: 28))))
+                        child: Text(coverEmoji,
+                            style: const TextStyle(fontSize: 28))))
                 : Center(
-                    child: Text(coverEmoji, style: const TextStyle(fontSize: 28))),
+                    child:
+                        Text(coverEmoji, style: const TextStyle(fontSize: 28))),
           ),
         ),
         const SizedBox(width: 12),
@@ -3389,19 +3784,20 @@ class _StoryWizardState extends State<_StoryWizard> {
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(title,
-                  style: GoogleFonts.fredoka(fontSize: 16, color: context.adminText),
+                  style: GoogleFonts.fredoka(
+                      fontSize: 16, color: context.adminText),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis),
               const SizedBox(height: 4),
               Text(author,
-                  style:
-                      GoogleFonts.nunito(fontSize: 12, color: context.adminSubtext),
+                  style: GoogleFonts.nunito(
+                      fontSize: 12, color: context.adminSubtext),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis),
               const SizedBox(height: 2),
               Text('$difficulty  •  $category',
-                  style:
-                      GoogleFonts.nunito(fontSize: 11, color: context.adminMuted)),
+                  style: GoogleFonts.nunito(
+                      fontSize: 11, color: context.adminMuted)),
             ]),
           ),
         ),
@@ -3459,7 +3855,8 @@ class _StoryWizardState extends State<_StoryWizard> {
             decoration: BoxDecoration(
                 color: _accent, borderRadius: BorderRadius.circular(20)),
             child: Text('Page ${i + 1}',
-                style: GoogleFonts.fredoka(color: context.adminText, fontSize: 14)),
+                style: GoogleFonts.fredoka(
+                    color: context.adminText, fontSize: 14)),
           ),
           const Spacer(),
           if (_pages.length > 1)
@@ -3500,15 +3897,14 @@ class _StoryWizardState extends State<_StoryWizard> {
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(p.uploadedImageUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Icon(
-                            Icons.broken_image,
-                            color: context.adminMuted,
-                            size: 36)),
+                        errorBuilder: (_, __, ___) => Icon(Icons.broken_image,
+                            color: context.adminMuted, size: 36)),
                   )
                 : p.imageFile != null
                     ? Center(
                         child: Text('⏳ Uploading…',
-                            style: GoogleFonts.nunito(color: context.adminMuted)))
+                            style:
+                                GoogleFonts.nunito(color: context.adminMuted)))
                     : Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -3530,7 +3926,8 @@ class _StoryWizardState extends State<_StoryWizard> {
     final validPages =
         _pages.where((p) => p.bodyCtrl.text.trim().isNotEmpty).toList();
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const _SectionHeader(icon: Icons.preview_rounded, label: 'Review & Publish'),
+      const _SectionHeader(
+          icon: Icons.preview_rounded, label: 'Review & Publish'),
       const SizedBox(height: 16),
       _ReviewRow(label: 'Title', value: _titleCtrl.text),
       _ReviewRow(label: 'Author', value: _authorCtrl.text),
@@ -3544,13 +3941,15 @@ class _StoryWizardState extends State<_StoryWizard> {
         _ReviewRow(label: 'Description', value: _descCtrl.text),
       const SizedBox(height: 20),
       Text('Pages Preview',
-          style: GoogleFonts.fredoka(fontSize: 16, color: context.adminSubtext)),
+          style:
+              GoogleFonts.fredoka(fontSize: 16, color: context.adminSubtext)),
       const SizedBox(height: 10),
       ...validPages.asMap().entries.map((e) => Container(
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-                color: context.adminCard, borderRadius: BorderRadius.circular(12)),
+                color: context.adminCard,
+                borderRadius: BorderRadius.circular(12)),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(
@@ -3558,8 +3957,8 @@ class _StoryWizardState extends State<_StoryWizard> {
                   style: GoogleFonts.fredoka(color: _gold, fontSize: 14)),
               const SizedBox(height: 6),
               Text(e.value.bodyCtrl.text,
-                  style:
-                      GoogleFonts.nunito(color: context.adminSubtext, fontSize: 13),
+                  style: GoogleFonts.nunito(
+                      color: context.adminSubtext, fontSize: 13),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis),
             ]),
@@ -3575,10 +3974,12 @@ class _StoryWizardState extends State<_StoryWizard> {
           const Text('🎉', style: TextStyle(fontSize: 72)),
           const SizedBox(height: 16),
           Text('Story Published!',
-              style: GoogleFonts.fredoka(fontSize: 28, color: context.adminText)),
+              style:
+                  GoogleFonts.fredoka(fontSize: 28, color: context.adminText)),
           const SizedBox(height: 8),
           Text('Story ID: $_createdStoryId',
-              style: GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
+              style: GoogleFonts.nunito(
+                  fontSize: 14, color: context.adminSubtext)),
           const SizedBox(height: 32),
           ElevatedButton(
             onPressed: () {
@@ -3633,7 +4034,8 @@ class _StepIndicator extends StatelessWidget {
         if (i.isOdd) {
           return Expanded(
             child: Container(
-                height: 2, color: i ~/ 2 < current ? _accent : context.adminBorder),
+                height: 2,
+                color: i ~/ 2 < current ? _accent : context.adminBorder),
           );
         }
         final idx = i ~/ 2;
@@ -3651,7 +4053,8 @@ class _StepIndicator extends StatelessWidget {
                       ? _accent.withValues(alpha: 0.3)
                       : context.adminCard,
               border: Border.all(
-                  color: done || active ? _accent : context.adminBorder, width: 2),
+                  color: done || active ? _accent : context.adminBorder,
+                  width: 2),
             ),
             child: Center(
               child: done
@@ -3659,14 +4062,16 @@ class _StepIndicator extends StatelessWidget {
                   : Text('${idx + 1}',
                       style: GoogleFonts.fredoka(
                           fontSize: 13,
-                          color: active ? context.adminText : context.adminMuted)),
+                          color:
+                              active ? context.adminText : context.adminMuted)),
             ),
           ),
           const SizedBox(height: 4),
           Text(labels[idx],
               style: GoogleFonts.nunito(
                   fontSize: 10,
-                  color: active || done ? context.adminText : context.adminMuted,
+                  color:
+                      active || done ? context.adminText : context.adminMuted,
                   fontWeight: active ? FontWeight.w700 : FontWeight.normal)),
         ]);
       }),
@@ -3705,30 +4110,131 @@ class _AdminTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color fieldBg = isDark ? const Color(0xFF1E1C2A) : Colors.white;
+    final Color borderColor = isDark
+        ? const Color(0xFFA55FEF).withValues(alpha: 0.25)
+        : Colors.black.withValues(alpha: 0.10);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label,
-          style: GoogleFonts.nunito(fontSize: 13, color: context.adminSubtext)),
-      const SizedBox(height: 6),
+      Padding(
+        padding: const EdgeInsets.only(left: 2, bottom: 6),
+        child: Text(
+          label.toUpperCase(),
+          style: GoogleFonts.nunito(
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.4,
+            color: isDark
+                ? const Color(0xFF3AAFFF).withValues(alpha: 0.8)
+                : const Color(0xFF3AAFFF),
+          ),
+        ),
+      ),
       TextField(
         controller: controller,
         maxLines: maxLines,
-        style: GoogleFonts.nunito(color: context.adminText, fontSize: 14),
+        style: GoogleFonts.nunito(
+          color: isDark ? Colors.white : Colors.black87,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.nunito(color: context.adminBorder, fontSize: 13),
+          hintStyle: GoogleFonts.nunito(
+            color: isDark ? Colors.white24 : Colors.black26,
+            fontSize: 13,
+          ),
           filled: true,
-          fillColor: isDark ? const Color(0xFF150831) : context.adminText.withValues(alpha: 0.04),
+          fillColor: fieldBg,
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none),
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: borderColor),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: borderColor, width: 1.5),
+          ),
           focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _accent, width: 1.5)),
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFF3AAFFF), width: 2),
+          ),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         ),
       ),
     ]);
+  }
+}
+
+// ─────────────── Admin Ambient Background Blobs (matches login/home) ───────────────
+
+class _AdminAmbientBlobs extends StatelessWidget {
+  final bool isDark;
+  const _AdminAmbientBlobs({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final h = MediaQuery.of(context).size.height;
+    final w = MediaQuery.of(context).size.width;
+    return Stack(
+      children: [
+        Positioned(
+          top: -40,
+          right: -60,
+          child: Container(
+            width: 220,
+            height: 220,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isDark
+                  ? const Color(0xFF3AAFFF).withValues(alpha: 0.05)
+                  : const Color(0xFF3AAFFF).withValues(alpha: 0.07),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: h * 0.1,
+          right: -50,
+          child: Container(
+            width: 180,
+            height: 180,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isDark
+                  ? const Color(0xFFA55FEF).withValues(alpha: 0.05)
+                  : const Color(0xFFA55FEF).withValues(alpha: 0.07),
+            ),
+          ),
+        ),
+        Positioned(
+          top: h * 0.45,
+          left: -50,
+          child: Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isDark
+                  ? const Color(0xFFFF8811).withValues(alpha: 0.04)
+                  : const Color(0xFFFF8811).withValues(alpha: 0.06),
+            ),
+          ),
+        ),
+        Positioned(
+          top: h * 0.25,
+          right: w * 0.12,
+          child: Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isDark
+                  ? const Color(0xFFFDDF50).withValues(alpha: 0.15)
+                  : const Color(0xFFFDDF50).withValues(alpha: 0.55),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -3745,7 +4251,8 @@ class _ReviewRow extends StatelessWidget {
         SizedBox(
           width: 100,
           child: Text(label,
-              style: GoogleFonts.nunito(fontSize: 13, color: context.adminMuted)),
+              style:
+                  GoogleFonts.nunito(fontSize: 13, color: context.adminMuted)),
         ),
         Expanded(
           child: Text(value,

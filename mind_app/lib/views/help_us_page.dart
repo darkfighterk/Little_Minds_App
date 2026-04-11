@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 // ── Shared brand palette ──
 const Color _mainBlue = Color(0xFF3AAFFF);
 const Color _secondaryPurple = Color(0xFFA55FEF);
-const Color _accentOrange = Color(0xFFFF8811);
 const Color _sunnyYellow = Color(0xFFFDDF50);
 
 class HelpUsPage extends StatefulWidget {
@@ -203,7 +202,7 @@ class _HelpUsPageState extends State<HelpUsPage> with TickerProviderStateMixin {
                                 title: 'Contribute',
                                 color: _mainBlue,
                                 isDark: isDark,
-                                items: [
+                                items: const [
                                   'Tell us what your child loves the most',
                                   'Suggest new games or stories',
                                   'Rate us on the Play Store ❤️',
@@ -220,7 +219,7 @@ class _HelpUsPageState extends State<HelpUsPage> with TickerProviderStateMixin {
                                 title: 'Ideas & Suggestions',
                                 color: _secondaryPurple,
                                 isDark: isDark,
-                                items: [
+                                items: const [
                                   'New learning game ideas',
                                   'More characters or puzzle types',
                                   'Better parental controls',

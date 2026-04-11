@@ -658,7 +658,7 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isNeutral =
-        color == Colors.black26 || color == Colors.white24 || color.alpha < 80;
+        color == Colors.black26 || color == Colors.white24 || (color.a * 255).round() < 80;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(

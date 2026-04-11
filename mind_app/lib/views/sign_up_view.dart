@@ -204,9 +204,9 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
                         onPressed: isLoading ? null : _onSignUpPressed,
                         label: "Create Account",
                         isLoading: isLoading,
-                        gradientColors: [
+                        gradientColors: const [
                           secondaryPurple,
-                          const Color(0xFF7B3FEF),
+                          Color(0xFF7B3FEF),
                         ],
                       ),
 

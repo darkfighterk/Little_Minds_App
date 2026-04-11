@@ -372,7 +372,7 @@ class _TextFromImagePageState extends State<TextFromImagePage>
         ),
         child: Column(
           children: [
-            Text('✨', style: TextStyle(fontSize: 32)),
+            const Text('✨', style: TextStyle(fontSize: 32)),
             const SizedBox(height: 10),
             Text(
               'Scan your study notes to see magic!',

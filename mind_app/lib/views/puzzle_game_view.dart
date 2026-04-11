@@ -197,7 +197,7 @@ class _PieceTile extends StatelessWidget {
                           child: SizedBox(
                             width: cell * .28,
                             height: cell * .28,
-                            child: CircularProgressIndicator(
+                            child: const CircularProgressIndicator(
                                 color: secondaryPurple, strokeWidth: 1.5),
                           ),
                         ),
@@ -998,7 +998,7 @@ class _PuzzleGameState extends State<PuzzleGameView>
               _GradientBtn(
                 label: 'Play Again',
                 icon: Icons.refresh_rounded,
-                colors: [accentOrange, const Color(0xFFFF5F5F)],
+                colors: const [accentOrange, Color(0xFFFF5F5F)],
                 onTap: () => setState(_reset),
               ),
               const SizedBox(width: 14),

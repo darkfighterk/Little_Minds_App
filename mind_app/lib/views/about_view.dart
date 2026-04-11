@@ -283,7 +283,7 @@ class _AboutViewState extends State<AboutView> with TickerProviderStateMixin {
   // ── Team card ──
   Widget _buildTeamCard(bool isDark) {
     // Members — leader first, rest follow
-    final members = [
+    const members = [
       _TeamMember(
           name: 'W.M.P.B. Wanasinghe',
           id: '32318',
