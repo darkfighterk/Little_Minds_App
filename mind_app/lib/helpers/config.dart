@@ -4,6 +4,9 @@ class Config {
   // Gemini AI
   static String get geminiApiKey => dotenv.get('GEMINI_API_KEY', fallback: '');
 
+  // Groq AI
+  static String get groqApiKey => dotenv.get('GROQ_API_KEY', fallback: '');
+
   // Cloudinary
   static String get cloudinaryCloudName => dotenv.get('CLOUDINARY_CLOUD_NAME', fallback: '');
   static String get cloudinaryUploadPreset => dotenv.get('CLOUDINARY_UPLOAD_PRESET', fallback: 'ml_default');
@@ -17,6 +20,10 @@ class Config {
   static String get firebaseIosApiKey => dotenv.get('FIREBASE_IOS_API_KEY', fallback: '');
   static String get firebaseIosAppId => dotenv.get('FIREBASE_IOS_APP_ID', fallback: '');
 
-  // Helper to check if AI is configured
-  static bool get isAiConfigured => geminiApiKey.isNotEmpty && geminiApiKey != 'YOUR_GEMINI_API_KEY_HERE';
+  // Helper to check if AI is configured (check both)
+  static bool get isAiConfigured => 
+    (geminiApiKey.isNotEmpty && geminiApiKey != 'YOUR_GEMINI_API_KEY_HERE') || 
+    (groqApiKey.isNotEmpty && !groqApiKey.startsWith('YOUR'));
+  
+  static bool get isGroqEnabled => groqApiKey.isNotEmpty && !groqApiKey.startsWith('YOUR');
 }

@@ -2,11 +2,15 @@
 
     <!-- 🌍 Internet Permission  -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    
+    <!-- 📸 Gallery Permission (Legacy) -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
 
     <application
         android:label="Little Minds"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:requestLegacyExternalStorage="true">
 
         <activity
             android:name=".MainActivity"

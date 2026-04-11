@@ -5,6 +5,8 @@ import 'main_home_view.dart';
 import 'library_view.dart';
 import 'settings_view.dart';
 import 'bottom_nav_bar.dart';
+import '../widgets/mindie_draggable_ball.dart';
+import 'magic_canvas_view.dart';
 
 class MainTabView extends StatefulWidget {
   final User user;
@@ -30,25 +32,30 @@ class _MainTabViewState extends State<MainTabView>
     final List<Widget> pages = [
       HomePage(user: widget.user),
       LibraryView(user: widget.user, onBack: () => _onTabSelected(0)),
-      _MagicPlaceholder(isDark: isDark),
+      MagicCanvasView(onBack: () => _onTabSelected(0)),
       SettingsView(user: widget.user),
     ];
 
-    return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF12111A) : const Color(0xFFFFF8EE),
-      extendBody: true,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: pages,
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentIndex,
-        primaryColor: mainBlue,
-        isDark: isDark, // ← was hardcoded false, now theme-aware
-        user: widget.user,
-        onTabSelected: _onTabSelected,
-      ),
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor:
+              isDark ? const Color(0xFF12111A) : const Color(0xFFFFF8EE),
+          extendBody: true,
+          body: IndexedStack(
+            index: _currentIndex,
+            children: pages,
+          ),
+          bottomNavigationBar: BottomNavBar(
+            currentIndex: _currentIndex,
+            primaryColor: mainBlue,
+            isDark: isDark,
+            user: widget.user,
+            onTabSelected: _onTabSelected,
+          ),
+        ),
+        const MindieDraggableBall(),
+      ],
     );
   }
 }

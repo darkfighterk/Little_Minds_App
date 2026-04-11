@@ -10,7 +10,6 @@ import 'story_time_page.dart';
 import 'drawing_pad_view.dart';
 import 'admin_view.dart';
 import 'profile_view.dart';
-import 'package:mind_app/widgets/mindie_button.dart';
 
 // ── Shared brand palette ──
 const Color mainBlue = Color(0xFF3AAFFF);
@@ -136,7 +135,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     return Scaffold(
       backgroundColor: scaffoldBg,
-      floatingActionButton: const MindieButton(),
       body: Stack(
         children: [
           // ── Ambient background blobs (match login) ──
