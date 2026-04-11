@@ -550,10 +550,7 @@ class _StoryCard extends StatelessWidget {
                       color: story.coverUrl.isNotEmpty
                           ? cardColor.withValues(alpha: 0.08)
                           : null,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(80),
-                        bottom: Radius.circular(20),
-                      ),
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
                       boxShadow: story.coverUrl.isEmpty
                           ? [
                               BoxShadow(
@@ -565,10 +562,7 @@ class _StoryCard extends StatelessWidget {
                           : null,
                     ),
                     child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(80),
-                        bottom: Radius.circular(20),
-                      ),
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
                       child: story.coverUrl.isNotEmpty
                           ? Image.network(
                               story.coverUrl,
@@ -657,8 +651,9 @@ class _Badge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isNeutral =
-        color == Colors.black26 || color == Colors.white24 || (color.a * 255).round() < 80;
+    final bool isNeutral = color == Colors.black26 ||
+        color == Colors.white24 ||
+        (color.a * 255).round() < 80;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(

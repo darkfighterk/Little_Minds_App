@@ -410,10 +410,8 @@ class _PuzzleCard extends StatelessWidget {
                   child: Stack(
                     children: [
                       ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(80),
-                          bottom: Radius.circular(20),
-                        ),
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(20)),
                         child: Container(
                           width: double.infinity,
                           decoration: BoxDecoration(

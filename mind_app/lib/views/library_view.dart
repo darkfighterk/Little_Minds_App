@@ -13,8 +13,9 @@ const Color sunnyYellow = Color(0xFFFDDF50);
 
 class LibraryView extends StatefulWidget {
   final User user;
+  final VoidCallback? onBack;
 
-  const LibraryView({super.key, required this.user});
+  const LibraryView({super.key, required this.user, this.onBack});
 
   @override
   State<LibraryView> createState() => _LibraryViewState();
@@ -244,7 +245,13 @@ class _LibraryViewState extends State<LibraryView>
         children: [
           // Back button
           GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              if (widget.onBack != null) {
+                widget.onBack!();
+              } else if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            },
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(

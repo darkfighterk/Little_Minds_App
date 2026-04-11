@@ -29,7 +29,7 @@ class _MainTabViewState extends State<MainTabView>
 
     final List<Widget> pages = [
       HomePage(user: widget.user),
-      LibraryView(user: widget.user),
+      LibraryView(user: widget.user, onBack: () => _onTabSelected(0)),
       _MagicPlaceholder(isDark: isDark),
       SettingsView(user: widget.user),
     ];
