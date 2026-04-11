@@ -30,6 +30,18 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/puzzle_model.dart';
 import '../models/user_model.dart';
 
+// ── Brand palette (consistent with entire app) ──
+const Color mainBlue = Color(0xFF3AAFFF);
+const Color secondaryPurple = Color(0xFFA55FEF);
+const Color accentOrange = Color(0xFFFF8811);
+const Color sunnyYellow = Color(0xFFFDDF50);
+
+// ── Game-canvas palette (intentionally dark/immersive) ──
+const Color _canvasBg = Color(0xFF0D0520);
+const Color _boardBg = Color(0xFF160830);
+const Color _trayBg = Color(0xFF080215);
+const Color _pieceGlow = Color(0xFFFF7043);
+
 // ─────────────────────────────────────────────────────────────────
 // EDGE MODEL
 //   1 = tab   (knob protrudes OUT)
@@ -39,25 +51,28 @@ import '../models/user_model.dart';
 
 class _E {
   final int top, right, bottom, left;
-  const _E({required this.top, required this.right,
-            required this.bottom, required this.left});
+  const _E(
+      {required this.top,
+      required this.right,
+      required this.bottom,
+      required this.left});
 }
 
 /// Deterministic edge map for a given seed – same seed → same puzzle.
 List<_E> _makeEdges(int cols, Random rng) {
   final rows = cols;
-  final hj = List.generate(rows - 1,
-      (_) => List.generate(cols, (_) => rng.nextBool() ? 1 : -1));
-  final vj = List.generate(rows,
-      (_) => List.generate(cols - 1, (_) => rng.nextBool() ? 1 : -1));
+  final hj = List.generate(
+      rows - 1, (_) => List.generate(cols, (_) => rng.nextBool() ? 1 : -1));
+  final vj = List.generate(
+      rows, (_) => List.generate(cols - 1, (_) => rng.nextBool() ? 1 : -1));
 
   return List.generate(rows * cols, (i) {
     final r = i ~/ cols, c = i % cols;
     return _E(
-      top:    r == 0        ? 0 : -hj[r - 1][c],
-      bottom: r == rows - 1 ? 0 :  hj[r][c],
-      left:   c == 0        ? 0 : -vj[r][c - 1],
-      right:  c == cols - 1 ? 0 :  vj[r][c],
+      top: r == 0 ? 0 : -hj[r - 1][c],
+      bottom: r == rows - 1 ? 0 : hj[r][c],
+      left: c == 0 ? 0 : -vj[r][c - 1],
+      right: c == cols - 1 ? 0 : vj[r][c],
     );
   });
 }
@@ -69,32 +84,40 @@ List<_E> _makeEdges(int cols, Random rng) {
 Path _jigsawPath(_E e, double cell, double nub) {
   final o = nub;
   final p = Path()..moveTo(o, o);
-  _hSeg(p, o, o + cell, o,           e.top    * (-nub)); // top    L→R
-  _vSeg(p, o + cell, o, o + cell,    e.right  *   nub ); // right  T→B
-  _hSeg(p, o + cell, o, o + cell,    e.bottom *   nub ); // bottom R→L
-  _vSeg(p, o, o + cell, o,           e.left   * (-nub)); // left   B→T
+  _hSeg(p, o, o + cell, o, e.top * (-nub)); // top    L→R
+  _vSeg(p, o + cell, o, o + cell, e.right * nub); // right  T→B
+  _hSeg(p, o + cell, o, o + cell, e.bottom * nub); // bottom R→L
+  _vSeg(p, o, o + cell, o, e.left * (-nub)); // left   B→T
   return p..close();
 }
 
 void _hSeg(Path p, double x0, double x1, double y, double n) {
-  if (n == 0) { p.lineTo(x1, y); return; }
+  if (n == 0) {
+    p.lineTo(x1, y);
+    return;
+  }
   final s = x1 > x0 ? 1.0 : -1.0;
   final w = (x1 - x0).abs();
   final mx = x0 + s * w * .5;
   p.lineTo(x0 + s * w * .28, y);
   p.cubicTo(x0 + s * w * .28, y + n * .6, mx - s * w * .12, y + n, mx, y + n);
-  p.cubicTo(mx + s * w * .12, y + n, x0 + s * w * .72, y + n * .6, x0 + s * w * .72, y);
+  p.cubicTo(mx + s * w * .12, y + n, x0 + s * w * .72, y + n * .6,
+      x0 + s * w * .72, y);
   p.lineTo(x1, y);
 }
 
 void _vSeg(Path p, double x, double y0, double y1, double n) {
-  if (n == 0) { p.lineTo(x, y1); return; }
+  if (n == 0) {
+    p.lineTo(x, y1);
+    return;
+  }
   final s = y1 > y0 ? 1.0 : -1.0;
   final h = (y1 - y0).abs();
   final my = y0 + s * h * .5;
   p.lineTo(x, y0 + s * h * .28);
   p.cubicTo(x + n * .6, y0 + s * h * .28, x + n, my - s * h * .12, x + n, my);
-  p.cubicTo(x + n, my + s * h * .12, x + n * .6, y0 + s * h * .72, x, y0 + s * h * .72);
+  p.cubicTo(x + n, my + s * h * .12, x + n * .6, y0 + s * h * .72, x,
+      y0 + s * h * .72);
   p.lineTo(x, y1);
 }
 
@@ -111,19 +134,11 @@ class _JigsawClipper extends CustomClipper<Path> {
   Path getClip(Size _) => _jigsawPath(edge, cell, nub);
 
   @override
-  bool shouldReclip(_JigsawClipper o) =>
-      o.cell != cell || o.nub != nub;
+  bool shouldReclip(_JigsawClipper o) => o.cell != cell || o.nub != nub;
 }
 
 // ─────────────────────────────────────────────────────────────────
 // PIECE WIDGET
-//
-// Uses ClipPath + Stack(Clip.none) + Positioned(width, height):
-//   • Positioned shifts the FULL image so this piece's region
-//     aligns with the canvas body area (nub, nub).
-//   • width/height on Positioned are MANDATORY – without them
-//     Flutter constrains child to remaining Stack space.
-//   • ClipPath clips all paint to the jigsaw bezier shape.
 // ─────────────────────────────────────────────────────────────────
 
 class _PieceTile extends StatelessWidget {
@@ -146,29 +161,29 @@ class _PieceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final row    = pieceIndex ~/ cols;
-    final col    = pieceIndex % cols;
-    final sz     = cell + 2 * nub;       // canvas size
-    final imgPx  = cell * cols;          // full image rendered at this size
-    final left   = nub - col * cell;     // shift so col*cell lands at nub
-    final top    = nub - row * cell;     // shift so row*cell lands at nub
+    final row = pieceIndex ~/ cols;
+    final col = pieceIndex % cols;
+    final sz = cell + 2 * nub;
+    final imgPx = cell * cols;
+    final left = nub - col * cell;
+    final top = nub - row * cell;
 
     return SizedBox(
-      width: sz, height: sz,
+      width: sz,
+      height: sz,
       child: Stack(children: [
-
-        // ── Image clipped to jigsaw shape ──────────────────
         ClipPath(
           clipper: _JigsawClipper(edge, cell, nub),
           child: SizedBox(
-            width: sz, height: sz,
+            width: sz,
+            height: sz,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 Positioned(
-                  left:   left,
-                  top:    top,
-                  width:  imgPx,   // ← explicit size — critical
+                  left: left,
+                  top: top,
+                  width: imgPx,
                   height: imgPx,
                   child: Image.network(
                     imageUrl,
@@ -180,9 +195,10 @@ class _PieceTile extends StatelessWidget {
                         color: const Color(0xFF1E1040),
                         child: Center(
                           child: SizedBox(
-                            width: cell * .28, height: cell * .28,
-                            child: const CircularProgressIndicator(
-                              color: Color(0xFFFF7043), strokeWidth: 1.5),
+                            width: cell * .28,
+                            height: cell * .28,
+                            child: CircularProgressIndicator(
+                                color: secondaryPurple, strokeWidth: 1.5),
                           ),
                         ),
                       );
@@ -190,8 +206,8 @@ class _PieceTile extends StatelessWidget {
                     errorBuilder: (_, __, ___) => Container(
                       color: const Color(0xFF1E1040),
                       child: Center(
-                        child: Icon(Icons.broken_image,
-                            color: Colors.white24, size: cell * .3)),
+                          child: Icon(Icons.broken_image,
+                              color: Colors.white24, size: cell * .3)),
                     ),
                   ),
                 ),
@@ -199,8 +215,6 @@ class _PieceTile extends StatelessWidget {
             ),
           ),
         ),
-
-        // ── Outline on top ─────────────────────────────────
         CustomPaint(
           size: Size(sz, sz),
           painter: _PieceOutline(edge, cell, nub, correct: correct),
@@ -211,7 +225,7 @@ class _PieceTile extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// GHOST SLOT WIDGET  (empty board slot)
+// GHOST SLOT WIDGET
 // ─────────────────────────────────────────────────────────────────
 
 class _GhostSlot extends StatelessWidget {
@@ -224,7 +238,7 @@ class _GhostSlot extends StatelessWidget {
     required this.cell,
     required this.nub,
     this.hovered = false,
-    this.wrong   = false,
+    this.wrong = false,
   });
 
   @override
@@ -232,8 +246,7 @@ class _GhostSlot extends StatelessWidget {
     final sz = cell + 2 * nub;
     return CustomPaint(
       size: Size(sz, sz),
-      painter: _GhostPainter(edge, cell, nub,
-          hovered: hovered, wrong: wrong),
+      painter: _GhostPainter(edge, cell, nub, hovered: hovered, wrong: wrong),
     );
   }
 }
@@ -253,12 +266,12 @@ class _PieceOutline extends CustomPainter {
     canvas.drawPath(
       _jigsawPath(edge, cell, nub),
       Paint()
-        ..color       = correct
+        ..color = correct
             ? const Color(0xFF4CAF50).withValues(alpha: .95)
             : Colors.white.withValues(alpha: .55)
-        ..style       = PaintingStyle.stroke
+        ..style = PaintingStyle.stroke
         ..strokeWidth = correct ? 2.4 : 1.4
-        ..strokeJoin  = StrokeJoin.round,
+        ..strokeJoin = StrokeJoin.round,
     );
   }
 
@@ -277,42 +290,45 @@ class _GhostPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final path = _jigsawPath(edge, cell, nub);
 
-    // Fill
     final fill = wrong
         ? Colors.red.withValues(alpha: .18)
         : hovered
-            ? const Color(0xFFFF7043).withValues(alpha: .18)
+            ? _pieceGlow.withValues(alpha: .18)
             : Colors.white.withValues(alpha: .05);
-    canvas.drawPath(path, Paint()..color = fill..style = PaintingStyle.fill);
+    canvas.drawPath(
+        path,
+        Paint()
+          ..color = fill
+          ..style = PaintingStyle.fill);
 
-    // Centre icon
     final cx = nub + cell / 2, cy = nub + cell / 2;
     final ir = cell * .10;
     final ip = Paint()
       ..strokeWidth = 1.8
-      ..strokeCap   = StrokeCap.round
-      ..style       = PaintingStyle.stroke;
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
 
     if (wrong) {
       ip.color = Colors.red.withValues(alpha: .75);
       canvas.drawLine(Offset(cx - ir, cy - ir), Offset(cx + ir, cy + ir), ip);
       canvas.drawLine(Offset(cx + ir, cy - ir), Offset(cx - ir, cy + ir), ip);
     } else if (hovered) {
-      ip.color = const Color(0xFFFF7043).withValues(alpha: .9);
+      ip.color = _pieceGlow.withValues(alpha: .9);
       canvas.drawLine(Offset(cx - ir, cy), Offset(cx + ir, cy), ip);
       canvas.drawLine(Offset(cx, cy - ir), Offset(cx, cy + ir), ip);
     }
 
-    // Outline
-    canvas.drawPath(path, Paint()
-      ..color       = wrong
-          ? Colors.red.withValues(alpha: .65)
-          : hovered
-              ? const Color(0xFFFF7043).withValues(alpha: .85)
-              : Colors.white.withValues(alpha: .20)
-      ..style       = PaintingStyle.stroke
-      ..strokeWidth = hovered || wrong ? 1.8 : 1.2
-      ..strokeJoin  = StrokeJoin.round);
+    canvas.drawPath(
+        path,
+        Paint()
+          ..color = wrong
+              ? Colors.red.withValues(alpha: .65)
+              : hovered
+                  ? _pieceGlow.withValues(alpha: .85)
+                  : Colors.white.withValues(alpha: .20)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = hovered || wrong ? 1.8 : 1.2
+          ..strokeJoin = StrokeJoin.round);
   }
 
   @override
@@ -335,16 +351,15 @@ class PuzzleGameView extends StatefulWidget {
 
 class _PuzzleGameState extends State<PuzzleGameView>
     with TickerProviderStateMixin {
-
   // ── config ────────────────────────────────────────────────
   late final int _cols;
   late final int _total;
   final _rng = Random();
 
   // ── game state ────────────────────────────────────────────
-  late List<_E>   _edges;
-  late List<int?> _board;    // board[slot] = placed pieceIndex | null
-  late List<int>  _tray;     // remaining pieces
+  late List<_E> _edges;
+  late List<int?> _board;
+  late List<int> _tray;
 
   int? _hovSlot;
   int? _wrongSlot;
@@ -361,7 +376,7 @@ class _PuzzleGameState extends State<PuzzleGameView>
   @override
   void initState() {
     super.initState();
-    _cols  = widget.puzzle.cols;
+    _cols = widget.puzzle.cols;
     _total = widget.puzzle.pieceCount;
     _winCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 800));
@@ -369,10 +384,10 @@ class _PuzzleGameState extends State<PuzzleGameView>
   }
 
   void _reset() {
-    _edges = _makeEdges(_cols, Random(_cols * 99991)); // stable seed
+    _edges = _makeEdges(_cols, Random(_cols * 99991));
     _board = List.filled(_total, null);
-    _tray  = List.generate(_total, (i) => i)..shuffle(_rng);
-    _done  = false;
+    _tray = List.generate(_total, (i) => i)..shuffle(_rng);
+    _done = false;
     _hovSlot = _wrongSlot = _okSlot = null;
     _t0 = DateTime.now();
     _winCtrl.reset();
@@ -380,7 +395,8 @@ class _PuzzleGameState extends State<PuzzleGameView>
 
   @override
   void dispose() {
-    _wrongT?.cancel(); _okT?.cancel();
+    _wrongT?.cancel();
+    _okT?.cancel();
     _winCtrl.dispose();
     super.dispose();
   }
@@ -391,10 +407,10 @@ class _PuzzleGameState extends State<PuzzleGameView>
 
   void _drop(int piece, int slot) {
     if (_board[slot] != null) return;
-    _wrongT?.cancel(); _okT?.cancel();
+    _wrongT?.cancel();
+    _okT?.cancel();
 
     if (piece == slot) {
-      // ✅ correct
       HapticFeedback.lightImpact();
       setState(() {
         _board[slot] = piece;
@@ -403,8 +419,9 @@ class _PuzzleGameState extends State<PuzzleGameView>
         _wrongSlot = null;
         _okSlot = slot;
       });
-      _okT = Timer(const Duration(milliseconds: 700),
-          () { if (mounted) setState(() => _okSlot = null); });
+      _okT = Timer(const Duration(milliseconds: 700), () {
+        if (mounted) setState(() => _okSlot = null);
+      });
 
       if (_tray.isEmpty) {
         HapticFeedback.heavyImpact();
@@ -416,20 +433,19 @@ class _PuzzleGameState extends State<PuzzleGameView>
         });
       }
     } else {
-      // ❌ wrong
       HapticFeedback.selectionClick();
       setState(() {
         _hovSlot = null;
         _wrongSlot = slot;
         _okSlot = null;
       });
-      _wrongT = Timer(const Duration(milliseconds: 800),
-          () { if (mounted) setState(() => _wrongSlot = null); });
+      _wrongT = Timer(const Duration(milliseconds: 800), () {
+        if (mounted) setState(() => _wrongSlot = null);
+      });
     }
   }
 
   void _exitOrPop() {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     if (_done || _placed == 0) {
       Navigator.pop(context);
       return;
@@ -437,9 +453,8 @@ class _PuzzleGameState extends State<PuzzleGameView>
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor:
-            isDark ? const Color(0xFF1A1A1A) : const Color(0xFF1E1040),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: const Color(0xFF1E1040),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text('Leave Puzzle?',
             style: GoogleFonts.fredoka(fontSize: 22, color: Colors.white)),
         content: Text('Your progress will be lost.',
@@ -449,12 +464,11 @@ class _PuzzleGameState extends State<PuzzleGameView>
               onPressed: () => Navigator.pop(context),
               child: Text('Keep Playing',
                   style: GoogleFonts.nunito(
-                      color: const Color(0xFFFF7043),
-                      fontWeight: FontWeight.w700))),
+                      color: secondaryPurple, fontWeight: FontWeight.w800))),
           TextButton(
               onPressed: () {
-                Navigator.pop(context); // close dialog
-                Navigator.pop(context); // exit game
+                Navigator.pop(context);
+                Navigator.pop(context);
               },
               child: Text('Leave',
                   style: GoogleFonts.nunito(color: Colors.white38))),
@@ -474,47 +488,116 @@ class _PuzzleGameState extends State<PuzzleGameView>
     final cell = boardPx / _cols;
     final nub = cell * 0.22;
 
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0A0A0A) : const Color(0xFF0D0520),
-      appBar: _appBar(),
-      body: _done ? _winScreen() : _gameBody(cell, nub, boardPx),
+      backgroundColor: _canvasBg,
+      body: Column(
+        children: [
+          // ── Gradient AppBar (matches home/story header style) ──
+          _buildGradientAppBar(),
+          Expanded(
+            child: _done ? _winScreen() : _gameBody(cell, nub, boardPx),
+          ),
+        ],
+      ),
     );
   }
 
-  // ── AppBar ────────────────────────────────────────────────
+  // ── Gradient AppBar ───────────────────────────────────────
 
-  AppBar _appBar() {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    return AppBar(
-      backgroundColor:
-          isDark ? const Color(0xFF161616) : const Color(0xFF1E1040),
-      foregroundColor: Colors.white,
-      elevation: 0,
-      leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: _exitOrPop),
-      title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(widget.puzzle.title,
-            style: GoogleFonts.fredoka(fontSize: 18, color: Colors.white),
-            overflow: TextOverflow.ellipsis),
-        Text('$_placed / $_total pieces placed',
-            style: GoogleFonts.nunito(fontSize: 11, color: Colors.white54)),
-      ]),
-      actions: [
-        if (_tray.length > 1)
-          IconButton(
-              icon: const Icon(Icons.shuffle_rounded, color: Colors.white54),
-              tooltip: 'Shuffle tray',
-              onPressed: () {
-                HapticFeedback.selectionClick();
-                setState(() => _tray.shuffle(_rng));
-              }),
-        Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: _Timer(start: _t0, running: !_done)),
-      ],
+  Widget _buildGradientAppBar() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [secondaryPurple, Color(0xFF6A35CF), Color(0xFF3D1A8E)],
+        ),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x55A55FEF),
+            blurRadius: 20,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 6, 12, 16),
+          child: Row(
+            children: [
+              // Back button — glass pill
+              GestureDetector(
+                onTap: _exitOrPop,
+                child: Container(
+                  margin: const EdgeInsets.only(left: 8, right: 4),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: const Icon(Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white, size: 18),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.puzzle.title,
+                      style: GoogleFonts.fredoka(
+                        fontSize: 19,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.2,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      '$_placed / $_total pieces placed',
+                      style: GoogleFonts.nunito(
+                          fontSize: 11,
+                          color: Colors.white.withValues(alpha: 0.65),
+                          fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+              ),
+              // Shuffle button
+              if (_tray.length > 1)
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _tray.shuffle(_rng));
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.shuffle_rounded,
+                        color: Colors.white70, size: 20),
+                  ),
+                ),
+              const SizedBox(width: 8),
+              // Timer chip
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: _Timer(start: _t0, running: !_done),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -524,13 +607,27 @@ class _PuzzleGameState extends State<PuzzleGameView>
 
   Widget _gameBody(double cell, double nub, double boardPx) {
     return Column(children: [
+      const SizedBox(height: 10),
 
-      // Progress bar
-      LinearProgressIndicator(
-        value: _placed / _total,
-        backgroundColor: Colors.white10,
-        valueColor: const AlwaysStoppedAnimation(Color(0xFFFF7043)),
-        minHeight: 5),
+      // Progress bar — brand gradient
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(
+                value: _placed / _total,
+                backgroundColor: Colors.white.withValues(alpha: 0.08),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Color.lerp(secondaryPurple, mainBlue, _placed / _total)!,
+                ),
+                minHeight: 7,
+              ),
+            ),
+          ],
+        ),
+      ),
 
       const SizedBox(height: 14),
 
@@ -543,16 +640,22 @@ class _PuzzleGameState extends State<PuzzleGameView>
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18),
         child: Row(children: [
-          const Expanded(child: Divider(color: Colors.white12)),
+          Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.08))),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Text(
               _tray.isEmpty
                   ? '🎉  All placed!'
                   : '${_tray.length} piece${_tray.length == 1 ? '' : 's'} left  —  drag to the board',
-              style: GoogleFonts.nunito(fontSize: 11, color: Colors.white38))),
-          const Expanded(child: Divider(color: Colors.white12)),
-        ])),
+              style: GoogleFonts.nunito(
+                  fontSize: 11,
+                  color: Colors.white.withValues(alpha: 0.35),
+                  fontWeight: FontWeight.w700),
+            ),
+          ),
+          Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.08))),
+        ]),
+      ),
 
       const SizedBox(height: 6),
 
@@ -567,27 +670,39 @@ class _PuzzleGameState extends State<PuzzleGameView>
 
   Widget _buildBoard(double cell, double nub, double boardPx) {
     return Container(
-      width:  boardPx,
+      width: boardPx,
       height: boardPx,
       decoration: BoxDecoration(
-        color: const Color(0xFF160830),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: .07)),
-        boxShadow: [BoxShadow(
-            color: Colors.black.withValues(alpha: .55),
-            blurRadius: 28, offset: const Offset(0, 10))],
+        color: _boardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+            color: secondaryPurple.withValues(alpha: 0.15), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: secondaryPurple.withValues(alpha: 0.2),
+            blurRadius: 32,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         child: Stack(
           clipBehavior: Clip.none,
           children: List.generate(_total, (slot) {
             final r = slot ~/ _cols, c = slot % _cols;
             return Positioned(
-              left: c * cell, top: r * cell,
-              child: SizedBox(
-                width: cell, height: cell,
-                child: _boardSlot(slot, cell, nub)));
+                left: c * cell,
+                top: r * cell,
+                child: SizedBox(
+                    width: cell,
+                    height: cell,
+                    child: _boardSlot(slot, cell, nub)));
           }),
         ),
       ),
@@ -597,24 +712,23 @@ class _PuzzleGameState extends State<PuzzleGameView>
   Widget _boardSlot(int slot, double cell, double nub) {
     final placed = _board[slot];
 
-    // ── Filled — show placed piece
     if (placed != null) {
       return OverflowBox(
-        maxWidth: cell + 2 * nub, maxHeight: cell + 2 * nub,
+        maxWidth: cell + 2 * nub,
+        maxHeight: cell + 2 * nub,
         alignment: Alignment.center,
         child: _PieceTile(
-          imageUrl:    widget.puzzle.imageUrl,
-          pieceIndex:  placed,
-          cols:        _cols,
-          edge:        _edges[placed],
-          cell:        cell,
-          nub:         nub,
-          correct:     _okSlot == slot,
+          imageUrl: widget.puzzle.imageUrl,
+          pieceIndex: placed,
+          cols: _cols,
+          edge: _edges[placed],
+          cell: cell,
+          nub: nub,
+          correct: _okSlot == slot,
         ),
       );
     }
 
-    // ── Empty — drag target
     return DragTarget<int>(
       onWillAcceptWithDetails: (d) {
         setState(() => _hovSlot = slot);
@@ -623,14 +737,15 @@ class _PuzzleGameState extends State<PuzzleGameView>
       onLeave: (_) => setState(() => _hovSlot = null),
       onAcceptWithDetails: (d) => _drop(d.data, slot),
       builder: (_, __, ___) => OverflowBox(
-        maxWidth: cell + 2 * nub, maxHeight: cell + 2 * nub,
+        maxWidth: cell + 2 * nub,
+        maxHeight: cell + 2 * nub,
         alignment: Alignment.center,
         child: _GhostSlot(
-          edge:    _edges[slot],
-          cell:    cell,
-          nub:     nub,
-          hovered: _hovSlot   == slot,
-          wrong:   _wrongSlot == slot,
+          edge: _edges[slot],
+          cell: cell,
+          nub: nub,
+          hovered: _hovSlot == slot,
+          wrong: _wrongSlot == slot,
         ),
       ),
     );
@@ -642,37 +757,60 @@ class _PuzzleGameState extends State<PuzzleGameView>
 
   Widget _buildTray(double cell, double nub) {
     if (_tray.isEmpty) {
-      return const Center(
-          child: Text('🎉', style: TextStyle(fontSize: 52)));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('🎉', style: TextStyle(fontSize: 48)),
+            const SizedBox(height: 8),
+            Text(
+              'All pieces placed!',
+              style: GoogleFonts.fredoka(
+                fontSize: 16,
+                color: Colors.white38,
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
-    final tc   = (cell * .76).clamp(42.0, 95.0);
-    final tn   = tc * .22;
-    final pxH  = tc + 2 * tn;
+    final tc = (cell * .76).clamp(42.0, 95.0);
+    final tn = tc * .22;
+    final pxH = tc + 2 * tn;
     final vPad = max(6.0, (100.0 - pxH) / 2);
 
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      color: isDark ? const Color(0xFF080808) : const Color(0xFF080215),
+      decoration: BoxDecoration(
+        color: _trayBg,
+        border: Border(
+          top: BorderSide(
+            color: secondaryPurple.withValues(alpha: 0.12),
+            width: 1.5,
+          ),
+        ),
+      ),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.fromLTRB(14, vPad, 14, vPad),
         itemCount: _tray.length,
         itemBuilder: (_, i) => Padding(
           padding: const EdgeInsets.only(right: 10),
-          child: _draggable(_tray[i], tc, tn))),
+          child: _draggable(_tray[i], tc, tn),
+        ),
+      ),
     );
   }
 
   Widget _draggable(int pieceIndex, double cell, double nub) {
-    final sz   = cell + 2 * nub;
+    final sz = cell + 2 * nub;
     final face = _PieceTile(
-      imageUrl:   widget.puzzle.imageUrl,
+      imageUrl: widget.puzzle.imageUrl,
       pieceIndex: pieceIndex,
-      cols:       _cols,
-      edge:       _edges[pieceIndex],
-      cell:       cell,
-      nub:        nub,
+      cols: _cols,
+      edge: _edges[pieceIndex],
+      cell: cell,
+      nub: nub,
     );
 
     return Draggable<int>(
@@ -682,110 +820,199 @@ class _PuzzleGameState extends State<PuzzleGameView>
         child: Transform.scale(
           scale: 1.12,
           child: Container(
-            width: sz, height: sz,
+            width: sz,
+            height: sz,
             decoration: BoxDecoration(boxShadow: [
-              BoxShadow(color: const Color(0xFFFF7043).withValues(alpha: .65),
-                  blurRadius: 28, spreadRadius: 4),
+              BoxShadow(
+                color: secondaryPurple.withValues(alpha: .65),
+                blurRadius: 28,
+                spreadRadius: 4,
+              ),
             ]),
-            child: face))),
+            child: face,
+          ),
+        ),
+      ),
       childWhenDragging: Opacity(opacity: .15, child: face),
       child: MouseRegion(
         cursor: SystemMouseCursors.grab,
         child: Container(
-          width: sz, height: sz,
+          width: sz,
+          height: sz,
           decoration: BoxDecoration(boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: .45),
-                blurRadius: 10, offset: const Offset(0, 5)),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: .45),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
           ]),
-          child: face)),
+          child: face,
+        ),
+      ),
     );
   }
 
   // ─────────────────────────────────────────────────────────
-  // WIN SCREEN
+  // WIN SCREEN — full brand redesign
   // ─────────────────────────────────────────────────────────
 
   Widget _winScreen() {
     final elapsed = DateTime.now().difference(_t0);
-    final m  = elapsed.inMinutes.toString().padLeft(2, '0');
-    final s  = (elapsed.inSeconds % 60).toString().padLeft(2, '0');
+    final m = elapsed.inMinutes.toString().padLeft(2, '0');
+    final s = (elapsed.inSeconds % 60).toString().padLeft(2, '0');
     final sw = MediaQuery.of(context).size.width;
     final ps = (sw - 80).clamp(180.0, 300.0);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // ── Celebration badge (arch-top, matches _ActivityCard) ──
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 750),
+            curve: Curves.elasticOut,
+            builder: (_, v, child) => Transform.scale(scale: v, child: child),
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [sunnyYellow, accentOrange],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(80),
+                  bottom: Radius.circular(24),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: accentOrange.withValues(alpha: 0.5),
+                    blurRadius: 28,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Text('🎉', style: TextStyle(fontSize: 52)),
+              ),
+            ),
+          ),
 
-        // Bouncing trophy
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: const Duration(milliseconds: 750),
-          curve: Curves.elasticOut,
-          builder: (_, v, child) => Transform.scale(scale: v, child: child),
-          child: const Text('🎉', style: TextStyle(fontSize: 84))),
+          const SizedBox(height: 20),
 
-        const SizedBox(height: 14),
-        Text('Puzzle Complete!',
-            style: GoogleFonts.fredoka(fontSize: 34, color: Colors.white)),
-        const SizedBox(height: 6),
-        Text('"${widget.puzzle.title}"',
-            style: GoogleFonts.nunito(fontSize: 15, color: Colors.white60),
-            textAlign: TextAlign.center),
-        const SizedBox(height: 14),
-
-        // Stats badge
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFD700).withValues(alpha: .12),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-                color: const Color(0xFFFFD700).withValues(alpha: .4))),
-          child: Text(
-            '⏱  $m:$s   •   🧩  $_total pcs   •   ${widget.puzzle.difficulty}',
+          Text(
+            'Puzzle Complete!',
             style: GoogleFonts.fredoka(
-                fontSize: 15, color: const Color(0xFFFFD700)))),
+              fontSize: 36,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '"${widget.puzzle.title}"',
+            style: GoogleFonts.nunito(
+              fontSize: 15,
+              color: Colors.white60,
+              fontWeight: FontWeight.w700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 18),
 
-        const SizedBox(height: 30),
+          // Stats badge — brand gold
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  sunnyYellow.withValues(alpha: 0.15),
+                  accentOrange.withValues(alpha: 0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: sunnyYellow.withValues(alpha: 0.4),
+                width: 1.5,
+              ),
+            ),
+            child: Text(
+              '⏱  $m:$s   •   🧩  $_total pcs   •   ${widget.puzzle.difficulty}',
+              style: GoogleFonts.fredoka(
+                fontSize: 15,
+                color: sunnyYellow,
+              ),
+            ),
+          ),
 
-        // Completed image
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [BoxShadow(
-                color: const Color(0xFFFF7043).withValues(alpha: .55),
-                blurRadius: 32, spreadRadius: 2)]),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Image.network(
-              widget.puzzle.imageUrl,
-              width: ps, height: ps, fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                width: ps, height: ps,
-                color: const Color(0xFF2D1B69),
-                child: const Center(
-                    child: Text('🧩',
-                        style: TextStyle(fontSize: 72))))))),
+          const SizedBox(height: 28),
 
-        const SizedBox(height: 32),
+          // Completed image — brand glow
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: secondaryPurple.withValues(alpha: 0.5),
+                  blurRadius: 36,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Image.network(
+                widget.puzzle.imageUrl,
+                width: ps,
+                height: ps,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  width: ps,
+                  height: ps,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF2D1B69), Color(0xFF1A0D40)],
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: const Center(
+                    child: Text('🧩', style: TextStyle(fontSize: 72)),
+                  ),
+                ),
+              ),
+            ),
+          ),
 
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          _Btn(
-            label: 'Play Again',
-            icon:  Icons.refresh_rounded,
-            color: const Color(0xFFFF7043),
-            onTap: () => setState(_reset)),
-          const SizedBox(width: 14),
-          _Btn(
-            label:  'More Puzzles',
-            icon:   Icons.list_rounded,
-            color:  const Color(0xFF1E1040),
-            border: Colors.white24,
-            onTap:  () => Navigator.pop(context)),
-        ]),
+          const SizedBox(height: 32),
 
-        const SizedBox(height: 20),
-      ]),
+          // Action buttons — gradient style (matches login _GradientButton)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _GradientBtn(
+                label: 'Play Again',
+                icon: Icons.refresh_rounded,
+                colors: [accentOrange, const Color(0xFFFF5F5F)],
+                onTap: () => setState(_reset),
+              ),
+              const SizedBox(width: 14),
+              _OutlineBtn(
+                label: 'More Puzzles',
+                icon: Icons.grid_view_rounded,
+                onTap: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+        ],
+      ),
     );
   }
 }
@@ -798,7 +1025,8 @@ class _Timer extends StatefulWidget {
   final DateTime start;
   final bool running;
   const _Timer({required this.start, required this.running});
-  @override State<_Timer> createState() => _TimerState();
+  @override
+  State<_Timer> createState() => _TimerState();
 }
 
 class _TimerState extends State<_Timer> {
@@ -815,48 +1043,128 @@ class _TimerState extends State<_Timer> {
     });
   }
 
-  @override void dispose() { _t.cancel(); super.dispose(); }
+  @override
+  void dispose() {
+    _t.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final m = _e.inMinutes.toString().padLeft(2, '0');
     final s = (_e.inSeconds % 60).toString().padLeft(2, '0');
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      const Icon(Icons.timer_outlined, color: Colors.white38, size: 14),
-      const SizedBox(width: 3),
+      const Icon(Icons.timer_outlined, color: Colors.white60, size: 14),
+      const SizedBox(width: 4),
       Text('$m:$s',
-          style: GoogleFonts.fredoka(fontSize: 15, color: Colors.white54)),
+          style: GoogleFonts.fredoka(fontSize: 15, color: Colors.white70)),
     ]);
   }
 }
 
 // ─────────────────────────────────────────────────────────────────
-// ACTION BUTTON
+// GRADIENT BUTTON (matches login _GradientButton)
 // ─────────────────────────────────────────────────────────────────
 
-class _Btn extends StatelessWidget {
+class _GradientBtn extends StatelessWidget {
   final String label;
   final IconData icon;
-  final Color color;
-  final Color? border;
+  final List<Color> colors;
   final VoidCallback onTap;
 
-  const _Btn({required this.label, required this.icon,
-      required this.color, required this.onTap, this.border});
+  const _GradientBtn({
+    required this.label,
+    required this.icon,
+    required this.colors,
+    required this.onTap,
+  });
 
   @override
-  Widget build(BuildContext context) => ElevatedButton.icon(
-    onPressed: onTap,
-    icon: Icon(icon, size: 18),
-    label: Text(label, style: GoogleFonts.fredoka(fontSize: 15)),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: color,
-      foregroundColor: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: border != null
-            ? BorderSide(color: border!)
-            : BorderSide.none)));
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: colors,
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: colors.last.withValues(alpha: 0.45),
+              blurRadius: 16,
+              offset: const Offset(0, 7),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.fredoka(
+                color: Colors.white,
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// OUTLINE BUTTON
+// ─────────────────────────────────────────────────────────────────
+
+class _OutlineBtn extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _OutlineBtn({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.2),
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white60, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.fredoka(
+                color: Colors.white70,
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

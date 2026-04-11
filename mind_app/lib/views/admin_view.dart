@@ -6,7 +6,7 @@
 //   image_picker: ^1.0.7
 //
 // Access from your app with:
-//   Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminGateView()));
+//   Navigator.push(context, MaterialPageRoute(builder: (_) => AdminGateView()));
 // ============================================================
 
 import 'dart:math';
@@ -16,16 +16,25 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/admin_service.dart';
 
+extension AdminThemeContext on BuildContext {
+  bool get isDark => Theme.of(this).brightness == Brightness.dark;
+  Color get adminBg =>
+      isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA);
+  Color get adminCard => isDark ? const Color(0xFF1E1E1E) : Colors.white;
+  Color get adminText => isDark ? Colors.white : Colors.black87;
+  Color get adminSubtext => isDark ? Colors.white70 : Colors.black54;
+  Color get adminMuted => isDark ? Colors.white38 : Colors.black38;
+  Color get adminBorder => isDark ? Colors.white12 : Colors.black12;
+}
+
 // ── Colours ────────────────────────────────────────────────
 // These will be used for accents but backgrounds will be theme-aware.
-const _bg = Color(0xFF0D0520);
-const _card = Color(0xFF1E1040);
-const _accent = Color(0xFF7C3AED);
+const _accent = Color(0xFFA55FEF);
 const _gold = Color(0xFFFFD700);
 const _green = Color(0xFF4CAF50);
 const _red = Color(0xFFE53935);
-const Color mainBlue = Color(0xFF3AAFFF);
-const Color secondaryPurple = Color(0xFFA55FEF);
+Color mainBlue = const Color(0xFF3AAFFF);
+Color secondaryPurple = const Color(0xFFA55FEF);
 
 // ── Local model for building a question before submission ──
 class _QuestionDraft {
@@ -123,18 +132,18 @@ class _AdminGateViewState extends State<AdminGateView> {
                   const SizedBox(height: 40),
                   const Text('🛡️', style: TextStyle(fontSize: 64)),
                   const SizedBox(height: 16),
-                  const Text('Admin\nAccess',
+                  Text('Admin\nAccess',
                       style: TextStyle(
                           fontFamily: 'Fredoka',
                           fontSize: 42,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: context.adminText,
                           height: 1.1)),
                   const SizedBox(height: 10),
                   Text('Enter your admin key to continue ✨',
                       style: GoogleFonts.nunito(
                           fontSize: 16,
-                          color: Colors.white.withValues(alpha: 0.85),
+                          color: context.adminText.withValues(alpha: 0.85),
                           fontWeight: FontWeight.w600)),
                   const SizedBox(height: 60),
 
@@ -175,11 +184,11 @@ class _AdminGateViewState extends State<AdminGateView> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
+          color: context.adminText.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(15),
         ),
-        child: const Icon(Icons.arrow_back_ios_new_rounded,
-            size: 20, color: Colors.white),
+        child: Icon(Icons.arrow_back_ios_new_rounded,
+            size: 20, color: context.adminText),
       ),
     );
   }
@@ -220,7 +229,7 @@ class _AdminGateViewState extends State<AdminGateView> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        color: context.adminCard,
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
@@ -235,12 +244,12 @@ class _AdminGateViewState extends State<AdminGateView> {
         obscureText: obscure,
         style: GoogleFonts.nunito(
           fontWeight: FontWeight.w700,
-          color: isDark ? Colors.white : Colors.black87,
+          color: context.adminText,
         ),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: GoogleFonts.nunito(
-            color: isDark ? Colors.white24 : Colors.black26,
+            color: isDark ? context.adminBorder : Colors.black26,
             fontWeight: FontWeight.w600,
           ),
           prefixIcon: Icon(icon, color: color.withValues(alpha: 0.5)),
@@ -248,7 +257,7 @@ class _AdminGateViewState extends State<AdminGateView> {
               ? IconButton(
                   icon: Icon(
                     obscure ? Icons.visibility_off : Icons.visibility,
-                    color: isDark ? Colors.white24 : Colors.black26,
+                    color: isDark ? context.adminBorder : Colors.black26,
                   ),
                   onPressed: onToggle,
                 )
@@ -285,7 +294,7 @@ class _AdminModeState extends State<AdminView> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: isDark ? const Color(0xFF161616) : Colors.white,
-        foregroundColor: isDark ? Colors.white : Colors.black87,
+        foregroundColor: context.adminText,
         elevation: 0,
         title: Text(
           _mode == _AdminMode.quiz
@@ -296,7 +305,7 @@ class _AdminModeState extends State<AdminView> {
           style: GoogleFonts.fredoka(
             fontSize: 22, 
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87
+            color: context.adminText
           ),
         ),
         leading: IconButton(
@@ -665,12 +674,12 @@ class _QuizWizardState extends State<_QuizWizard> {
             const Text('🎉', style: TextStyle(fontSize: 80)),
             const SizedBox(height: 20),
             Text('Quiz Published!',
-                style: GoogleFonts.fredoka(fontSize: 36, color: Colors.white)),
+                style: GoogleFonts.fredoka(fontSize: 36, color: context.adminText)),
             const SizedBox(height: 12),
             Text(
               '${_questions.length} question${_questions.length == 1 ? '' : 's'} saved to Level $_levelNumber\n"${_levelTitleCtrl.text}"',
               style: GoogleFonts.nunito(
-                  fontSize: 16, color: Colors.white70, height: 1.6),
+                  fontSize: 16, color: context.adminSubtext, height: 1.6),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40),
@@ -680,7 +689,7 @@ class _QuizWizardState extends State<_QuizWizard> {
               label: Text('Done', style: GoogleFonts.fredoka(fontSize: 18)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _green,
-                foregroundColor: Colors.white,
+                foregroundColor: context.adminText,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -721,7 +730,7 @@ class _QuizWizardState extends State<_QuizWizard> {
   Widget _buildStepIndicator() {
     final steps = ['Subject', 'Level', 'Questions', 'Review'];
     return Container(
-      color: _card,
+      color: context.adminCard,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       child: Row(
         children: steps.asMap().entries.map((e) {
@@ -744,7 +753,7 @@ class _QuizWizardState extends State<_QuizWizard> {
                             ? _green
                             : active
                                 ? _accent
-                                : Colors.white12,
+                                : context.adminBorder,
                         shape: BoxShape.circle,
                         border: Border.all(
                             color: active ? _accent : Colors.transparent,
@@ -752,21 +761,21 @@ class _QuizWizardState extends State<_QuizWizard> {
                       ),
                       child: Center(
                         child: done
-                            ? const Icon(Icons.check_rounded,
-                                color: Colors.white, size: 16)
+                            ? Icon(Icons.check_rounded,
+                                color: context.adminText, size: 16)
                             : Text('${i + 1}',
                                 style: GoogleFonts.fredoka(
                                     fontSize: 14,
                                     color: active
-                                        ? Colors.white
-                                        : Colors.white38)),
+                                        ? context.adminText
+                                        : context.adminMuted)),
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(label,
                         style: GoogleFonts.nunito(
                             fontSize: 10,
-                            color: active ? _accent : Colors.white38,
+                            color: active ? _accent : context.adminMuted,
                             fontWeight:
                                 active ? FontWeight.w700 : FontWeight.w500)),
                   ],
@@ -776,7 +785,7 @@ class _QuizWizardState extends State<_QuizWizard> {
                     child: Container(
                       height: 2,
                       margin: const EdgeInsets.only(bottom: 20),
-                      color: done ? _green : Colors.white12,
+                      color: done ? _green : context.adminBorder,
                     ),
                   ),
               ],
@@ -792,7 +801,7 @@ class _QuizWizardState extends State<_QuizWizard> {
   Widget _buildBottomBar() {
     final isLast = _step == 3;
     return Container(
-      color: _card,
+      color: context.adminCard,
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
       child: SizedBox(
         width: double.infinity,
@@ -808,15 +817,15 @@ class _QuizWizardState extends State<_QuizWizard> {
           ),
           child: _publishing
               ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const SizedBox(
+                  SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white)),
+                          strokeWidth: 2, color: isLast ? Colors.black87 : Colors.white)),
                   const SizedBox(width: 12),
                   Text(_publishStatus,
                       style: GoogleFonts.fredoka(
-                          fontSize: 16, color: Colors.white)),
+                          fontSize: 16, color: isLast ? Colors.black87 : Colors.white)),
                 ])
               : Text(
                   isLast ? '🚀  Publish Quiz' : 'Continue →',
@@ -839,7 +848,7 @@ class _QuizWizardState extends State<_QuizWizard> {
         _sectionTitle('📚', 'Choose a Subject'),
         const SizedBox(height: 8),
         Text('Select an existing subject or create a new one.',
-            style: GoogleFonts.nunito(fontSize: 14, color: Colors.white54)),
+            style: GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
         const SizedBox(height: 20),
 
         // Toggle
@@ -875,10 +884,10 @@ class _QuizWizardState extends State<_QuizWizard> {
                   margin: const EdgeInsets.only(bottom: 10),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: selected ? _accent.withValues(alpha: 0.2) : _card,
+                    color: selected ? _accent.withValues(alpha: 0.2) : context.adminCard,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: selected ? _accent : Colors.white12,
+                      color: selected ? _accent : context.adminBorder,
                       width: selected ? 2 : 1,
                     ),
                   ),
@@ -889,7 +898,7 @@ class _QuizWizardState extends State<_QuizWizard> {
                     Text(s['name'] as String,
                         style: GoogleFonts.fredoka(
                             fontSize: 18,
-                            color: selected ? Colors.white : Colors.white70)),
+                            color: selected ? context.adminText : context.adminSubtext)),
                     const Spacer(),
                     if (selected)
                       const Icon(Icons.check_circle_rounded, color: _accent),
@@ -913,7 +922,7 @@ class _QuizWizardState extends State<_QuizWizard> {
           Text('Gradient Colours (hex)',
               style: GoogleFonts.nunito(
                   fontSize: 13,
-                  color: Colors.white54,
+                  color: context.adminSubtext,
                   fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Row(children: [
@@ -951,7 +960,7 @@ class _QuizWizardState extends State<_QuizWizard> {
         _sectionTitle('📋', 'Level Details'),
         const SizedBox(height: 8),
         Text('Define the level that will contain your questions.',
-            style: GoogleFonts.nunito(fontSize: 14, color: Colors.white54)),
+            style: GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
         const SizedBox(height: 20),
 
         // FIX: show existing levels for the selected subject
@@ -974,7 +983,7 @@ class _QuizWizardState extends State<_QuizWizard> {
         Text('Level Number',
             style: GoogleFonts.nunito(
                 fontSize: 13,
-                color: Colors.white54,
+                color: context.adminSubtext,
                 fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         _NumberStepper(
@@ -1005,7 +1014,7 @@ class _QuizWizardState extends State<_QuizWizard> {
         Text('Stars Required to Unlock',
             style: GoogleFonts.nunito(
                 fontSize: 13,
-                color: Colors.white54,
+                color: context.adminSubtext,
                 fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         _NumberStepper(
@@ -1017,13 +1026,13 @@ class _QuizWizardState extends State<_QuizWizard> {
         ),
         const SizedBox(height: 12),
         Row(children: [
-          const Icon(Icons.info_outline_rounded,
-              size: 14, color: Colors.white38),
+          Icon(Icons.info_outline_rounded,
+              size: 14, color: context.adminMuted),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
               'Level 1 should be 0 stars. Each subsequent level is typically +30 stars.',
-              style: GoogleFonts.nunito(fontSize: 12, color: Colors.white38),
+              style: GoogleFonts.nunito(fontSize: 12, color: context.adminMuted),
             ),
           ),
         ]),
@@ -1036,9 +1045,9 @@ class _QuizWizardState extends State<_QuizWizard> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: context.adminText.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: context.adminBorder),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
@@ -1046,7 +1055,7 @@ class _QuizWizardState extends State<_QuizWizard> {
           const SizedBox(width: 8),
           Text(
             'Existing Levels (${_existingLevels.length})',
-            style: GoogleFonts.fredoka(fontSize: 16, color: Colors.white),
+            style: GoogleFonts.fredoka(fontSize: 16, color: context.adminText),
           ),
         ]),
         const SizedBox(height: 12),
@@ -1080,7 +1089,7 @@ class _QuizWizardState extends State<_QuizWizard> {
                 child: Text(
                   title,
                   style:
-                      GoogleFonts.nunito(fontSize: 13, color: Colors.white70),
+                      GoogleFonts.nunito(fontSize: 13, color: context.adminSubtext),
                 ),
               ),
               Row(children: [
@@ -1089,7 +1098,7 @@ class _QuizWizardState extends State<_QuizWizard> {
                 const SizedBox(width: 3),
                 Text('$stars',
                     style: GoogleFonts.nunito(
-                        fontSize: 11, color: Colors.white38)),
+                        fontSize: 11, color: context.adminMuted)),
               ]),
             ]),
           );
@@ -1128,7 +1137,7 @@ class _QuizWizardState extends State<_QuizWizard> {
         _sectionTitle('❓', 'Add Questions'),
         const SizedBox(height: 4),
         Text('Minimum 1 question. Each question has 4 options.',
-            style: GoogleFonts.nunito(fontSize: 14, color: Colors.white54)),
+            style: GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
         const SizedBox(height: 20),
         ..._questions.asMap().entries.map((entry) {
           final i = entry.key;
@@ -1156,9 +1165,9 @@ class _QuizWizardState extends State<_QuizWizard> {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: _card,
+        color: context.adminCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: context.adminBorder),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         // Card header
@@ -1234,7 +1243,7 @@ class _QuizWizardState extends State<_QuizWizard> {
               TextField(
                 controller: q.questionCtrl,
                 maxLines: 3,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: context.adminText),
                 decoration: _inputDecoration('Type your question here...'),
               ),
             ],
@@ -1261,10 +1270,10 @@ class _QuizWizardState extends State<_QuizWizard> {
                     decoration: BoxDecoration(
                       color: selected
                           ? _green.withValues(alpha: 0.2)
-                          : Colors.white.withValues(alpha: 0.05),
+                          : context.adminText.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: selected ? _green : Colors.white12,
+                        color: selected ? _green : context.adminBorder,
                         width: selected ? 2 : 1,
                       ),
                     ),
@@ -1272,7 +1281,7 @@ class _QuizWizardState extends State<_QuizWizard> {
                       Text(['A', 'B', 'C', 'D'][oi],
                           style: GoogleFonts.fredoka(
                               fontSize: 16,
-                              color: selected ? _green : Colors.white54)),
+                              color: selected ? _green : context.adminSubtext)),
                       if (selected)
                         const Icon(Icons.check_rounded,
                             color: _green, size: 14),
@@ -1288,7 +1297,7 @@ class _QuizWizardState extends State<_QuizWizard> {
             TextField(
               controller: q.funFactCtrl,
               maxLines: 2,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: context.adminText),
               decoration:
                   _inputDecoration('A cool fact shown after answering...'),
             ),
@@ -1327,7 +1336,7 @@ class _QuizWizardState extends State<_QuizWizard> {
         Expanded(
           child: TextField(
             controller: q.optionCtrls[optionIndex],
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+            style: TextStyle(color: context.adminText, fontSize: 14),
             decoration:
                 _inputDecoration('Option ${letters[optionIndex]}...').copyWith(
               isDense: true,
@@ -1350,10 +1359,10 @@ class _QuizWizardState extends State<_QuizWizard> {
           width: double.infinity,
           height: 160,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: context.adminText.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: q.uploadedImageUrl != null ? _green : Colors.white24,
+              color: q.uploadedImageUrl != null ? _green : context.adminBorder,
               width: 1.5,
             ),
           ),
@@ -1376,8 +1385,8 @@ class _QuizWizardState extends State<_QuizWizard> {
                             decoration: BoxDecoration(
                                 color: Colors.black54,
                                 borderRadius: BorderRadius.circular(8)),
-                            child: const Icon(Icons.edit_rounded,
-                                color: Colors.white, size: 16),
+                            child: Icon(Icons.edit_rounded,
+                                color: context.adminText, size: 16),
                           ),
                         ),
                       ),
@@ -1385,16 +1394,16 @@ class _QuizWizardState extends State<_QuizWizard> {
                   : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.cloud_upload_rounded,
-                            color: Colors.white38, size: 40),
+                        Icon(Icons.cloud_upload_rounded,
+                            color: context.adminMuted, size: 40),
                         const SizedBox(height: 8),
                         Text('Tap to upload image',
                             style: GoogleFonts.nunito(
-                                fontSize: 14, color: Colors.white38)),
+                                fontSize: 14, color: context.adminMuted)),
                         const SizedBox(height: 4),
                         Text('JPG, PNG, GIF — max 10 MB',
                             style: GoogleFonts.nunito(
-                                fontSize: 11, color: Colors.white24)),
+                                fontSize: 11, color: context.adminBorder)),
                       ],
                     ),
         ),
@@ -1405,7 +1414,7 @@ class _QuizWizardState extends State<_QuizWizard> {
         const SizedBox(height: 6),
         TextField(
           controller: q.questionCtrl,
-          style: const TextStyle(color: Colors.white, fontSize: 14),
+          style: TextStyle(color: context.adminText, fontSize: 14),
           decoration: _inputDecoration('e.g. "What is shown in this image?"'),
         ),
       ],
@@ -1430,7 +1439,7 @@ class _QuizWizardState extends State<_QuizWizard> {
         _sectionTitle('🔍', 'Review & Publish'),
         const SizedBox(height: 8),
         Text('Check your quiz before publishing.',
-            style: GoogleFonts.nunito(fontSize: 14, color: Colors.white54)),
+            style: GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
         const SizedBox(height: 20),
 
         // Subject card
@@ -1453,9 +1462,9 @@ class _QuizWizardState extends State<_QuizWizard> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: _card,
+            color: context.adminCard,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: context.adminBorder),
           ),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1465,7 +1474,7 @@ class _QuizWizardState extends State<_QuizWizard> {
               Text(
                   '${_questions.length} Question${_questions.length == 1 ? '' : 's'}',
                   style:
-                      GoogleFonts.fredoka(fontSize: 18, color: Colors.white)),
+                      GoogleFonts.fredoka(fontSize: 18, color: context.adminText)),
             ]),
             const SizedBox(height: 12),
             ..._questions.asMap().entries.map((e) {
@@ -1505,7 +1514,7 @@ class _QuizWizardState extends State<_QuizWizard> {
                             children: [
                               Text(preview,
                                   style: GoogleFonts.nunito(
-                                      fontSize: 13, color: Colors.white70),
+                                      fontSize: 13, color: context.adminSubtext),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis),
                               Text('Correct: Option $correct',
@@ -1536,7 +1545,7 @@ class _QuizWizardState extends State<_QuizWizard> {
               child: Text(
                 'Once published, this quiz is immediately stored in your database.',
                 style: GoogleFonts.nunito(
-                    fontSize: 13, color: Colors.white70, height: 1.4),
+                    fontSize: 13, color: context.adminSubtext, height: 1.4),
               ),
             ),
           ]),
@@ -1564,7 +1573,7 @@ class _QuizWizardState extends State<_QuizWizard> {
         TextField(
           controller: ctrl,
           keyboardType: keyboardType,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: context.adminText),
           onChanged: onChanged,
           decoration: _inputDecoration(hint),
         ),
@@ -1585,7 +1594,7 @@ class _QuizWizardState extends State<_QuizWizard> {
         const SizedBox(height: 6),
         TextField(
           controller: ctrl,
-          style: const TextStyle(color: Colors.white, fontSize: 22),
+          style: TextStyle(color: context.adminText, fontSize: 22),
           maxLength: 2,
           onChanged: onChanged,
           decoration: _inputDecoration('e.g. 🧪').copyWith(counterText: ''),
@@ -1597,27 +1606,27 @@ class _QuizWizardState extends State<_QuizWizard> {
   Widget _inputLabel(String text) => Text(
         text,
         style: GoogleFonts.nunito(
-            fontSize: 13, color: Colors.white54, fontWeight: FontWeight.w700),
+            fontSize: 13, color: context.adminSubtext, fontWeight: FontWeight.w700),
       );
 
   Widget _sectionTitle(String emoji, String title) => Row(children: [
         Text(emoji, style: const TextStyle(fontSize: 24)),
         const SizedBox(width: 10),
         Text(title,
-            style: GoogleFonts.fredoka(fontSize: 22, color: Colors.white)),
+            style: GoogleFonts.fredoka(fontSize: 22, color: context.adminText)),
       ]);
 
   InputDecoration _inputDecoration(String hint) => InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Colors.white24, fontSize: 14),
+        hintStyle: TextStyle(color: context.adminBorder, fontSize: 14),
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.06),
+        fillColor: context.adminText.withValues(alpha: 0.06),
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.white12)),
+            borderSide: BorderSide(color: context.adminBorder)),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.white12)),
+            borderSide: BorderSide(color: context.adminBorder)),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: _accent, width: 2)),
@@ -1645,14 +1654,14 @@ class _TabChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? _accent : _card,
+          color: active ? _accent : context.adminCard,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: active ? _accent : Colors.white12),
+          border: Border.all(color: active ? _accent : context.adminBorder),
         ),
         child: Text(label,
             style: GoogleFonts.nunito(
                 fontSize: 13,
-                color: active ? Colors.white : Colors.white54,
+                color: active ? Colors.white : context.adminSubtext,
                 fontWeight: FontWeight.w700)),
       ),
     );
@@ -1682,7 +1691,7 @@ class _NumberStepper extends StatelessWidget {
       ),
       const SizedBox(width: 12),
       Text('$value',
-          style: GoogleFonts.fredoka(fontSize: 22, color: Colors.white)),
+          style: GoogleFonts.fredoka(fontSize: 22, color: context.adminText)),
       const SizedBox(width: 12),
       _StepBtn(
         icon: Icons.add_rounded,
@@ -1707,12 +1716,12 @@ class _StepBtn extends StatelessWidget {
         decoration: BoxDecoration(
           color: onTap != null
               ? _accent.withValues(alpha: 0.2)
-              : Colors.white.withValues(alpha: 0.04),
+              : context.adminText.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: onTap != null ? _accent : Colors.white12),
+          border: Border.all(color: onTap != null ? _accent : context.adminBorder),
         ),
         child: Icon(icon,
-            size: 20, color: onTap != null ? _accent : Colors.white24),
+            size: 20, color: onTap != null ? _accent : context.adminBorder),
       ),
     );
   }
@@ -1730,9 +1739,9 @@ class _ReviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _card,
+        color: context.adminCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: context.adminBorder),
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(icon, style: const TextStyle(fontSize: 24)),
@@ -1741,10 +1750,10 @@ class _ReviewCard extends StatelessWidget {
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(title,
-                style: GoogleFonts.fredoka(fontSize: 16, color: Colors.white)),
+                style: GoogleFonts.fredoka(fontSize: 16, color: context.adminText)),
             const SizedBox(height: 4),
             Text(content,
-                style: GoogleFonts.nunito(fontSize: 13, color: Colors.white54)),
+                style: GoogleFonts.nunito(fontSize: 13, color: context.adminSubtext)),
           ]),
         ),
       ]),
@@ -1788,9 +1797,9 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
   String _publishStatus = '';
 
   // Piece count options
-  static const List<int> _pieceCounts = [9, 16, 25, 36];
-  static const List<String> _difficulties = ['Easy', 'Medium', 'Hard'];
-  static const List<String> _categories = [
+  static final List<int> _pieceCounts = [9, 16, 25, 36];
+  static final List<String> _difficulties = ['Easy', 'Medium', 'Hard'];
+  static final List<String> _categories = [
     'General',
     'Nature',
     'Animals',
@@ -1920,16 +1929,16 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: _card,
+        backgroundColor: context.adminCard,
         title: Text('Delete Puzzle',
-            style: GoogleFonts.fredoka(color: Colors.white)),
+            style: GoogleFonts.fredoka(color: context.adminText)),
         content: Text('Delete "$title"? This cannot be undone.',
-            style: GoogleFonts.nunito(color: Colors.white70)),
+            style: GoogleFonts.nunito(color: context.adminSubtext)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
               child: Text('Cancel',
-                  style: GoogleFonts.nunito(color: Colors.white54))),
+                  style: GoogleFonts.nunito(color: context.adminSubtext))),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
               child: Text('Delete', style: GoogleFonts.nunito(color: _red))),
@@ -1969,7 +1978,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
   Widget _buildStepIndicator() {
     final steps = ['Details', 'Review'];
     return Container(
-      color: _card,
+      color: context.adminCard,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       child: Row(
         children: steps.asMap().entries.map((e) {
@@ -1989,24 +1998,24 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                         ? _green
                         : active
                             ? _accent
-                            : Colors.white12,
+                            : context.adminBorder,
                     shape: BoxShape.circle,
                   ),
                   child: Center(
                     child: done
-                        ? const Icon(Icons.check_rounded,
-                            color: Colors.white, size: 16)
+                        ? Icon(Icons.check_rounded,
+                            color: context.adminText, size: 16)
                         : Text('${i + 1}',
                             style: GoogleFonts.fredoka(
                                 fontSize: 14,
-                                color: active ? Colors.white : Colors.white38)),
+                                color: active ? context.adminText : context.adminMuted)),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(label,
                     style: GoogleFonts.nunito(
                         fontSize: 10,
-                        color: active ? _accent : Colors.white38,
+                        color: active ? _accent : context.adminMuted,
                         fontWeight:
                             active ? FontWeight.w700 : FontWeight.w500)),
               ]),
@@ -2015,7 +2024,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                   child: Container(
                     height: 2,
                     margin: const EdgeInsets.only(bottom: 20),
-                    color: done ? _green : Colors.white12,
+                    color: done ? _green : context.adminBorder,
                   ),
                 ),
             ]),
@@ -2030,7 +2039,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
   Widget _buildBottomBar() {
     final isLast = _step == 1;
     return Container(
-      color: _card,
+      color: context.adminCard,
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
       child: SizedBox(
         width: double.infinity,
@@ -2046,15 +2055,15 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
           ),
           child: _publishing
               ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const SizedBox(
+                  SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white)),
+                          strokeWidth: 2, color: isLast ? Colors.black87 : Colors.white)),
                   const SizedBox(width: 12),
                   Text(_publishStatus,
                       style: GoogleFonts.fredoka(
-                          fontSize: 16, color: Colors.white)),
+                          fontSize: 16, color: isLast ? Colors.black87 : Colors.white)),
                 ])
               : Text(
                   isLast ? '🚀  Publish Puzzle' : 'Continue →',
@@ -2077,12 +2086,12 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
             const Text('🧩', style: TextStyle(fontSize: 80)),
             const SizedBox(height: 20),
             Text('Puzzle Published!',
-                style: GoogleFonts.fredoka(fontSize: 36, color: Colors.white)),
+                style: GoogleFonts.fredoka(fontSize: 36, color: context.adminText)),
             const SizedBox(height: 12),
             Text(
               '"${_titleCtrl.text}" with $_pieceCount pieces is now live!',
               style: GoogleFonts.nunito(
-                  fontSize: 16, color: Colors.white70, height: 1.6),
+                  fontSize: 16, color: context.adminSubtext, height: 1.6),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40),
@@ -2103,7 +2112,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                   Text('Add Another', style: GoogleFonts.fredoka(fontSize: 18)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _accent,
-                foregroundColor: Colors.white,
+                foregroundColor: context.adminText,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -2129,11 +2138,11 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
           const Text('🧩', style: TextStyle(fontSize: 24)),
           const SizedBox(width: 10),
           Text('Puzzle Details',
-              style: GoogleFonts.fredoka(fontSize: 22, color: Colors.white)),
+              style: GoogleFonts.fredoka(fontSize: 22, color: context.adminText)),
         ]),
         const SizedBox(height: 6),
         Text('Fill in the puzzle info and upload the image.',
-            style: GoogleFonts.nunito(fontSize: 14, color: Colors.white54)),
+            style: GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
         const SizedBox(height: 20),
 
         // Title
@@ -2146,23 +2155,23 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.06),
+            color: context.adminText.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: context.adminBorder),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _categories.contains(_categoryCtrl.text)
                   ? _categoryCtrl.text
                   : 'General',
-              dropdownColor: _card,
+              dropdownColor: context.adminCard,
               isExpanded: true,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: context.adminText),
               items: _categories
                   .map((c) => DropdownMenuItem(
                         value: c,
                         child: Text(c,
-                            style: GoogleFonts.nunito(color: Colors.white)),
+                            style: GoogleFonts.nunito(color: context.adminText)),
                       ))
                   .toList(),
               onChanged: (v) => setState(() => _categoryCtrl.text = v!),
@@ -2191,15 +2200,15 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                   decoration: BoxDecoration(
-                    color: active ? color.withValues(alpha: 0.2) : _card,
+                    color: active ? color.withValues(alpha: 0.2) : context.adminCard,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: active ? color : Colors.white12, width: 2),
+                        color: active ? color : context.adminBorder, width: 2),
                   ),
                   child: Text(d,
                       style: GoogleFonts.nunito(
                           fontSize: 14,
-                          color: active ? color : Colors.white54,
+                          color: active ? color : context.adminSubtext,
                           fontWeight: FontWeight.w700)),
                 ),
               ),
@@ -2229,15 +2238,15 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: active ? _accent.withValues(alpha: 0.2) : _card,
+                  color: active ? _accent.withValues(alpha: 0.2) : context.adminCard,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                      color: active ? _accent : Colors.white12, width: 2),
+                      color: active ? _accent : context.adminBorder, width: 2),
                 ),
                 child: Text(label,
                     style: GoogleFonts.nunito(
                         fontSize: 14,
-                        color: active ? _accent : Colors.white54,
+                        color: active ? _accent : context.adminSubtext,
                         fontWeight: FontWeight.w700)),
               ),
             );
@@ -2254,7 +2263,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
             duration: const Duration(milliseconds: 300),
             width: double.infinity,
             decoration: BoxDecoration(
-              color: _card,
+              color: context.adminCard,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: _uploadedImageUrl != null
@@ -2264,16 +2273,16 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
               ),
             ),
             child: _uploadingImage
-                ? const SizedBox(
+                ? SizedBox(
                     height: 200,
                     child: Center(
                       child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            CircularProgressIndicator(color: _accent),
-                            SizedBox(height: 12),
+                            const CircularProgressIndicator(color: _accent),
+                            const SizedBox(height: 12),
                             Text('Uploading image…',
-                                style: TextStyle(color: Colors.white54)),
+                                style: TextStyle(color: context.adminSubtext)),
                           ]),
                     ))
                 : _uploadedImageUrl != null
@@ -2298,17 +2307,17 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 10, vertical: 5),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.08),
+                                    color: context.adminText.withValues(alpha: 0.08),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Row(children: [
-                                    const Icon(Icons.edit_rounded,
-                                        color: Colors.white54, size: 14),
+                                    Icon(Icons.edit_rounded,
+                                        color: context.adminSubtext, size: 14),
                                     const SizedBox(width: 4),
                                     Text('Change',
                                         style: GoogleFonts.nunito(
                                             fontSize: 12,
-                                            color: Colors.white54)),
+                                            color: context.adminSubtext)),
                                   ]),
                                 ),
                               ),
@@ -2339,7 +2348,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                               const SizedBox(height: 12),
                               Text('Tap to upload puzzle image',
                                   style: GoogleFonts.nunito(
-                                      fontSize: 14, color: Colors.white54)),
+                                      fontSize: 14, color: context.adminSubtext)),
                               const SizedBox(height: 4),
                               Text('JPG, PNG, WEBP — max 10 MB',
                                   style: GoogleFonts.nunito(
@@ -2355,7 +2364,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
           const Text('📋', style: TextStyle(fontSize: 22)),
           const SizedBox(width: 10),
           Text('Existing Puzzles',
-              style: GoogleFonts.fredoka(fontSize: 20, color: Colors.white)),
+              style: GoogleFonts.fredoka(fontSize: 20, color: context.adminText)),
           const SizedBox(width: 10),
           if (_loadingPuzzles)
             const SizedBox(
@@ -2369,14 +2378,14 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: _card,
+              color: context.adminCard,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white12),
+              border: Border.all(color: context.adminBorder),
             ),
             child: Center(
               child: Text('No puzzles yet. Create your first one!',
                   style:
-                      GoogleFonts.nunito(fontSize: 14, color: Colors.white38)),
+                      GoogleFonts.nunito(fontSize: 14, color: context.adminMuted)),
             ),
           ),
         ..._existingPuzzles.map((p) => _buildPuzzleListItem(p)),
@@ -2396,9 +2405,9 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: _card,
+        color: context.adminCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: context.adminBorder),
       ),
       child: Row(children: [
         // Thumbnail
@@ -2424,13 +2433,13 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(title,
-                  style: GoogleFonts.fredoka(fontSize: 16, color: Colors.white),
+                  style: GoogleFonts.fredoka(fontSize: 16, color: context.adminText),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis),
               const SizedBox(height: 4),
               Text('$pieces pieces  •  $difficulty  •  $category',
                   style:
-                      GoogleFonts.nunito(fontSize: 12, color: Colors.white54)),
+                      GoogleFonts.nunito(fontSize: 12, color: context.adminSubtext)),
             ]),
           ),
         ),
@@ -2451,18 +2460,18 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
         const SizedBox(height: 6),
         TextField(
           controller: ctrl,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: context.adminText),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: Colors.white24, fontSize: 14),
+            hintStyle: TextStyle(color: context.adminBorder, fontSize: 14),
             filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.06),
+            fillColor: context.adminText.withValues(alpha: 0.06),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.white12)),
+                borderSide: BorderSide(color: context.adminBorder)),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.white12)),
+                borderSide: BorderSide(color: context.adminBorder)),
             focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: _accent, width: 2)),
@@ -2476,7 +2485,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
 
   Widget _buildLabel(String text) => Text(text,
       style: GoogleFonts.nunito(
-          fontSize: 13, color: Colors.white54, fontWeight: FontWeight.w700));
+          fontSize: 13, color: context.adminSubtext, fontWeight: FontWeight.w700));
 
   // =====================================================================
   // STEP 1 — Review
@@ -2490,11 +2499,11 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
           const Text('🔍', style: TextStyle(fontSize: 24)),
           const SizedBox(width: 10),
           Text('Review & Publish',
-              style: GoogleFonts.fredoka(fontSize: 22, color: Colors.white)),
+              style: GoogleFonts.fredoka(fontSize: 22, color: context.adminText)),
         ]),
         const SizedBox(height: 6),
         Text('Double-check everything before publishing.',
-            style: GoogleFonts.nunito(fontSize: 14, color: Colors.white54)),
+            style: GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
         const SizedBox(height: 24),
 
         // Puzzle piece grid preview
@@ -2544,7 +2553,7 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
               child: Text(
                 'Once published, this puzzle will be immediately available in the app.',
                 style: GoogleFonts.nunito(
-                    fontSize: 13, color: Colors.white70, height: 1.4),
+                    fontSize: 13, color: context.adminSubtext, height: 1.4),
               ),
             ),
           ]),
@@ -2557,18 +2566,18 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _card,
+        color: context.adminCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: context.adminBorder),
       ),
       child: Row(children: [
         Text(emoji, style: const TextStyle(fontSize: 22)),
         const SizedBox(width: 12),
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(title,
-              style: GoogleFonts.fredoka(fontSize: 14, color: Colors.white54)),
+              style: GoogleFonts.fredoka(fontSize: 14, color: context.adminSubtext)),
           Text(value,
-              style: GoogleFonts.fredoka(fontSize: 17, color: Colors.white)),
+              style: GoogleFonts.fredoka(fontSize: 17, color: context.adminText)),
         ]),
       ]),
     );
@@ -2649,14 +2658,16 @@ class _PzClipper extends CustomClipper<Path> {
 class _PzOutline extends CustomPainter {
   final int eT, eR, eB, eL;
   final double cell, nub;
-  const _PzOutline(this.eT, this.eR, this.eB, this.eL, this.cell, this.nub);
+  final Color outlineColor;
+  const _PzOutline(
+      this.eT, this.eR, this.eB, this.eL, this.cell, this.nub, this.outlineColor);
 
   @override
   void paint(Canvas canvas, Size size) {
     canvas.drawPath(
       _pzPath(eT, eR, eB, eL, cell, nub),
       Paint()
-        ..color = Colors.white.withValues(alpha: .70)
+        ..color = outlineColor.withValues(alpha: .70)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.6
         ..strokeJoin = StrokeJoin.round,
@@ -2752,7 +2763,7 @@ class _PzTile extends StatelessWidget {
                       color: const Color(0xFF1A0A3D),
                       child: Center(
                           child: Icon(Icons.broken_image,
-                              color: Colors.white24, size: cell * .3)),
+                              color: context.adminBorder, size: cell * .3)),
                     ),
                   ),
                 ),
@@ -2764,7 +2775,7 @@ class _PzTile extends StatelessWidget {
         // ── White jigsaw outline drawn on top ───────────────
         CustomPaint(
           size: Size(sz, sz),
-          painter: _PzOutline(eT, eR, eB, eL, cell, nub),
+          painter: _PzOutline(eT, eR, eB, eL, cell, nub, context.adminText),
         ),
       ]),
     );
@@ -2866,7 +2877,7 @@ class _AdminPieceGrid extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           '$pieceCount pieces  •  swipe right to scroll',
-          style: GoogleFonts.nunito(fontSize: 11, color: Colors.white38),
+          style: GoogleFonts.nunito(fontSize: 11, color: context.adminMuted),
         ),
       ],
     );
@@ -2898,6 +2909,10 @@ class _StoryPageDraft {
 class _StoryWizardState extends State<_StoryWizard> {
   final _svc = AdminService();
 
+  // ── Existing Stories ───────────────────────────────────────────────
+  List<Map<String, dynamic>> _existingStories = [];
+  bool _loadingStories = true;
+
   // ── Step 0 controllers ──────────────────────────────────────────────
   final _titleCtrl = TextEditingController();
   final _authorCtrl = TextEditingController();
@@ -2918,6 +2933,22 @@ class _StoryWizardState extends State<_StoryWizard> {
   String? _createdStoryId;
 
   final _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchExistingStories();
+  }
+
+  Future<void> _fetchExistingStories() async {
+    final list = await _svc.getStories();
+    if (mounted) {
+      setState(() {
+        _existingStories = list;
+        _loadingStories = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -3068,7 +3099,7 @@ class _StoryWizardState extends State<_StoryWizard> {
         left: 0,
         right: 0,
         child: Container(
-          color: _bg,
+          color: context.adminBg,
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
           child: Row(children: [
             if (_step > 0)
@@ -3076,8 +3107,8 @@ class _StoryWizardState extends State<_StoryWizard> {
                 child: OutlinedButton(
                   onPressed: () => setState(() => _step--),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white54,
-                    side: const BorderSide(color: Colors.white24),
+                    foregroundColor: context.adminSubtext,
+                    side: BorderSide(color: context.adminBorder),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
@@ -3148,27 +3179,27 @@ class _StoryWizardState extends State<_StoryWizard> {
           width: double.infinity,
           height: 160,
           decoration: BoxDecoration(
-            color: _card,
+            color: context.adminCard,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: context.adminBorder),
           ),
           child: _coverFile != null || _coverUrl != null
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: Image.network(_coverUrl ?? '',
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(
+                      errorBuilder: (_, __, ___) => Icon(
                           Icons.broken_image,
-                          color: Colors.white38,
+                          color: context.adminMuted,
                           size: 48)),
                 )
               : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const Icon(Icons.add_photo_alternate_rounded,
-                      color: Colors.white38, size: 48),
+                  Icon(Icons.add_photo_alternate_rounded,
+                      color: context.adminMuted, size: 48),
                   const SizedBox(height: 8),
                   Text('Tap to add cover image (optional)',
                       style: GoogleFonts.nunito(
-                          fontSize: 13, color: Colors.white38)),
+                          fontSize: 13, color: context.adminMuted)),
                 ]),
         ),
       ),
@@ -3176,7 +3207,7 @@ class _StoryWizardState extends State<_StoryWizard> {
 
       // Emoji picker
       Text('Cover Emoji',
-          style: GoogleFonts.nunito(fontSize: 13, color: Colors.white54)),
+          style: GoogleFonts.nunito(fontSize: 13, color: context.adminSubtext)),
       const SizedBox(height: 8),
       Wrap(
         spacing: 8,
@@ -3186,10 +3217,10 @@ class _StoryWizardState extends State<_StoryWizard> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: _coverEmoji == e ? _accent : _card,
+                      color: _coverEmoji == e ? _accent : context.adminCard,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                          color: _coverEmoji == e ? _accent : Colors.white12),
+                          color: _coverEmoji == e ? _accent : context.adminBorder),
                     ),
                     child: Text(e, style: const TextStyle(fontSize: 22)),
                   ),
@@ -3225,7 +3256,7 @@ class _StoryWizardState extends State<_StoryWizard> {
 
       // Difficulty
       Text('Difficulty',
-          style: GoogleFonts.nunito(fontSize: 13, color: Colors.white54)),
+          style: GoogleFonts.nunito(fontSize: 13, color: context.adminSubtext)),
       const SizedBox(height: 8),
       Row(
           children: ['Easy', 'Medium', 'Hard']
@@ -3237,21 +3268,149 @@ class _StoryWizardState extends State<_StoryWizard> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 18, vertical: 8),
                         decoration: BoxDecoration(
-                          color: _difficulty == d ? _accent : _card,
+                          color: _difficulty == d ? _accent : context.adminCard,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                               color:
-                                  _difficulty == d ? _accent : Colors.white12),
+                                  _difficulty == d ? _accent : context.adminBorder),
                         ),
                         child: Text(d,
                             style: GoogleFonts.nunito(
-                                color: Colors.white,
+                                color: _difficulty == d ? Colors.white : context.adminText,
                                 fontWeight: FontWeight.w700)),
                       ),
                     ),
                   ))
               .toList()),
+      const SizedBox(height: 32),
+
+      // ── Existing Stories ──────────────────────────────────
+      Row(children: [
+        const Text('📋', style: TextStyle(fontSize: 22)),
+        const SizedBox(width: 10),
+        Text('Existing Stories',
+            style: GoogleFonts.fredoka(fontSize: 20, color: context.adminText)),
+        const SizedBox(width: 10),
+        if (_loadingStories)
+          const SizedBox(
+              width: 16,
+              height: 16,
+              child:
+                  CircularProgressIndicator(strokeWidth: 2, color: _accent)),
+      ]),
+      const SizedBox(height: 12),
+      if (!_loadingStories && _existingStories.isEmpty)
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: context.adminCard,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: context.adminBorder),
+          ),
+          child: Center(
+            child: Text('No stories yet. Create your first one!',
+                style:
+                    GoogleFonts.nunito(fontSize: 14, color: context.adminMuted)),
+          ),
+        ),
+      ..._existingStories.map((s) => _buildStoryListItem(s)),
+      const SizedBox(height: 20),
     ]);
+  }
+
+  Future<void> _deleteStory(String id, String title) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: context.adminCard,
+        title: Text('Delete Story',
+            style: GoogleFonts.fredoka(color: context.adminText)),
+        content: Text('Delete "$title"? This cannot be undone.',
+            style: GoogleFonts.nunito(color: context.adminSubtext)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text('Cancel',
+                  style: GoogleFonts.nunito(color: context.adminSubtext))),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text('Delete', style: GoogleFonts.nunito(color: _red))),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      final ok = await _svc.deleteStory(id);
+      if (ok) {
+        _snack('Story deleted');
+        _fetchExistingStories();
+      } else {
+        _snack('Delete failed', error: true);
+      }
+    }
+  }
+
+  Widget _buildStoryListItem(Map<String, dynamic> s) {
+    final title = s['title'] as String? ?? 'Untitled';
+    final author = s['author'] as String? ?? 'Unknown Author';
+    final difficulty = s['difficulty'] as String? ?? '';
+    final category = s['category'] as String? ?? '';
+    final id = s['id']?.toString() ?? '';
+    final coverEmoji = s['cover_emoji'] as String? ?? '📖';
+    final imageUrl = s['cover_url'] as String? ?? '';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: context.adminCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.adminBorder),
+      ),
+      child: Row(children: [
+        // Thumbnail
+        ClipRRect(
+          borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
+          child: SizedBox(
+            width: 80,
+            height: 80,
+            child: imageUrl.isNotEmpty
+                ? Image.network(imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Center(
+                        child: Text(coverEmoji, style: const TextStyle(fontSize: 28))))
+                : Center(
+                    child: Text(coverEmoji, style: const TextStyle(fontSize: 28))),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title,
+                  style: GoogleFonts.fredoka(fontSize: 16, color: context.adminText),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 4),
+              Text(author,
+                  style:
+                      GoogleFonts.nunito(fontSize: 12, color: context.adminSubtext),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 2),
+              Text('$difficulty  •  $category',
+                  style:
+                      GoogleFonts.nunito(fontSize: 11, color: context.adminMuted)),
+            ]),
+          ),
+        ),
+        IconButton(
+          onPressed: () => _deleteStory(id, title),
+          icon: const Icon(Icons.delete_outline_rounded, color: _red, size: 22),
+        ),
+      ]),
+    );
   }
 
   // ── STEP 1 — Pages ───────────────────────────────────────────────────
@@ -3261,7 +3420,7 @@ class _StoryWizardState extends State<_StoryWizard> {
       const SizedBox(height: 4),
       Text(
           'Add at least one page. Each page can have text and an optional image.',
-          style: GoogleFonts.nunito(fontSize: 13, color: Colors.white54)),
+          style: GoogleFonts.nunito(fontSize: 13, color: context.adminSubtext)),
       const SizedBox(height: 16),
       ...List.generate(_pages.length, (i) => _buildPageCard(i)),
       const SizedBox(height: 12),
@@ -3289,9 +3448,9 @@ class _StoryWizardState extends State<_StoryWizard> {
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _card,
+        color: context.adminCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: context.adminBorder),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
@@ -3300,7 +3459,7 @@ class _StoryWizardState extends State<_StoryWizard> {
             decoration: BoxDecoration(
                 color: _accent, borderRadius: BorderRadius.circular(20)),
             child: Text('Page ${i + 1}',
-                style: GoogleFonts.fredoka(color: Colors.white, fontSize: 14)),
+                style: GoogleFonts.fredoka(color: context.adminText, fontSize: 14)),
           ),
           const Spacer(),
           if (_pages.length > 1)
@@ -3334,31 +3493,31 @@ class _StoryWizardState extends State<_StoryWizard> {
             decoration: BoxDecoration(
               color: const Color(0xFF150831),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white12),
+              border: Border.all(color: context.adminBorder),
             ),
             child: p.uploadedImageUrl != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(p.uploadedImageUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(
+                        errorBuilder: (_, __, ___) => Icon(
                             Icons.broken_image,
-                            color: Colors.white38,
+                            color: context.adminMuted,
                             size: 36)),
                   )
                 : p.imageFile != null
                     ? Center(
                         child: Text('⏳ Uploading…',
-                            style: GoogleFonts.nunito(color: Colors.white38)))
+                            style: GoogleFonts.nunito(color: context.adminMuted)))
                     : Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                            const Icon(Icons.image_rounded,
-                                color: Colors.white24, size: 36),
+                            Icon(Icons.image_rounded,
+                                color: context.adminBorder, size: 36),
                             const SizedBox(height: 6),
                             Text('Tap to add illustration (optional)',
                                 style: GoogleFonts.nunito(
-                                    fontSize: 12, color: Colors.white38)),
+                                    fontSize: 12, color: context.adminMuted)),
                           ]),
           ),
         ),
@@ -3385,13 +3544,13 @@ class _StoryWizardState extends State<_StoryWizard> {
         _ReviewRow(label: 'Description', value: _descCtrl.text),
       const SizedBox(height: 20),
       Text('Pages Preview',
-          style: GoogleFonts.fredoka(fontSize: 16, color: Colors.white70)),
+          style: GoogleFonts.fredoka(fontSize: 16, color: context.adminSubtext)),
       const SizedBox(height: 10),
       ...validPages.asMap().entries.map((e) => Container(
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-                color: _card, borderRadius: BorderRadius.circular(12)),
+                color: context.adminCard, borderRadius: BorderRadius.circular(12)),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(
@@ -3400,7 +3559,7 @@ class _StoryWizardState extends State<_StoryWizard> {
               const SizedBox(height: 6),
               Text(e.value.bodyCtrl.text,
                   style:
-                      GoogleFonts.nunito(color: Colors.white70, fontSize: 13),
+                      GoogleFonts.nunito(color: context.adminSubtext, fontSize: 13),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis),
             ]),
@@ -3416,10 +3575,10 @@ class _StoryWizardState extends State<_StoryWizard> {
           const Text('🎉', style: TextStyle(fontSize: 72)),
           const SizedBox(height: 16),
           Text('Story Published!',
-              style: GoogleFonts.fredoka(fontSize: 28, color: Colors.white)),
+              style: GoogleFonts.fredoka(fontSize: 28, color: context.adminText)),
           const SizedBox(height: 8),
           Text('Story ID: $_createdStoryId',
-              style: GoogleFonts.nunito(fontSize: 14, color: Colors.white54)),
+              style: GoogleFonts.nunito(fontSize: 14, color: context.adminSubtext)),
           const SizedBox(height: 32),
           ElevatedButton(
             onPressed: () {
@@ -3474,7 +3633,7 @@ class _StepIndicator extends StatelessWidget {
         if (i.isOdd) {
           return Expanded(
             child: Container(
-                height: 2, color: i ~/ 2 < current ? _accent : Colors.white12),
+                height: 2, color: i ~/ 2 < current ? _accent : context.adminBorder),
           );
         }
         final idx = i ~/ 2;
@@ -3490,24 +3649,24 @@ class _StepIndicator extends StatelessWidget {
                   ? _accent
                   : active
                       ? _accent.withValues(alpha: 0.3)
-                      : _card,
+                      : context.adminCard,
               border: Border.all(
-                  color: done || active ? _accent : Colors.white24, width: 2),
+                  color: done || active ? _accent : context.adminBorder, width: 2),
             ),
             child: Center(
               child: done
-                  ? const Icon(Icons.check, size: 14, color: Colors.white)
+                  ? Icon(Icons.check, size: 14, color: context.adminText)
                   : Text('${idx + 1}',
                       style: GoogleFonts.fredoka(
                           fontSize: 13,
-                          color: active ? Colors.white : Colors.white38)),
+                          color: active ? context.adminText : context.adminMuted)),
             ),
           ),
           const SizedBox(height: 4),
           Text(labels[idx],
               style: GoogleFonts.nunito(
                   fontSize: 10,
-                  color: active || done ? Colors.white : Colors.white38,
+                  color: active || done ? context.adminText : context.adminMuted,
                   fontWeight: active ? FontWeight.w700 : FontWeight.normal)),
         ]);
       }),
@@ -3526,7 +3685,7 @@ class _SectionHeader extends StatelessWidget {
       Icon(icon, color: _accent, size: 20),
       const SizedBox(width: 8),
       Text(label,
-          style: GoogleFonts.fredoka(fontSize: 18, color: Colors.white)),
+          style: GoogleFonts.fredoka(fontSize: 18, color: context.adminText)),
     ]);
   }
 }
@@ -3545,19 +3704,20 @@ class _AdminTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(label,
-          style: GoogleFonts.nunito(fontSize: 13, color: Colors.white54)),
+          style: GoogleFonts.nunito(fontSize: 13, color: context.adminSubtext)),
       const SizedBox(height: 6),
       TextField(
         controller: controller,
         maxLines: maxLines,
-        style: GoogleFonts.nunito(color: Colors.white, fontSize: 14),
+        style: GoogleFonts.nunito(color: context.adminText, fontSize: 14),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.nunito(color: Colors.white24, fontSize: 13),
+          hintStyle: GoogleFonts.nunito(color: context.adminBorder, fontSize: 13),
           filled: true,
-          fillColor: const Color(0xFF150831),
+          fillColor: isDark ? const Color(0xFF150831) : context.adminText.withValues(alpha: 0.04),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none),
@@ -3585,13 +3745,13 @@ class _ReviewRow extends StatelessWidget {
         SizedBox(
           width: 100,
           child: Text(label,
-              style: GoogleFonts.nunito(fontSize: 13, color: Colors.white38)),
+              style: GoogleFonts.nunito(fontSize: 13, color: context.adminMuted)),
         ),
         Expanded(
           child: Text(value,
               style: GoogleFonts.nunito(
                   fontSize: 13,
-                  color: Colors.white,
+                  color: context.adminText,
                   fontWeight: FontWeight.w700)),
         ),
       ]),

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/course_model.dart';
 import '../models/user_model.dart'; // ✅ User model එක අනිවාර්යයෙන් ඕනේ
 import '../services/course_service.dart';
-import 'bottom_nav_bar.dart';
+
 import 'category_filter_screen.dart';
 
 // ── 🎨 Premium Palette ──
@@ -57,6 +58,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
                 final allCourses = snapshot.data!;
 
                 return CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
                   slivers: [
                     SliverToBoxAdapter(
                       child: Padding(
@@ -168,13 +170,16 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
                         fontWeight: FontWeight.bold,
                         color: Colors.black87)),
                 TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CategoryFilterScreen(
-                          categoryName: categoryKey, courses: courses),
-                    ),
-                  ),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CategoryFilterScreen(
+                            categoryName: categoryKey, courses: courses),
+                      ),
+                    );
+                  },
                   child: const Text("View All",
                       style: TextStyle(
                           color: mainBlue, fontWeight: FontWeight.w800)),
@@ -185,6 +190,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
           SizedBox(
             height: 220,
             child: ListView.builder(
+              physics: const BouncingScrollPhysics(),
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 24),
               itemCount: courses.length,
@@ -216,14 +222,19 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.1),
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(25))),
-              child: Center(
-                  child: Icon(Icons.auto_awesome_rounded,
-                      size: 45, color: accentColor)),
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.1),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(25))),
+                child: Center(
+                    child: Icon(Icons.auto_awesome_rounded,
+                        size: 45, color: accentColor)),
+              ),
             ),
           ),
           Padding(
@@ -252,17 +263,8 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
   }
 
   Widget _buildFixedOverlays(bool isDark) {
-    return Stack(
+    return const Stack(
       children: [
-        Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: BottomNavBar(
-              primaryColor: mainBlue,
-              isDark: isDark,
-              user: widget.user!, // ✅ මෙන්න මෙතන තමයි error එක තිබුණේ
-            )),
         // AR Button logic...
       ],
     );

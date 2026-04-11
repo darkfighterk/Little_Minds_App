@@ -45,14 +45,15 @@ class _LevelMapViewState extends State<LevelMapView>
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withValues(alpha: 0.08), Colors.white],
+            colors: [isDark ? const Color(0xFF1E1E1E) : mainBlue.withValues(alpha: 0.08), Theme.of(context).scaffoldBackgroundColor],
           ),
         ),
         child: SafeArea(
@@ -73,14 +74,15 @@ class _LevelMapViewState extends State<LevelMapView>
   }
 
   Widget _buildModernHeader() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
       child: Row(
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.black87, size: 20),
+            icon: Icon(Icons.arrow_back_ios_new_rounded,
+                color: isDark ? Colors.white : Colors.black87, size: 20),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -88,15 +90,15 @@ class _LevelMapViewState extends State<LevelMapView>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("${widget.subject.emoji} ${widget.subject.name}",
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontFamily: 'Recoleta',
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87)),
+                        color: isDark ? Colors.white : Colors.black87)),
                 Text('Choose a level to start',
                     style: GoogleFonts.nunito(
                         fontSize: 13,
-                        color: Colors.black38,
+                        color: isDark ? Colors.white54 : Colors.black38,
                         fontWeight: FontWeight.w700)),
               ],
             ),
@@ -149,11 +151,12 @@ class _LevelMapViewState extends State<LevelMapView>
       required bool completed,
       required bool isLeft,
       required bool isLast}) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final Color nodeColor = completed
         ? sunnyYellow
         : unlocked
             ? mainBlue
-            : Colors.grey.shade300;
+            : (isDark ? Colors.white24 : Colors.grey.shade300);
 
     return Column(children: [
       Row(
@@ -173,7 +176,7 @@ class _LevelMapViewState extends State<LevelMapView>
                 width: 220,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
                   borderRadius: BorderRadius.circular(25),
                   border: Border.all(color: nodeColor, width: 2.5),
                   boxShadow: [
@@ -199,11 +202,11 @@ class _LevelMapViewState extends State<LevelMapView>
                           letterSpacing: 1.5,
                           fontSize: 11)),
                   Text(level.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontFamily: 'Recoleta',
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87)),
+                          color: isDark ? Colors.white : Colors.black87)),
                   if (!unlocked) ...[
                     const SizedBox(height: 8),
                     Text('Need ${level.starsRequired} ⭐',

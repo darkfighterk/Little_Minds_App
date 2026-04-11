@@ -116,14 +116,15 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withValues(alpha: 0.1), Colors.white],
+            colors: [isDark ? const Color(0xFF1E1E1E) : mainBlue.withValues(alpha: 0.1), Theme.of(context).scaffoldBackgroundColor],
           ),
         ),
         child: SafeArea(
@@ -140,14 +141,15 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
   }
 
   Widget _buildHeader() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
       child: Row(
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.black87, size: 20),
+            icon: Icon(Icons.arrow_back_ios_new_rounded,
+                color: isDark ? Colors.white : Colors.black87, size: 20),
           ),
           const SizedBox(width: 8),
           Column(
@@ -160,11 +162,11 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
                       color: mainBlue,
                       letterSpacing: 1.2)),
               Text(widget.level.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontFamily: 'Recoleta',
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87)),
+                      color: isDark ? Colors.white : Colors.black87)),
             ],
           ),
           const Spacer(),
@@ -213,7 +215,7 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
                 style: GoogleFonts.nunito(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                     height: 1.4)),
             const SizedBox(height: 30),
             ..._currentQuestion.options
@@ -254,9 +256,10 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
   Widget _buildOption(int index, String text) {
     bool isCorrect = index == _currentQuestion.correctIndex;
     bool isSelected = index == _selectedOption;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-    Color borderCol = Colors.grey.shade200;
-    Color bgCol = Colors.white;
+    Color borderCol = isDark ? Colors.white24 : Colors.grey.shade200;
+    Color bgCol = isDark ? const Color(0xFF2A2A2A) : Colors.white;
     if (_answered) {
       if (isCorrect) {
         borderCol = Colors.green;
@@ -282,10 +285,10 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
           children: [
             CircleAvatar(
               radius: 15,
-              backgroundColor: isSelected ? mainBlue : Colors.grey.shade100,
+              backgroundColor: isSelected ? mainBlue : (isDark ? Colors.white12 : Colors.grey.shade100),
               child: Text(String.fromCharCode(65 + index),
                   style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black54,
+                      color: isSelected ? Colors.white : (isDark ? Colors.white54 : Colors.black54),
                       fontSize: 12)),
             ),
             const SizedBox(width: 15),
@@ -294,7 +297,7 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
                     style: GoogleFonts.nunito(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87))),
+                        color: isDark ? Colors.white : Colors.black87))),
             if (_answered && isCorrect)
               const Icon(Icons.check_circle, color: Colors.green),
           ],
@@ -304,13 +307,14 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
   }
 
   Widget _buildFunFactBox() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(top: 20),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
           color: sunnyYellow.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: sunnyYellow)),
+          border: Border.all(color: sunnyYellow.withValues(alpha: 0.5))),
       child: Row(children: [
         const Text('💡', style: TextStyle(fontSize: 24)),
         const SizedBox(width: 12),
@@ -318,7 +322,7 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
             child: Text(_currentQuestion.funFact!,
                 style: GoogleFonts.nunito(
                     fontSize: 14,
-                    color: Colors.black87,
+                    color: isDark ? Colors.white : Colors.black87,
                     fontWeight: FontWeight.w600))),
       ]),
     );
@@ -336,7 +340,9 @@ class _ResultDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Dialog(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       child: Padding(
         padding: const EdgeInsets.all(30),
@@ -353,7 +359,7 @@ class _ResultDialog extends StatelessWidget {
             Text('You got $correct out of $total correct!',
                 style: GoogleFonts.nunito(
                     fontSize: 16,
-                    color: Colors.black54,
+                    color: isDark ? Colors.white54 : Colors.black54,
                     fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             Row(
@@ -363,7 +369,7 @@ class _ResultDialog extends StatelessWidget {
                     (i) => Icon(Icons.star_rounded,
                         color: i < (stars / 10)
                             ? sunnyYellow
-                            : Colors.grey.shade200,
+                            : (isDark ? Colors.white12 : Colors.grey.shade200),
                         size: 50))),
             const SizedBox(height: 30),
             ElevatedButton(

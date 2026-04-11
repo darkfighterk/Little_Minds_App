@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:ui';
 import '../models/user_model.dart';
 
@@ -27,6 +28,7 @@ class BottomNavBar extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(24, 0, 24, 30),
       height: 70,
       child: Stack(
+        alignment: Alignment.center,
         children: [
           // Glassmorphism effect background
           ClipRRect(
@@ -116,7 +118,10 @@ class _NavItem extends StatelessWidget {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap?.call();
+      },
       behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -128,12 +133,28 @@ class _NavItem extends StatelessWidget {
               color: active ? color.withValues(alpha: 0.1) : Colors.transparent,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Icon(
-              icon,
-              color: active 
-                  ? color 
-                  : (isDark ? Colors.white24 : Colors.blueGrey[200]),
-              size: 28,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  color: active 
+                      ? color 
+                      : (isDark ? Colors.white24 : Colors.black38),
+                  size: 28,
+                ),
+                if (active) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],

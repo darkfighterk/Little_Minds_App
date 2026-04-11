@@ -70,7 +70,7 @@ class _LearningLessonScreenState extends State<LearningLessonScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: CustomScrollView(
         slivers: [
           _buildSliverAppBar(),
@@ -166,15 +166,16 @@ class _LessonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       height: 140,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
               blurRadius: 15,
               offset: const Offset(0, 5))
         ],
@@ -214,15 +215,16 @@ class _LessonCard extends StatelessWidget {
                   Text(lesson.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontFamily: 'Recoleta',
                           fontSize: 18,
+                          color: isDark ? Colors.white : Colors.black87,
                           fontWeight: FontWeight.bold)),
                   Text(lesson.subtitle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.nunito(
-                          fontSize: 13, color: Colors.black54)),
+                          fontSize: 13, color: isDark ? Colors.white54 : Colors.black54)),
                   const Spacer(),
                   Align(
                     alignment: Alignment.bottomRight,
@@ -257,18 +259,19 @@ class _FilterChip extends StatelessWidget {
       {required this.label, required this.selected, required this.onTap});
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(right: 10),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
-            color: selected ? mainBlue : softBlueBg,
+            color: selected ? mainBlue : (isDark ? const Color(0xFF2A2A2A) : softBlueBg),
             borderRadius: BorderRadius.circular(15)),
         child: Center(
             child: Text(label.toUpperCase(),
                 style: TextStyle(
-                    color: selected ? Colors.white : Colors.black54,
+                    color: selected ? Colors.white : (isDark ? Colors.white54 : Colors.black54),
                     fontWeight: FontWeight.bold,
                     fontSize: 11))),
       ),

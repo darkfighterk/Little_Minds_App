@@ -267,7 +267,7 @@ class _InputField extends StatelessWidget {
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+            color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F7FA),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(

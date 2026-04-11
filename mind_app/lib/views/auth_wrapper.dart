@@ -10,14 +10,18 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color bgColor = isDark ? const Color(0xFF1E1E1E) : const Color(0xFF3AAFFF);
+    final Color spinnerColor = isDark ? const Color(0xFF3AAFFF) : Colors.white;
+
     return StreamBuilder<firebase.User?>(
       stream: firebase.FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            backgroundColor: Color(0xFF3AAFFF),
+          return Scaffold(
+            backgroundColor: bgColor,
             body: Center(
-              child: CircularProgressIndicator(color: Colors.white),
+              child: CircularProgressIndicator(color: spinnerColor),
             ),
           );
         }
@@ -31,10 +35,10 @@ class AuthWrapper extends StatelessWidget {
                 .get(),
             builder: (context, userSnapshot) {
               if (userSnapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(
-                  backgroundColor: Color(0xFF3AAFFF),
+                return Scaffold(
+                  backgroundColor: bgColor,
                   body: Center(
-                    child: CircularProgressIndicator(color: Colors.white),
+                    child: CircularProgressIndicator(color: spinnerColor),
                   ),
                 );
               }

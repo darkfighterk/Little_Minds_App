@@ -106,7 +106,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           ..._buildFloatingDeco(context),
@@ -129,6 +129,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildHeader() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       child: Row(
@@ -136,13 +137,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         children: [
           IconButton(
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20)),
+              icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: isDark ? Colors.white : Colors.black87)),
           Text('Chat with Mindie',
               style: TextStyle(
                   fontFamily: 'Recoleta',
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: mainBlue)),
+                  color: isDark ? Colors.white : mainBlue)),
           const Text('🦄', style: TextStyle(fontSize: 24)),
         ],
       ),
@@ -150,6 +151,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildHeroSection() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -166,13 +168,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                   fontFamily: 'Recoleta',
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: mainBlue)),
+                  color: isDark ? Colors.white : mainBlue)),
           const SizedBox(height: 10),
           Text("Pick a fun topic to start! ✨",
               style: GoogleFonts.nunito(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: Colors.blueGrey)),
+                  color: isDark ? Colors.white54 : Colors.blueGrey)),
           const SizedBox(height: 35),
           Wrap(
             spacing: 12,
@@ -214,13 +216,14 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   Widget _buildBubble(Map<String, dynamic> msg) {
     bool isMe = msg['isMe'];
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
-          color: isMe ? mainBlue : const Color(0xFFF1F5F9),
+          color: isMe ? mainBlue : (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF1F5F9)),
           borderRadius: BorderRadius.circular(24).copyWith(
             bottomRight:
                 isMe ? const Radius.circular(4) : const Radius.circular(24),
@@ -230,7 +233,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         ),
         child: Text(msg['text'],
             style: GoogleFonts.nunito(
-                color: isMe ? Colors.white : Colors.black87,
+                color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87),
                 fontWeight: FontWeight.w700,
                 fontSize: 15)),
       ),
@@ -238,14 +241,15 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildInputBar() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 25),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
           borderRadius: BorderRadius.circular(35),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20)
+            BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05), blurRadius: 20)
           ]),
       child: Row(
         children: [
@@ -253,9 +257,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           Expanded(
               child: TextField(
                   controller: _messageController,
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                   onSubmitted: (_) => _handleSend(),
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                       hintText: 'Ask Mindie anything...',
+                      hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black54),
                       border: InputBorder.none))),
           GestureDetector(
             onTap: _handleSend,
@@ -321,11 +327,12 @@ class _MindieAvatar extends StatelessWidget {
   const _MindieAvatar(this.color);
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: 140,
       height: 140,
       decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
           shape: BoxShape.circle,
           border: Border.all(color: color.withValues(alpha: 0.1), width: 8),
           boxShadow: [
