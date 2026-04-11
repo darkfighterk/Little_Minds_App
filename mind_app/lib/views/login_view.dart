@@ -455,25 +455,27 @@ class _LogoBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 80,
-      height: 80,
+      width: 100,
+      height: 100,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFDDF50), Color(0xFFFF8811)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white.withValues(alpha: 0.1),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF8811).withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 25,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: const Center(
-        child: Text("🎓", style: TextStyle(fontSize: 36)),
+      child: ClipOval(
+        child: Image.asset(
+          'assets/brand/play_store_512.png',
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => const Center(
+            child: Text("🎓", style: TextStyle(fontSize: 40)),
+          ),
+        ),
       ),
     );
   }
