@@ -12,6 +12,7 @@ import 'puzzle_list_screen.dart';
 import 'create_puzzle_screen.dart';
 import 'admin_view.dart';
 import 'package:mind_app/widgets/mindie_button.dart';
+import 'package:mind_app/views/crossword_list_view.dart';
 
 class HomePage extends StatefulWidget {
   final User user;
@@ -107,6 +108,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           // Profile Section or App Logo
           Row(
             children: [
+<<<<<<< Updated upstream
               Container(
                 padding: const EdgeInsets.all(2),
                 decoration: const BoxDecoration(
@@ -115,6 +117,37 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   radius: 22,
                   backgroundColor: mainBlue.withOpacity(0.1),
                   child: Icon(Icons.person_rounded, color: mainBlue, size: 28),
+=======
+              GestureDetector(
+                onTap: _goToProfile,
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  child: CircleAvatar(
+                    radius: 22,
+                    backgroundColor:
+                        const Color(0xFF3AAFFF).withValues(alpha: 0.1),
+                    backgroundImage: _currentUser.photoUrl != null &&
+                            _currentUser.photoUrl!.isNotEmpty
+                        ? NetworkImage(_currentUser.photoUrl!)
+                        : null,
+                    child: _currentUser.photoUrl == null ||
+                            _currentUser.photoUrl!.isEmpty
+                        ? const Icon(Icons.person_rounded,
+                            color: Color(0xFF3AAFFF), size: 28)
+                        : null,
+                  ),
+>>>>>>> Stashed changes
                 ),
               ),
               const SizedBox(width: 12),
@@ -169,17 +202,32 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             decoration: BoxDecoration(
+<<<<<<< Updated upstream
               color: Colors.white.withOpacity(0.95),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+=======
+              color: isDark
+                  ? const Color(0xFF2A2A2A)
+                  : Colors.white.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)
+>>>>>>> Stashed changes
               ],
             ),
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Search adventure...',
                 hintStyle: GoogleFonts.nunito(
+<<<<<<< Updated upstream
                     color: Colors.grey[400], fontWeight: FontWeight.bold),
+=======
+                    color: isDark ? Colors.white38 : Colors.grey[400],
+                    fontWeight: FontWeight.bold),
+>>>>>>> Stashed changes
                 border: InputBorder.none,
                 icon: Icon(Icons.search, color: mainBlue),
               ),
@@ -191,10 +239,102 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildMainButtonsGrid() {
+<<<<<<< Updated upstream
     return GridView.count(
       crossAxisCount: 2,
       mainAxisSpacing: 22,
       crossAxisSpacing: 22,
+=======
+    final List<Map<String, dynamic>> allButtons = [
+      {
+        'title': 'Quiz Arena',
+        'icon': Icons.quiz_rounded,
+        'color': secondaryPurple,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => HomeView(user: widget.user))),
+      },
+      {
+        'title': 'Note Scanner',
+        'icon': Icons.document_scanner_rounded,
+        'color': secondaryOrange,
+        'onTap': () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const TextFromImagePage())),
+      },
+      {
+        'title': 'Story Time',
+        'icon': Icons.menu_book_rounded,
+        'color': secondaryYellow,
+        'onTap': () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => StoryTimePage(user: widget.user))),
+      },
+      {
+        'title': 'Drawing',
+        'icon': Icons.brush_rounded,
+        'color': mainBlue,
+        'onTap': () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const DrawingPadView())),
+      },
+      {
+        'title': 'Puzzles',
+        'icon': Icons.extension_rounded,
+        'color': const Color(0xFF26A69A), // Teal
+        'onTap': () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => PuzzlesListView(user: widget.user))),
+      },
+      {
+        'title': 'Crossword',
+        'icon': Icons.grid_on_rounded,
+        'color': const Color(0xFF8E24AA),
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CrosswordListView(user: widget.user),
+            ),
+          );
+        },
+      },
+    ];
+
+    final filteredButtons = allButtons
+        .where((btn) =>
+            btn['title'].toString().toLowerCase().contains(_searchQuery))
+        .toList();
+
+    if (filteredButtons.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40.0),
+          child: Column(
+            children: [
+              Icon(Icons.search_off_rounded, size: 60, color: Colors.grey[300]),
+              const SizedBox(height: 16),
+              Text(
+                'No adventures found!',
+                style: GoogleFonts.nunito(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[400],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 22,
+        crossAxisSpacing: 22,
+        childAspectRatio: 0.82,
+      ),
+>>>>>>> Stashed changes
       shrinkWrap: true,
       childAspectRatio: 0.82,
       physics: const NeverScrollableScrollPhysics(),
@@ -320,7 +460,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       fontSize: 22,
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: 20),
+<<<<<<< Updated upstream
               _buildAdminTile('Quiz Admin', Icons.quiz_rounded, mainBlue, () {
+=======
+              _buildAdminTile('Admin Control Panel',
+                  Icons.admin_panel_settings_rounded, mainBlue, () {
+>>>>>>> Stashed changes
                 Navigator.pop(ctx);
                 Navigator.push(context,
                     MaterialPageRoute(builder: (_) => const AdminGateView()));
