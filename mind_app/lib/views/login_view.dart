@@ -89,7 +89,15 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields 🎈')),
+        const SnackBar(content: Text('Please fill in all fields 🎈'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email address 📧'), backgroundColor: Colors.orangeAccent),
       );
       return;
     }

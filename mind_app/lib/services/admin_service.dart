@@ -134,6 +134,12 @@ class AdminService {
         'icon': icon,
         'stars_required': starsRequired,
       });
+
+      // Update level count in parent subject
+      await _db.collection('quiz_subjects').doc(subjectId).update({
+        'level_count': FieldValue.increment(1),
+      });
+
       return docRef.id;
     } catch (e) {
       debugPrint('AdminService.createLevel error: $e');
@@ -169,6 +175,7 @@ class AdminService {
       }
 
       await batch.commit();
+      debugPrint('AdminService.saveQuestions: Successfully saved ${questions.length} questions to $subjectId > $levelId');
       return true;
     } catch (e) {
       debugPrint('AdminService.saveQuestions error: $e');
