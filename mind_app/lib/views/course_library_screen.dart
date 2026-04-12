@@ -1,11 +1,11 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/course_model.dart';
 import '../models/user_model.dart'; // ✅ User model එක අනිවාර්යයෙන් ඕනේ
 import '../services/course_service.dart';
-import 'bottom_nav_bar.dart';
+
 import 'category_filter_screen.dart';
 
 // ── 🎨 Premium Palette ──
@@ -58,6 +58,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
                 final allCourses = snapshot.data!;
 
                 return CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
                   slivers: [
                     SliverToBoxAdapter(
                       child: Padding(
@@ -121,7 +122,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                  color: sunnyYellow.withOpacity(0.2),
+                  color: sunnyYellow.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: sunnyYellow)),
               child: const Text("1,250 💎",
@@ -137,7 +138,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
             hintStyle: GoogleFonts.nunito(color: Colors.black26),
             prefixIcon: const Icon(Icons.search_rounded, color: mainBlue),
             filled: true,
-            fillColor: mainBlue.withOpacity(0.05),
+            fillColor: mainBlue.withValues(alpha: 0.05),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: BorderSide.none),
@@ -169,13 +170,16 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
                         fontWeight: FontWeight.bold,
                         color: Colors.black87)),
                 TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CategoryFilterScreen(
-                          categoryName: categoryKey, courses: courses),
-                    ),
-                  ),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CategoryFilterScreen(
+                            categoryName: categoryKey, courses: courses),
+                      ),
+                    );
+                  },
                   child: const Text("View All",
                       style: TextStyle(
                           color: mainBlue, fontWeight: FontWeight.w800)),
@@ -186,6 +190,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
           SizedBox(
             height: 220,
             child: ListView.builder(
+              physics: const BouncingScrollPhysics(),
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 24),
               itemCount: courses.length,
@@ -208,7 +213,7 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 15,
               offset: const Offset(0, 8))
         ],
@@ -217,14 +222,19 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.1),
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(25))),
-              child: Center(
-                  child: Icon(Icons.auto_awesome_rounded,
-                      size: 45, color: accentColor)),
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.1),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(25))),
+                child: Center(
+                    child: Icon(Icons.auto_awesome_rounded,
+                        size: 45, color: accentColor)),
+              ),
             ),
           ),
           Padding(
@@ -253,17 +263,8 @@ class _CourseLibraryScreenState extends State<CourseLibraryScreen> {
   }
 
   Widget _buildFixedOverlays(bool isDark) {
-    return Stack(
+    return const Stack(
       children: [
-        Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: BottomNavBar(
-              primaryColor: mainBlue,
-              isDark: isDark,
-              user: widget.user!, // ✅ මෙන්න මෙතන තමයි error එක තිබුණේ
-            )),
         // AR Button logic...
       ],
     );

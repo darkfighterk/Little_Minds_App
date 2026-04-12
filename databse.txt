@@ -1,112 +1,434 @@
-X-Admin-Key: LittleMind@Admin2024
+//Admin panel key - littleminds_admin_2024
 
-CREATE DATABASE little_mind_db;
+-- ============================================================
+-- Little Mind DB - Full Database Schema & Data
+-- Generated: 2026-04-09
+-- Database: little_mind_db
+-- ============================================================
 
-USE little_mind_db;
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100),
-    email VARCHAR(100),
-    password VARCHAR(100)
-);
+-- ------------------------------------------------------------
+-- Create Database
+-- ------------------------------------------------------------
 
--- Insert sample users
-INSERT INTO users (name, email, password) VALUES
-('Alice Johnson', 'alice.johnson@example.com', 'password123'),
-('Bob Smith', 'bob.smith@example.com', 'securepass'),
-('Charlie Brown', 'charlie.brown@example.com', 'charlie2026'),
-('Diana Prince', 'diana.prince@example.com', 'wonderwoman'),
-('Ethan Hunt', 'ethan.hunt@example.com', 'impossible123');
+CREATE DATABASE IF NOT EXISTS `little_mind_db`
+  DEFAULT CHARACTER SET utf8mb4
+  COLLATE utf8mb4_general_ci;
 
-
-CREATE TABLE courses (
-    id INT(11) AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    category VARCHAR(100) NOT NULL,
-    description TEXT,
-    imageUrl VARCHAR(255),
-    instructor VARCHAR(255) NOT NULL
-);
-
-INSERT INTO courses (title, category, description, imageUrl, instructor) VALUES
-('Machine Learning Basics', 'AI', 
- 'Learn fundamentals of Machine Learning including supervised and unsupervised learning.', 
- 'https://example.com/images/ml.jpg', 
- 'Dr. Silva'),
-
-('Full Stack Web Development', 'Web Development', 
- 'Complete MERN stack development course covering MongoDB, Express, React, and Node.js.', 
- 'https://example.com/images/mern.jpg', 
- 'Mr. Perera'),
-
-('Data Structures & Algorithms', 'Programming', 
- 'Master DSA concepts for coding interviews and competitive programming.', 
- 'https://example.com/images/dsa.jpg', 
- 'Ms. Fernando'),
-
-('Deep Learning with TensorFlow', 'AI', 
- 'Build neural networks and deep learning models using TensorFlow and Keras.', 
- 'https://example.com/images/dl.jpg', 
- 'Dr. Jayasinghe'),
-
-('Mobile App Development', 'Mobile Development', 
- 'Create Android and iOS apps using React Native.', 
- 'https://example.com/images/mobile.jpg', 
- 'Mr. Kumar');
-
--- Subjects created via the admin panel
-CREATE TABLE IF NOT EXISTS quiz_subjects (
-    id            VARCHAR(50)  PRIMARY KEY,           -- e.g. "math", "geography"
-    name          VARCHAR(100) NOT NULL,
-    emoji         VARCHAR(20)  NOT NULL DEFAULT '📚',
-    gradient_start VARCHAR(10) NOT NULL DEFAULT '#4FC3F7',
-    gradient_end  VARCHAR(10)  NOT NULL DEFAULT '#0288D1',
-    created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
-);
-
--- Levels belonging to a subject
-CREATE TABLE IF NOT EXISTS quiz_levels (
-    id             INT AUTO_INCREMENT PRIMARY KEY,
-    subject_id     VARCHAR(50)  NOT NULL,
-    level_number   INT          NOT NULL,
-    title          VARCHAR(100) NOT NULL,
-    icon           VARCHAR(20)  NOT NULL DEFAULT '🎯',
-    stars_required INT          NOT NULL DEFAULT 0,
-    created_at     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_subject_level (subject_id, level_number),
-    FOREIGN KEY (subject_id) REFERENCES quiz_subjects(id) ON DELETE CASCADE
-);
-
--- Questions belonging to a level
-CREATE TABLE IF NOT EXISTS quiz_questions (
-    id            INT AUTO_INCREMENT PRIMARY KEY,
-    level_id      INT           NOT NULL,
-    question_text TEXT          NOT NULL,         -- may be empty if image_url is set
-    image_url     VARCHAR(500)  DEFAULT NULL,     -- optional image for the question
-    option_a      VARCHAR(500)  NOT NULL,
-    option_b      VARCHAR(500)  NOT NULL,
-    option_c      VARCHAR(500)  NOT NULL,
-    option_d      VARCHAR(500)  NOT NULL,
-    correct_index INT           NOT NULL,         -- 0=A, 1=B, 2=C, 3=D
-    fun_fact      TEXT          DEFAULT NULL,
-    sort_order    INT           NOT NULL DEFAULT 0,
-    created_at    TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (level_id) REFERENCES quiz_levels(id) ON DELETE CASCADE
-);
+USE `little_mind_db`;
 
 
+-- ============================================================
+-- TABLE: users
+-- ============================================================
 
-CREATE TABLE `puzzles` (
-  `id` int(11) NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `grid_rows` int(11) NOT NULL,
-  `grid_cols` int(11) NOT NULL,
-  `grid_data` text NOT NULL,
-  `across_clues` text NOT NULL,
-  `down_clues` text NOT NULL,
-  `timer_minutes` int(11) NOT NULL DEFAULT 15,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `category` varchar(100) DEFAULT 'General',
-  `difficulty` varchar(50) DEFAULT 'Medium'
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE `users` (
+  `id`       int(11)      NOT NULL AUTO_INCREMENT,
+  `name`     varchar(100) DEFAULT NULL,
+  `email`    varchar(100) DEFAULT NULL,
+  `password` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `users` VALUES
+  (1, 'Alice Johnson',  'alice.johnson@example.com',      'password123'),
+  (2, 'Bob Smith',      'bob.smith@example.com',          'securepass'),
+  (3, 'Charlie Brown',  'charlie.brown@example.com',      'charlie2026'),
+  (4, 'Diana Prince',   'diana.prince@example.com',       'wonderwoman'),
+  (5, 'Ethan Hunt',     'ethan.hunt@example.com',         'impossible123'),
+  (6, 'Bhashitha Doe',  'john@example.com',               'password123'),
+  (7, 'Bhashitha',      'bashitha@littelmindsapp.com',    '$2a$10$QOI7NvpdeGZxKzvscEJca.P1My6cffei0ikGiPjVC9GgXnq8OwO0.');
+
+
+-- ============================================================
+-- TABLE: achievements
+-- ============================================================
+
+DROP TABLE IF EXISTS `achievements`;
+CREATE TABLE `achievements` (
+  `id`              int(11)      NOT NULL AUTO_INCREMENT,
+  `badge_name`      varchar(100) NOT NULL,
+  `criteria_points` int(11)      NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- (No data)
+
+
+-- ============================================================
+-- TABLE: user_achievements
+-- ============================================================
+
+DROP TABLE IF EXISTS `user_achievements`;
+CREATE TABLE `user_achievements` (
+  `id`             int(11)   NOT NULL AUTO_INCREMENT,
+  `user_id`        int(11)   NOT NULL,
+  `achievement_id` int(11)   NOT NULL,
+  `earned_at`      timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_user_achievement` (`user_id`, `achievement_id`),
+  KEY `achievement_id` (`achievement_id`),
+  CONSTRAINT `user_achievements_ibfk_1` FOREIGN KEY (`user_id`)        REFERENCES `users`        (`id`) ON DELETE CASCADE,
+  CONSTRAINT `user_achievements_ibfk_2` FOREIGN KEY (`achievement_id`) REFERENCES `achievements` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- (No data)
+
+
+-- ============================================================
+-- TABLE: courses
+-- ============================================================
+
+DROP TABLE IF EXISTS `courses`;
+CREATE TABLE `courses` (
+  `id`          int(11)      NOT NULL AUTO_INCREMENT,
+  `title`       varchar(255) NOT NULL,
+  `category`    varchar(100) NOT NULL,
+  `description` text         DEFAULT NULL,
+  `imageUrl`    varchar(255) DEFAULT NULL,
+  `instructor`  varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `courses` VALUES
+  (1, 'Machine Learning Basics',      'AI',                 'Learn fundamentals of Machine Learning including supervised and unsupervised learning.',   'https://example.com/images/ml.jpg',     'Dr. Silva'),
+  (2, 'Full Stack Web Development',   'Web Development',    'Complete MERN stack development course covering MongoDB, Express, React, and Node.js.',    'https://example.com/images/mern.jpg',   'Mr. Perera'),
+  (3, 'Data Structures & Algorithms', 'Programming',        'Master DSA concepts for coding interviews and competitive programming.',                   'https://example.com/images/dsa.jpg',    'Ms. Fernando'),
+  (4, 'Deep Learning with TensorFlow','AI',                 'Build neural networks and deep learning models using TensorFlow and Keras.',               'https://example.com/images/dl.jpg',     'Dr. Jayasinghe'),
+  (5, 'Mobile App Development',       'Mobile Development', 'Create Android and iOS apps using React Native.',                                          'https://example.com/images/mobile.jpg', 'Mr. Kumar');
+
+
+-- ============================================================
+-- TABLE: puzzles
+-- ============================================================
+
+DROP TABLE IF EXISTS `puzzles`;
+CREATE TABLE `puzzles` (
+  `id`          int(11)      NOT NULL AUTO_INCREMENT,
+  `title`       varchar(200) NOT NULL,
+  `image_url`   varchar(500) NOT NULL,
+  `piece_count` int(11)      NOT NULL DEFAULT 16,
+  `category`    varchar(100) NOT NULL DEFAULT 'General',
+  `difficulty`  varchar(20)  NOT NULL DEFAULT 'Easy',
+  `created_at`  timestamp    NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `puzzles` VALUES
+  (2, 'Kungfu Panda', 'http://localhost:8080/uploads/1772430926141602800.jpg', 9, 'Animals', 'Easy', '2026-03-02 05:55:33');
+
+
+-- ============================================================
+-- TABLE: crossword_puzzles
+-- ============================================================
+
+DROP TABLE IF EXISTS `crossword_puzzles`;
+CREATE TABLE `crossword_puzzles` (
+  `id`           int(11)      NOT NULL AUTO_INCREMENT,
+  `title`        varchar(255) NOT NULL,
+  `created_at`   datetime     NOT NULL DEFAULT current_timestamp(),
+  `category`     varchar(100) NOT NULL DEFAULT 'General',
+  `difficulty`   varchar(50)  NOT NULL DEFAULT 'Medium',
+  `grid_rows`    int(11)      NOT NULL DEFAULT 10,
+  `grid_cols`    int(11)      NOT NULL DEFAULT 10,
+  `grid_data`    longtext     DEFAULT NULL,
+  `across_clues` text         DEFAULT NULL,
+  `down_clues`   text         DEFAULT NULL,
+  `timer_minutes`int(11)      NOT NULL DEFAULT 10,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- (No data)
+
+
+-- ============================================================
+-- TABLE: quiz_subjects
+-- ============================================================
+
+DROP TABLE IF EXISTS `quiz_subjects`;
+CREATE TABLE `quiz_subjects` (
+  `id`             varchar(50) NOT NULL,
+  `name`           varchar(100) NOT NULL,
+  `emoji`          varchar(20)  NOT NULL DEFAULT '?',
+  `gradient_start` varchar(10)  NOT NULL DEFAULT '#4FC3F7',
+  `gradient_end`   varchar(10)  NOT NULL DEFAULT '#0288D1',
+  `created_at`     timestamp    NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `quiz_subjects` VALUES
+  ('biology', 'Biology',      '?', '#81C784', '#388E3C', '2026-03-02 15:26:58'),
+  ('health',  'Health',       '?', '#4FC3F7', '#0288D1', '2026-02-22 13:49:45'),
+  ('history', 'History',      '?', '#FFB74D', '#E65100', '2026-03-02 15:26:58'),
+  ('math',    'Mathamatics',  '?', '#4FC3F7', '#0288D1', '2026-02-22 13:26:28'),
+  ('science', 'Science',      '?', '#4FC3F7', '#0288D1', '2026-03-02 15:26:58');
+
+
+-- ============================================================
+-- TABLE: quiz_levels
+-- ============================================================
+
+DROP TABLE IF EXISTS `quiz_levels`;
+CREATE TABLE `quiz_levels` (
+  `id`             int(11)     NOT NULL AUTO_INCREMENT,
+  `subject_id`     varchar(50) NOT NULL,
+  `level_number`   int(11)     NOT NULL,
+  `title`          varchar(100) NOT NULL,
+  `icon`           varchar(20)  NOT NULL DEFAULT '?',
+  `stars_required` int(11)     NOT NULL DEFAULT 0,
+  `created_at`     timestamp   NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_subject_level` (`subject_id`, `level_number`),
+  CONSTRAINT `quiz_levels_ibfk_1` FOREIGN KEY (`subject_id`) REFERENCES `quiz_subjects` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=66 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `quiz_levels` VALUES
+  -- Science
+  (1,  'science', 1, 'What is Science?', '?',   0,   '2026-03-02 15:41:22'),
+  (2,  'science', 2, 'Forces & Motion',  '?',   30,  '2026-03-02 15:41:22'),
+  (3,  'science', 3, 'Space Explorer',   '?',   60,  '2026-03-02 15:41:22'),
+  (4,  'science', 4, 'Energy & Light',   '⚛️', 100, '2026-03-02 15:41:22'),
+  (5,  'science', 5, 'Science Master',   '?',   150, '2026-03-02 15:41:22'),
+  -- Biology
+  (6,  'biology', 1, 'Living Things',    '?',   0,   '2026-03-02 15:41:22'),
+  (7,  'biology', 2, 'Animal Kingdom',   '?',   30,  '2026-03-02 15:41:22'),
+  (8,  'biology', 3, 'Human Body',       '❤️', 60,  '2026-03-02 15:41:22'),
+  (9,  'biology', 4, 'Ecosystems',       '?',   100, '2026-03-02 15:41:22'),
+  (10, 'biology', 5, 'Biology Champion', '?',   150, '2026-03-02 15:41:22'),
+  -- History
+  (11, 'history', 1, 'Ancient Egypt',    '?',   0,   '2026-03-02 15:41:22'),
+  (12, 'history', 2, 'Ancient Greece',   '?️', 30,  '2026-03-02 15:41:22'),
+  (13, 'history', 3, 'Middle Ages',      '⚔️', 60,  '2026-03-02 15:41:22'),
+  (14, 'history', 4, 'Age of Exploration','⛵', 100, '2026-03-02 15:41:22'),
+  (15, 'history', 5, 'History Hero',     '?',   150, '2026-03-02 15:41:22');
+
+
+-- ============================================================
+-- TABLE: quiz_questions
+-- ============================================================
+
+DROP TABLE IF EXISTS `quiz_questions`;
+CREATE TABLE `quiz_questions` (
+  `id`            int(11)      NOT NULL AUTO_INCREMENT,
+  `level_id`      int(11)      NOT NULL,
+  `question_text` text         NOT NULL,
+  `image_url`     varchar(500) DEFAULT NULL,
+  `option_a`      varchar(500) NOT NULL,
+  `option_b`      varchar(500) NOT NULL,
+  `option_c`      varchar(500) NOT NULL,
+  `option_d`      varchar(500) NOT NULL,
+  `correct_index` int(11)      NOT NULL,
+  `fun_fact`      text         DEFAULT NULL,
+  `sort_order`    int(11)      NOT NULL DEFAULT 0,
+  `created_at`    timestamp    NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `level_id` (`level_id`),
+  CONSTRAINT `quiz_questions_ibfk_1` FOREIGN KEY (`level_id`) REFERENCES `quiz_levels` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=278 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `quiz_questions` VALUES
+  -- Science Level 1: What is Science?
+  (233, 1,  'What do we use to look at tiny objects that are too small to see?',        NULL, 'Telescope','Microscope','Binoculars','Camera',   2, 'A microscope can magnify objects up to 2,000 times their real size! ?',                                         1, '2026-03-02 15:48:07'),
+  (234, 1,  'What is the closest star to Earth?',                                       NULL, 'Polaris','Sirius','The Sun','Proxima Centauri',   3, 'The Sun is 93 million miles away — that\'s very far, but still the closest star! ☀️',                         2, '2026-03-02 15:48:07'),
+  (235, 1,  'Which of these is NOT a state of matter?',                                 NULL, 'Solid','Liquid','Energy','Gas',                   3, 'The three states of matter are solid, liquid, and gas. Energy is not a state of matter! ⚡',                   3, '2026-03-02 15:48:07'),
+  -- Science Level 2: Forces & Motion
+  (236, 2,  'What force pulls objects toward the ground?',                              NULL, 'Magnetism','Friction','Gravity','Wind',           3, 'Gravity is what keeps you from floating off into space! ?',                                                    1, '2026-03-02 15:49:21'),
+  (237, 2,  'What happens when you push a ball on a flat surface?',                     NULL, 'It stops immediately','It moves forward','It goes up','Nothing happens', 2, 'Friction eventually slows the ball down and stops it! ?',                              2, '2026-03-02 15:49:21'),
+  (238, 2,  'Which is heavier — a kilogram of feathers or a kilogram of rocks?',       NULL, 'Rocks','Feathers','They weigh the same','Depends on the day', 3, 'Both weigh exactly 1 kilogram — don\'t be tricked! ⚖️',                                      3, '2026-03-02 15:49:21'),
+  -- Science Level 3: Space Explorer
+  (239, 3,  'How many planets are in our Solar System?',                                NULL, '7','8','9','10',                                  2, 'Pluto was reclassified as a dwarf planet in 2006, leaving us with 8! ?',                                        1, '2026-03-02 15:49:21'),
+  (240, 3,  'What is the largest planet in our Solar System?',                          NULL, 'Saturn','Earth','Jupiter','Neptune',              3, 'Jupiter is so big that 1,300 Earths could fit inside it! ?',                                                   2, '2026-03-02 15:49:21'),
+  (241, 3,  'What do we call a rock from space that hits Earth?',                       NULL, 'Asteroid','Comet','Meteor','Meteorite',           4, 'A meteoroid becomes a meteor when it enters the atmosphere, and a meteorite when it lands! ☄️',                3, '2026-03-02 15:49:21'),
+  -- Science Level 4: Energy & Light
+  (242, 4,  'What color is made when red and blue light mix?',                          NULL, 'Green','Yellow','Purple','Orange',               3, 'Mixing red and blue gives purple or magenta! ?',                                                               1, '2026-03-02 15:49:21'),
+  (243, 4,  'Which travels faster — sound or light?',                                   NULL, 'Sound','Light','They travel the same speed','Depends on weather', 2, 'Light travels at 300,000 km per second — much faster than sound! ⚡',                         2, '2026-03-02 15:49:21'),
+  (244, 4,  'What source of energy comes from the Sun?',                                NULL, 'Nuclear energy','Solar energy','Wind energy','Hydro energy', 2, 'The Sun produces more energy in one second than all of human history combined! ☀️',              3, '2026-03-02 15:49:21'),
+  -- Science Level 5: Science Master
+  (245, 5,  'What is H₂O more commonly known as?',                                     NULL, 'Juice','Milk','Water','Air',                      3, 'H₂O means 2 Hydrogen atoms and 1 Oxygen atom — that\'s water! ?',                                             1, '2026-03-02 15:49:21'),
+  (246, 5,  'What gas do plants absorb from the air?',                                  NULL, 'Oxygen','Nitrogen','Carbon Dioxide','Hydrogen',   3, 'Plants absorb CO₂ and release Oxygen — the opposite of what we do! ?',                                         2, '2026-03-02 15:49:21'),
+  (247, 5,  'What is the hardest natural substance on Earth?',                           NULL, 'Iron','Diamond','Quartz','Granite',              2, 'Diamond is so hard it can only be scratched by another diamond! ?',                                            3, '2026-03-02 15:49:21'),
+  -- Biology Level 6: Living Things
+  (248, 6,  'Which of these is a living thing?',                                        NULL, 'Rock','Tree','Cloud','Water',                    2, 'Trees are living organisms — they grow, reproduce, and respond to the environment! ?',                          1, '2026-03-02 15:49:21'),
+  (249, 6,  'What do plants need to make their own food?',                              NULL, 'Moonlight','Sunlight','Darkness','Rain only',    2, 'Photosynthesis uses sunlight, water, and CO₂ to make sugar for plants! ☀️',                                    2, '2026-03-02 15:49:21'),
+  (250, 6,  'What is the smallest unit of life?',                                       NULL, 'Atom','Organ','Cell','Tissue',                   3, 'Your body has about 37 trillion cells! ?',                                                                     3, '2026-03-02 15:49:21'),
+  -- Biology Level 7: Animal Kingdom
+  (251, 7,  'What do we call animals that eat only plants?',                            NULL, 'Carnivores','Omnivores','Herbivores','Decomposers', 3, 'Cows, rabbits, and elephants are herbivores! ?',                                                           1, '2026-03-02 15:49:21'),
+  (252, 7,  'Which animal is a mammal?',                                                NULL, 'Snake','Frog','Shark','Whale',                   4, 'Whales breathe air and feed their babies milk — just like you! ?',                                             2, '2026-03-02 15:49:21'),
+  (253, 7,  'How many legs does an insect have?',                                       NULL, '4','6','8','10',                                 2, 'All insects have exactly 6 legs! Spiders have 8 and are not insects. ?',                                        3, '2026-03-02 15:49:21'),
+  -- Biology Level 8: Human Body
+  (254, 8,  'How many bones does an adult human body have?',                            NULL, '106','206','306','406',                          2, 'Babies are born with 270 bones, but many fuse together as we grow! ?',                                         1, '2026-03-02 15:49:21'),
+  (255, 8,  'Which organ pumps blood around your body?',                                NULL, 'Lungs','Liver','Heart','Brain',                  3, 'Your heart beats about 100,000 times every single day! ❤️',                                                   2, '2026-03-02 15:49:21'),
+  (256, 8,  'What do your lungs do?',                                                   NULL, 'Digest food','Pump blood','Breathe air','Filter water', 3, 'Your lungs take in oxygen and release carbon dioxide with every breath! ?',                           3, '2026-03-02 15:49:21'),
+  -- Biology Level 9: Ecosystems
+  (257, 9,  'What do we call the place where an animal naturally lives?',               NULL, 'Zoo','Habitat','Farm','Biome',                  2, 'Protecting natural habitats is the best way to save endangered animals! ?',                                    1, '2026-03-02 15:49:21'),
+  (258, 9,  'What is the process called when a caterpillar turns into a butterfly?',    NULL, 'Evolution','Metamorphosis','Migration','Hibernation', 2, 'Inside the chrysalis, the caterpillar literally dissolves before reforming as a butterfly! ?',          2, '2026-03-02 15:49:21'),
+  (259, 9,  'Which of these animals hibernates in winter?',                             NULL, 'Penguin','Eagle','Bear','Dolphin',              3, 'Bears can sleep for 7 months straight during hibernation! ?',                                                   3, '2026-03-02 15:49:21'),
+  -- Biology Level 10: Biology Champion
+  (260, 10, 'What is DNA?',                                                             NULL, 'A type of food','Instructions for building living things','A bone','A disease', 2, 'If you stretched out all the DNA in one human cell, it would be 2 meters long! ?', 1, '2026-03-02 15:49:21'),
+  (261, 10, 'Which part of the plant absorbs water from the soil?',                    NULL, 'Leaves','Stem','Roots','Flowers',               3, 'Some tree roots can spread wider than the tree is tall! ?',                                                    2, '2026-03-02 15:49:21'),
+  (262, 10, 'What do we call baby frogs before they grow legs?',                        NULL, 'Larvae','Tadpoles','Puppies','Nymphs',           2, 'Tadpoles have tails and gills, then grow legs and lungs as they become frogs! ?',                              3, '2026-03-02 15:49:21'),
+  -- History Level 11: Ancient Egypt
+  (263, 11, 'What did the Ancient Egyptians build as tombs for their pharaohs?',       NULL, 'Castles','Pyramids','Coliseums','Temples',       2, 'The Great Pyramid was the tallest human-made structure for 3,800 years! ?',                                   1, '2026-03-02 15:49:21'),
+  (264, 11, 'What was the name of the writing system used in Ancient Egypt?',          NULL, 'Alphabet','Cuneiform','Hieroglyphics','Latin',   3, 'Hieroglyphics used over 700 different picture symbols as letters! ?',                                          2, '2026-03-02 15:49:21'),
+  (265, 11, 'What was the River Nile important for in Ancient Egypt?',                 NULL, 'Swimming','Farming and water','Trading gold only','Building pyramids', 2, 'The Nile floods every year, leaving rich soil perfect for growing crops! ?',              3, '2026-03-02 15:49:21'),
+  -- History Level 12: Ancient Greece
+  (266, 12, 'The Ancient Greeks invented which major sporting event?',                  NULL, 'World Cup','Olympic Games','Cricket','Chess Olympics', 2, 'The first Olympic Games were held in 776 BC in Olympia, Greece! ?',                                   1, '2026-03-02 15:49:21'),
+  (267, 12, 'What is democracy?',                                                       NULL, 'Rule by one king','Rule by the people','Rule by priests','Rule by the army', 2, 'The Ancient Greeks invented democracy — the word means "rule by the people" in Greek! ?️', 2, '2026-03-02 15:49:21'),
+  (268, 12, 'Who was the king of the Greek gods?',                                      NULL, 'Poseidon','Hades','Zeus','Apollo',               3, 'Zeus was the god of lightning and the sky, and ruler of Mount Olympus! ⚡',                                   3, '2026-03-02 15:49:21'),
+  -- History Level 13: Middle Ages
+  (269, 13, 'Where did knights and kings live in the Middle Ages?',                     NULL, 'Pyramids','Castles','Caves','Skyscrapers',       2, 'Castles had thick walls, drawbridges, and moats to protect against attackers! ?',                             1, '2026-03-02 15:49:21'),
+  (270, 13, 'What were the journeys to recapture Jerusalem called?',                    NULL, 'Expeditions','Crusades','Voyages','Pilgrimages', 2, 'There were 9 major Crusades between 1095 and 1291! ⚔️',                                                       2, '2026-03-02 15:49:21'),
+  (271, 13, 'What did monks do in the Middle Ages to preserve knowledge?',              NULL, 'Printed books','Copied manuscripts by hand','Built libraries','Used computers', 2, 'Before printing, monks spent years carefully copying books by hand! ?',           3, '2026-03-02 15:49:21'),
+  -- History Level 14: Age of Exploration
+  (272, 14, 'Who is credited with discovering America in 1492?',                        NULL, 'Vasco da Gama','Ferdinand Magellan','Christopher Columbus','Marco Polo', 3, 'Columbus was actually trying to find a sea route to Asia when he landed in America! ?', 1, '2026-03-02 15:49:21'),
+  (273, 14, 'Which explorer was the first to sail around the whole world?',             NULL, 'Columbus','Magellan\'s expedition','Drake','Cook', 2, 'Magellan died during the voyage, but his crew completed the circumnavigation! ⛵',                          2, '2026-03-02 15:49:21'),
+  (274, 14, 'What tool helped sailors navigate the oceans?',                            NULL, 'Telescope','Compass','Calculator','Map only',    2, 'The magnetic compass was invented in China and reached Europe around 1190! ?',                                3, '2026-03-02 15:49:21'),
+  -- History Level 15: History Hero
+  (275, 15, 'When did World War II end?',                                               NULL, '1939','1942','1945','1950',                      3, 'WWII ended in 1945 — it involved over 30 countries and 70 million soldiers! ?️',                               1, '2026-03-02 15:49:21'),
+  (276, 15, 'Who invented the telephone?',                                              NULL, 'Thomas Edison','Alexander Graham Bell','Nikola Tesla','Benjamin Franklin', 2, 'Alexander Graham Bell made the first phone call in 1876 — to his assistant next door! ?', 2, '2026-03-02 15:49:21'),
+  (277, 15, 'What year did humans first land on the Moon?',                             NULL, '1959','1965','1969','1972',                      3, 'Neil Armstrong and Buzz Aldrin landed on the Moon on July 20, 1969! ?',                                       3, '2026-03-02 15:49:21');
+
+
+-- ============================================================
+-- TABLE: user_subject_progress
+-- ============================================================
+
+DROP TABLE IF EXISTS `user_subject_progress`;
+CREATE TABLE `user_subject_progress` (
+  `id`          int(11)     NOT NULL AUTO_INCREMENT,
+  `user_id`     int(11)     NOT NULL,
+  `subject_id`  varchar(50) NOT NULL,
+  `total_stars` int(11)     NOT NULL DEFAULT 0,
+  `updated_at`  timestamp   NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_user_subject` (`user_id`, `subject_id`),
+  CONSTRAINT `fk_usp_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `user_subject_progress` VALUES
+  (1, 7, 'science', 30, '2026-02-22 05:17:48'),
+  (2, 7, 'health',  10, '2026-02-22 14:33:01'),
+  (3, 7, 'math',    60, '2026-02-23 13:48:02');
+
+
+-- ============================================================
+-- TABLE: user_level_completions
+-- ============================================================
+
+DROP TABLE IF EXISTS `user_level_completions`;
+CREATE TABLE `user_level_completions` (
+  `id`              int(11)     NOT NULL AUTO_INCREMENT,
+  `user_id`         int(11)     NOT NULL,
+  `subject_id`      varchar(50) NOT NULL,
+  `level_number`    int(11)     NOT NULL,
+  `stars_earned`    int(11)     NOT NULL DEFAULT 0,
+  `quiz_score`      int(11)     NOT NULL DEFAULT 0,
+  `total_questions` int(11)     NOT NULL DEFAULT 3,
+  `completed_at`    timestamp   NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_user_level` (`user_id`, `subject_id`, `level_number`),
+  CONSTRAINT `fk_ulc_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `user_level_completions` VALUES
+  (1, 7, 'science', 1, 30, 3, 3, '2026-02-22 05:17:48'),
+  (2, 7, 'health',  1, 10, 1, 2, '2026-02-22 14:33:01'),
+  (3, 7, 'math',    1, 30, 1, 1, '2026-02-23 13:48:02'),
+  (4, 7, 'math',    2, 30, 1, 1, '2026-02-22 15:03:23');
+
+
+-- ============================================================
+-- TABLE: user_points
+-- ============================================================
+
+DROP TABLE IF EXISTS `user_points`;
+CREATE TABLE `user_points` (
+  `user_id`      int(11) NOT NULL,
+  `total_points` int(11) DEFAULT 0,
+  PRIMARY KEY (`user_id`),
+  CONSTRAINT `fk_user_points_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- (No data)
+
+
+-- ============================================================
+-- TABLE: points_history
+-- ============================================================
+
+DROP TABLE IF EXISTS `points_history`;
+CREATE TABLE `points_history` (
+  `id`           int(11)      NOT NULL AUTO_INCREMENT,
+  `user_id`      int(11)      DEFAULT NULL,
+  `points_earned`int(11)      DEFAULT NULL,
+  `source`       varchar(100) DEFAULT NULL,
+  `created_at`   timestamp    NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `fk_points_history_user` (`user_id`),
+  CONSTRAINT `fk_points_history_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- (No data)
+
+
+-- ============================================================
+-- VIEWs
+-- ============================================================
+
+-- View: v_user_progress
+DROP VIEW IF EXISTS `v_user_progress`;
+CREATE VIEW `v_user_progress` AS
+  SELECT
+    u.id          AS user_id,
+    u.name        AS user_name,
+    usp.subject_id,
+    usp.total_stars,
+    COUNT(ulc.id) AS levels_completed,
+    usp.updated_at AS last_activity
+  FROM users u
+  LEFT JOIN user_subject_progress usp ON usp.user_id = u.id
+  LEFT JOIN user_level_completions ulc
+         ON ulc.user_id = u.id AND ulc.subject_id = usp.subject_id
+  GROUP BY u.id, u.name, usp.subject_id, usp.total_stars, usp.updated_at;
+
+
+-- View: v_leaderboard
+DROP VIEW IF EXISTS `v_leaderboard`;
+CREATE VIEW `v_leaderboard` AS
+  SELECT
+    u.id            AS user_id,
+    u.name          AS name,
+    SUM(usp.total_stars) AS grand_total_stars
+  FROM users u
+  JOIN user_subject_progress usp ON usp.user_id = u.id
+  GROUP BY u.id, u.name
+  ORDER BY SUM(usp.total_stars) DESC;
+
+
+-- ============================================================
+-- Restore settings
+-- ============================================================
+
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- ============================================================
+-- End of little_mind_db_full.sql
+-- ============================================================

@@ -1,55 +1,79 @@
-// ============================================================
-// admin_service.dart
-// Place in: lib/services/admin_service.dart
-// ============================================================
-//
-// Required pubspec.yaml addition:
-//   image_picker: ^1.0.7
-//
-// ============================================================
-
-import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
+import '../helpers/config.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AdminService {
-  // ── The admin secret key — must match const adminSecret in main.go ──
-  static const String adminKey = 'LittleMind@Admin2024';
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  static String get baseUrl {
-    if (kIsWeb) return 'http://localhost:8080';
-    return 'http://10.0.2.2:8080'; // Android emulator
+  // ── Authorization check ───────────────────────────────────────────
+  
+  /// Checks if the current user has admin privileges in Firestore.
+  Future<bool> isCurrentUserAdmin() async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return false;
+    final doc = await _db.collection('users').doc(uid).get();
+    return doc.data()?['isAdmin'] == true;
   }
 
-  static Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        'X-Admin-Key': adminKey,
-      };
+  static bool verifyKey(String key) {
+    return key == Config.adminGateKey;
+  }
 
-  // ── Verify key locally (matches the Go constant) ────────────────────
-  static bool verifyKey(String key) => key == adminKey;
+  /// Fetches the entire quiz structure for a subject.
+  Future<Map<String, dynamic>?> getFullQuiz(String subjectId) async {
+    try {
+      final subjectDoc = await _db.collection('quiz_subjects').doc(subjectId).get();
+      if (!subjectDoc.exists) return null;
+
+      final levelsSnapshot = await _db
+          .collection('quiz_subjects')
+          .doc(subjectId)
+          .collection('levels')
+          .orderBy('level_number')
+          .get();
+
+      final List<Map<String, dynamic>> levels = [];
+      for (var levelDoc in levelsSnapshot.docs) {
+        final questionsSnapshot = await levelDoc.reference.collection('questions').get();
+        final questions = questionsSnapshot.docs
+            .map((q) => {...q.data(), 'id': q.id})
+            .toList();
+
+        levels.add({
+          ...levelDoc.data(),
+          'id': levelDoc.id,
+          'questions': questions,
+        });
+      }
+
+      return {
+        ...subjectDoc.data()!,
+        'id': subjectDoc.id,
+        'levels': levels,
+      };
+    } catch (e) {
+      debugPrint('AdminService.getFullQuiz error: $e');
+    }
+    return null;
+  }
 
   // ── SUBJECTS ─────────────────────────────────────────────────────────
 
-  /// Returns a list of all admin-created subjects from the DB.
   Future<List<Map<String, dynamic>>> getSubjects() async {
     try {
-      final resp = await http
-          .get(Uri.parse('$baseUrl/admin/subjects'), headers: _headers)
-          .timeout(const Duration(seconds: 10));
-      if (resp.statusCode == 200) {
-        final body = jsonDecode(resp.body);
-        final data = body['data'] as List<dynamic>? ?? [];
-        return data.cast<Map<String, dynamic>>();
-      }
+      final snapshot = await _db.collection('quiz_subjects').get();
+      return snapshot.docs.map((doc) => {...doc.data(), 'id': doc.id}).toList();
     } catch (e) {
-      print('AdminService.getSubjects error: $e');
+      debugPrint('AdminService.getSubjects error: $e');
     }
     return [];
   }
 
-  /// Creates a new quiz subject. Returns true on success.
   Future<bool> createSubject({
     required String id,
     required String name,
@@ -58,48 +82,39 @@ class AdminService {
     String gradientEnd = '#0288D1',
   }) async {
     try {
-      final resp = await http
-          .post(
-            Uri.parse('$baseUrl/admin/subjects'),
-            headers: _headers,
-            body: jsonEncode({
-              'id': id.toLowerCase().replaceAll(' ', '_'),
-              'name': name,
-              'emoji': emoji,
-              'gradient_start': gradientStart,
-              'gradient_end': gradientEnd,
-            }),
-          )
-          .timeout(const Duration(seconds: 10));
-      return resp.statusCode == 201;
+      final subjectId = id.toLowerCase().replaceAll(' ', '_');
+      await _db.collection('quiz_subjects').doc(subjectId).set({
+        'name': name,
+        'emoji': emoji,
+        'gradient_start': gradientStart,
+        'gradient_end': gradientEnd,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      return true;
     } catch (e) {
-      print('AdminService.createSubject error: $e');
+      debugPrint('AdminService.createSubject error: $e');
       return false;
     }
   }
 
   // ── LEVELS ───────────────────────────────────────────────────────────
 
-  /// Returns all levels for a given subject.
   Future<List<Map<String, dynamic>>> getLevels(String subjectId) async {
     try {
-      final resp = await http
-          .get(Uri.parse('$baseUrl/admin/levels?subject_id=$subjectId'),
-              headers: _headers)
-          .timeout(const Duration(seconds: 10));
-      if (resp.statusCode == 200) {
-        final body = jsonDecode(resp.body);
-        final data = body['data'] as List<dynamic>? ?? [];
-        return data.cast<Map<String, dynamic>>();
-      }
+      final snapshot = await _db
+          .collection('quiz_subjects')
+          .doc(subjectId)
+          .collection('levels')
+          .orderBy('level_number')
+          .get();
+      return snapshot.docs.map((doc) => {...doc.data(), 'id': doc.id}).toList();
     } catch (e) {
-      print('AdminService.getLevels error: $e');
+      debugPrint('AdminService.getLevels error: $e');
     }
     return [];
   }
 
-  /// Creates a level. Returns the new level ID, or null on failure.
-  Future<int?> createLevel({
+  Future<String?> createLevel({
     required String subjectId,
     required int levelNumber,
     required String title,
@@ -107,122 +122,102 @@ class AdminService {
     required int starsRequired,
   }) async {
     try {
-      final resp = await http
-          .post(
-            Uri.parse('$baseUrl/admin/levels'),
-            headers: _headers,
-            body: jsonEncode({
-              'subject_id': subjectId,
-              'level_number': levelNumber,
-              'title': title,
-              'icon': icon,
-              'stars_required': starsRequired,
-            }),
-          )
-          .timeout(const Duration(seconds: 10));
-      if (resp.statusCode == 201) {
-        final body = jsonDecode(resp.body);
-        return (body['data']['id'] as num?)?.toInt();
-      }
-      print('AdminService.createLevel HTTP ${resp.statusCode}: ${resp.body}');
+      final docRef = _db
+          .collection('quiz_subjects')
+          .doc(subjectId)
+          .collection('levels')
+          .doc(levelNumber.toString()); // Use level number as ID for consistency
+      
+      await docRef.set({
+        'level_number': levelNumber,
+        'title': title,
+        'icon': icon,
+        'stars_required': starsRequired,
+      });
+      return docRef.id;
     } catch (e) {
-      print('AdminService.createLevel error: $e');
+      debugPrint('AdminService.createLevel error: $e');
     }
     return null;
   }
 
   // ── QUESTIONS ────────────────────────────────────────────────────────
 
-  /// Batch-saves all questions for a level. Returns true on success.
   Future<bool> saveQuestions(
-      int levelId, List<Map<String, dynamic>> questions) async {
+      String subjectId, String levelId, List<Map<String, dynamic>> questions) async {
     try {
-      final resp = await http
-          .post(
-            Uri.parse('$baseUrl/admin/questions'),
-            headers: _headers,
-            body: jsonEncode({'level_id': levelId, 'questions': questions}),
-          )
-          .timeout(const Duration(seconds: 15));
-      if (resp.statusCode == 200) return true;
-      print('AdminService.saveQuestions HTTP ${resp.statusCode}: ${resp.body}');
+      final batch = _db.batch();
+      final levelRef = _db
+          .collection('quiz_subjects')
+          .doc(subjectId)
+          .collection('levels')
+          .doc(levelId);
+
+      // Delete existing questions first (simplified: just overwrite in a subcollection)
+      final existingQs = await levelRef.collection('questions').get();
+      for (var doc in existingQs.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // Add new questions
+      for (var i = 0; i < questions.length; i++) {
+        final qRef = levelRef.collection('questions').doc((i + 1).toString());
+        batch.set(qRef, {
+          ...questions[i],
+          'sort_order': i,
+        });
+      }
+
+      await batch.commit();
+      return true;
     } catch (e) {
-      print('AdminService.saveQuestions error: $e');
+      debugPrint('AdminService.saveQuestions error: $e');
     }
     return false;
   }
 
   // ── IMAGE UPLOAD ─────────────────────────────────────────────────────
 
-  /// Uploads an image file picked by image_picker.
-  /// Returns the public URL string, or null on failure.
+  /// Uploads an image to Cloudinary. Returns the secure download URL.
   Future<String?> uploadImage(XFile imageFile) async {
     try {
-      final uri = Uri.parse('$baseUrl/admin/upload');
-      final request = http.MultipartRequest('POST', uri)
-        ..headers['X-Admin-Key'] = adminKey;
-
-      // Read bytes works on both web and mobile
-      final bytes = await imageFile.readAsBytes();
-      request.files.add(http.MultipartFile.fromBytes(
-        'image',
-        bytes,
-        filename: imageFile.name,
-      ));
-
-      final streamed =
-          await request.send().timeout(const Duration(seconds: 30));
-      final resp = await http.Response.fromStream(streamed);
-
-      if (resp.statusCode == 200) {
-        final body = jsonDecode(resp.body);
-        return body['data']['url'] as String?;
-      }
-      print('AdminService.uploadImage HTTP ${resp.statusCode}: ${resp.body}');
-    } catch (e) {
-      print('AdminService.uploadImage error: $e');
-    }
-    return null;
-  }
-
-  // ── FULL QUIZ (read-back) ─────────────────────────────────────────────
-
-  Future<Map<String, dynamic>?> getFullQuiz(String subjectId) async {
-    try {
-      final resp = await http
-          .get(Uri.parse('$baseUrl/admin/quiz?subject_id=$subjectId'),
-              headers: _headers)
-          .timeout(const Duration(seconds: 10));
-      if (resp.statusCode == 200) {
-        final body = jsonDecode(resp.body);
-        return body['data'] as Map<String, dynamic>?;
+      final String cloudName = Config.cloudinaryCloudName;
+      final String uploadPreset = Config.cloudinaryUploadPreset;
+      
+      final url = Uri.parse("https://api.cloudinary.com/v1_1/$cloudName/image/upload");
+      
+      final request = http.MultipartRequest("POST", url)
+        ..fields['upload_preset'] = uploadPreset
+        ..files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+        
+      final response = await request.send();
+      final responseData = await response.stream.toBytes();
+      final responseString = String.fromCharCodes(responseData);
+      final jsonResponse = jsonDecode(responseString);
+      
+      if (response.statusCode == 200) {
+        return jsonResponse['secure_url'];
+      } else {
+        debugPrint('Cloudinary upload failed: ${jsonResponse['error']['message']}');
       }
     } catch (e) {
-      print('AdminService.getFullQuiz error: $e');
+      debugPrint('AdminService.uploadImage Cloudinary error: $e');
     }
     return null;
   }
 
   // ── PUZZLES ───────────────────────────────────────────────────────────
 
-  /// Returns all puzzles from the DB.
   Future<List<Map<String, dynamic>>> getPuzzles() async {
     try {
-      final resp = await http
-          .get(Uri.parse('$baseUrl/admin/puzzles'), headers: _headers)
-          .timeout(const Duration(seconds: 10));
-      if (resp.statusCode == 200) {
-        final body = jsonDecode(resp.body);
-        final data = body['data'] as List<dynamic>? ?? [];
-        return data.cast<Map<String, dynamic>>();
-      }
+      final snapshot = await _db.collection('puzzles').get();
+      return snapshot.docs.map((doc) => {...doc.data(), 'id': doc.id}).toList();
     } catch (e) {
-      print('AdminService.getPuzzles error: $e');
+      debugPrint('AdminService.getPuzzles error: $e');
     }
     return [];
   }
 
-  /// Creates a new puzzle. Returns the created puzzle map or null on failure.
   Future<Map<String, dynamic>?> createPuzzle({
     required String title,
     required String imageUrl,
@@ -231,65 +226,45 @@ class AdminService {
     required String difficulty,
   }) async {
     try {
-      final resp = await http
-          .post(
-            Uri.parse('$baseUrl/admin/puzzles'),
-            headers: _headers,
-            body: jsonEncode({
-              'title': title,
-              'image_url': imageUrl,
-              'piece_count': pieceCount,
-              'category': category,
-              'difficulty': difficulty,
-            }),
-          )
-          .timeout(const Duration(seconds: 10));
-      if (resp.statusCode == 201) {
-        final body = jsonDecode(resp.body);
-        return body['data'] as Map<String, dynamic>?;
-      }
-      print('AdminService.createPuzzle HTTP ${resp.statusCode}: ${resp.body}');
+      final docRef = await _db.collection('puzzles').add({
+        'title': title,
+        'image_url': imageUrl,
+        'piece_count': pieceCount,
+        'category': category,
+        'difficulty': difficulty,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      final doc = await docRef.get();
+      return {...doc.data()!, 'id': doc.id};
     } catch (e) {
-      print('AdminService.createPuzzle error: $e');
+      debugPrint('AdminService.createPuzzle error: $e');
     }
     return null;
   }
 
-  /// Deletes a puzzle by ID. Returns true on success.
-  Future<bool> deletePuzzle(int id) async {
+  Future<bool> deletePuzzle(String id) async {
     try {
-      final resp = await http
-          .delete(Uri.parse('$baseUrl/admin/puzzles?id=$id'), headers: _headers)
-          .timeout(const Duration(seconds: 10));
-      return resp.statusCode == 200;
+      await _db.collection('puzzles').doc(id).delete();
+      return true;
     } catch (e) {
-      print('AdminService.deletePuzzle error: $e');
+      debugPrint('AdminService.deletePuzzle error: $e');
       return false;
     }
   }
 
   // ── STORIES ──────────────────────────────────────────────────────────
 
-  /// Returns all stories from the DB.
   Future<List<Map<String, dynamic>>> getStories() async {
     try {
-      final resp = await http
-          .get(Uri.parse('$baseUrl/admin/stories'), headers: _headers)
-          .timeout(const Duration(seconds: 10));
-      if (resp.statusCode == 200) {
-        final body = jsonDecode(resp.body);
-        final data = body['data'] as List<dynamic>? ?? [];
-        return data.cast<Map<String, dynamic>>();
-      }
+      final snapshot = await _db.collection('stories').get();
+      return snapshot.docs.map((doc) => {...doc.data(), 'id': doc.id}).toList();
     } catch (e) {
-      print('AdminService.getStories error: $e');
+      debugPrint('AdminService.getStories error: $e');
     }
     return [];
   }
 
-  /// Creates a story with its pages in one call.
-  /// Returns the new story ID, or null on failure.
-  Future<int?> createStory({
+  Future<String?> createStory({
     required String title,
     required String author,
     required String description,
@@ -301,7 +276,7 @@ class AdminService {
     required List<Map<String, dynamic>> pages,
   }) async {
     try {
-      final payload = jsonEncode({
+      final storyRef = await _db.collection('stories').add({
         'title': title,
         'author': author,
         'description': description,
@@ -310,52 +285,34 @@ class AdminService {
         'difficulty': difficulty,
         'age_range': ageRange,
         'cover_emoji': coverEmoji,
-        'pages': pages,
+        'createdAt': FieldValue.serverTimestamp(),
       });
-      final resp = await http
-          .post(
-            Uri.parse('$baseUrl/admin/stories'),
-            headers: _headers,
-            body: payload,
-          )
-          .timeout(const Duration(seconds: 30));
-      if (resp.statusCode == 201) {
-        final body = jsonDecode(resp.body);
-        return (body['data']['id'] as num?)?.toInt();
+
+      // Add pages as subcollection
+      final batch = _db.batch();
+      for (var i = 0; i < pages.length; i++) {
+        final pageRef = storyRef.collection('pages').doc((i + 1).toString());
+        batch.set(pageRef, {
+          ...pages[i],
+          'page_number': i + 1,
+        });
       }
-      print('AdminService.createStory HTTP ${resp.statusCode}: ${resp.body}');
+      await batch.commit();
+      
+      return storyRef.id;
     } catch (e) {
-      print('AdminService.createStory error: $e');
+      debugPrint('AdminService.createStory error: $e');
     }
     return null;
   }
 
-  /// Deletes a story and all its pages by ID. Returns true on success.
-  Future<bool> deleteStory(int id) async {
+  Future<bool> deleteStory(String id) async {
     try {
-      final resp = await http
-          .delete(Uri.parse('$baseUrl/admin/stories?id=$id'), headers: _headers)
-          .timeout(const Duration(seconds: 10));
-      return resp.statusCode == 200;
+      await _db.collection('stories').doc(id).delete();
+      return true;
     } catch (e) {
-      print('AdminService.deleteStory error: $e');
+      debugPrint('AdminService.deleteStory error: $e');
       return false;
     }
-  }
-
-  /// Returns a single story with all its pages.
-  Future<Map<String, dynamic>?> getStory(int id) async {
-    try {
-      final resp = await http
-          .get(Uri.parse('$baseUrl/admin/stories/$id'), headers: _headers)
-          .timeout(const Duration(seconds: 10));
-      if (resp.statusCode == 200) {
-        final body = jsonDecode(resp.body);
-        return body['data'] as Map<String, dynamic>?;
-      }
-    } catch (e) {
-      print('AdminService.getStory error: $e');
-    }
-    return null;
   }
 }

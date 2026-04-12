@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "59908804787",
+    "project_id": "little-minds-352e3",
+    "storage_bucket": "little-minds-352e3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:59908804787:android:e2c06aa8a5111b565f20c6",
+        "android_client_info": {
+          "package_name": "com.example.mind_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZNwK7J65kuD0gLBsOINXHCQDRGuTNDiE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

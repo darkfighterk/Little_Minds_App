@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -31,8 +30,8 @@ class _ARCameraViewState extends State<ARCameraView> {
         children: [
           // Background (camera placeholder + overlay)
           Container(
-            decoration: BoxDecoration(
-              image: const DecorationImage(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
                 image: NetworkImage(
                   'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
                 ),
@@ -40,7 +39,7 @@ class _ARCameraViewState extends State<ARCameraView> {
               ),
             ),
             child: Container(
-              color: Colors.black.withOpacity(0.22),
+              color: Colors.black.withValues(alpha: 0.22),
             ),
           ),
 
@@ -100,7 +99,7 @@ class _ARCameraViewState extends State<ARCameraView> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.pinkAccent.withOpacity(0.35),
+                          color: Colors.pinkAccent.withValues(alpha: 0.35),
                           blurRadius: 40,
                           spreadRadius: 10,
                         ),
@@ -126,8 +125,8 @@ class _ARCameraViewState extends State<ARCameraView> {
                   height: 288,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    color: primary.withOpacity(0.45),
-                    backgroundColor: primary.withOpacity(0.10),
+                    color: primary.withValues(alpha: 0.45),
+                    backgroundColor: primary.withValues(alpha: 0.10),
                   ),
                 ),
 
@@ -137,7 +136,7 @@ class _ARCameraViewState extends State<ARCameraView> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                        color: primary.withOpacity(0.20), width: 1.5),
+                        color: primary.withValues(alpha: 0.20), width: 1.5),
                   ),
                 ),
 
@@ -150,7 +149,7 @@ class _ARCameraViewState extends State<ARCameraView> {
           Positioned(
             top: MediaQuery.of(context).size.height * 0.22,
             right: 60,
-            child: _AnimatedLabel(label: "Aorta", primary: primary),
+            child: const _AnimatedLabel(label: "Aorta", primary: primary),
           ),
 
           // Right-side panel
@@ -164,12 +163,12 @@ class _ARCameraViewState extends State<ARCameraView> {
                   width: 220,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: glassBase.withOpacity(glassOpacity),
+                    color: glassBase.withValues(alpha: glassOpacity),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: primary.withOpacity(0.28)),
+                    border: Border.all(color: primary.withValues(alpha: 0.28)),
                     boxShadow: [
                       BoxShadow(
-                          color: Colors.black.withOpacity(0.42),
+                          color: Colors.black.withValues(alpha: 0.42),
                           blurRadius: 20,
                           offset: const Offset(0, 8)),
                     ],
@@ -179,7 +178,7 @@ class _ARCameraViewState extends State<ARCameraView> {
                     children: [
                       Row(
                         children: [
-                          Icon(Symbols.vital_signs, color: primary, size: 22),
+                          const Icon(Symbols.vital_signs, color: primary, size: 22),
                           const SizedBox(width: 8),
                           Text(
                             "QUICK FACTS",
@@ -193,15 +192,15 @@ class _ARCameraViewState extends State<ARCameraView> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _FactRow(
+                      const _FactRow(
                           label: "Daily Activity",
                           value: "The heart beats ~100k times a day."),
                       const Divider(color: Colors.white24, height: 24),
-                      _FactRow(
+                      const _FactRow(
                           label: "Capacity",
                           value: "It pumps 2,000 gallons of blood daily."),
                       const SizedBox(height: 16),
-                      _LearnMoreButton(primary: primary),
+                      const _LearnMoreButton(primary: primary),
                     ],
                   ),
                 ),
@@ -234,18 +233,18 @@ class _ARCameraViewState extends State<ARCameraView> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 10),
                         decoration: BoxDecoration(
-                          color: glassBase.withOpacity(glassOpacity),
+                          color: glassBase.withValues(alpha: glassOpacity),
                           borderRadius: BorderRadius.circular(999),
                           border:
-                              Border.all(color: Colors.white.withOpacity(0.14)),
+                              Border.all(color: Colors.white.withValues(alpha: 0.14)),
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Symbols.check_circle,
                                 color: primary, size: 18),
-                            const SizedBox(width: 8),
-                            const Text(
+                            SizedBox(width: 8),
+                            Text(
                               "Surface detected",
                               style: TextStyle(
                                   color: Colors.white,
@@ -273,20 +272,20 @@ class _ARCameraViewState extends State<ARCameraView> {
                             horizontal: 36, vertical: 18),
                         shape: const StadiumBorder(),
                         elevation: 12,
-                        shadowColor: primary.withOpacity(0.55),
+                        shadowColor: primary.withValues(alpha: 0.55),
                       ),
                     ),
                     const SizedBox(height: 36),
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _BottomActionButton(
                             icon: Symbols.image,
                             label: "Gallery",
                             primary: primary),
-                        const SizedBox(width: 60),
+                        SizedBox(width: 60),
                         _ShutterButton(primary: primary),
-                        const SizedBox(width: 60),
+                        SizedBox(width: 60),
                         _BottomActionButton(
                             icon: Symbols.history,
                             label: "Recent",
@@ -309,7 +308,7 @@ class _ARCameraViewState extends State<ARCameraView> {
                 width: 135,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.35),
+                  color: Colors.white.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -325,21 +324,21 @@ class _ARCameraViewState extends State<ARCameraView> {
     const double offset = -6;
     return [
       Positioned(
-          top: offset, left: offset, child: _Bracket(primary, topLeft: true)),
+          top: offset, left: offset, child: _bracket(primary, topLeft: true)),
       Positioned(
-          top: offset, right: offset, child: _Bracket(primary, topRight: true)),
+          top: offset, right: offset, child: _bracket(primary, topRight: true)),
       Positioned(
           bottom: offset,
           left: offset,
-          child: _Bracket(primary, bottomLeft: true)),
+          child: _bracket(primary, bottomLeft: true)),
       Positioned(
           bottom: offset,
           right: offset,
-          child: _Bracket(primary, bottomRight: true)),
+          child: _bracket(primary, bottomRight: true)),
     ];
   }
 
-  Widget _Bracket(Color color,
+  Widget _bracket(Color color,
       {bool topLeft = false,
       bool topRight = false,
       bool bottomLeft = false,
@@ -386,11 +385,11 @@ class _GlassButton extends StatelessWidget {
         width: 48,
         height: 48,
         decoration: BoxDecoration(
-          color: const Color(0xFF1A0F1C).withOpacity(0.68),
+          color: const Color(0xFF1A0F1C).withValues(alpha: 0.68),
           shape: BoxShape.circle,
-          border: Border.all(color: primary.withOpacity(0.28)),
+          border: Border.all(color: primary.withValues(alpha: 0.28)),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 12)
+            BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 12)
           ],
         ),
         child: Icon(icon, color: Colors.white, size: 26),
@@ -410,9 +409,9 @@ class _AnimatedLabel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A0F1C).withOpacity(0.68),
+        color: const Color(0xFF1A0F1C).withValues(alpha: 0.68),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: primary.withOpacity(0.38)),
+        border: Border.all(color: primary.withValues(alpha: 0.38)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -472,7 +471,7 @@ class _LearnMoreButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: primary.withOpacity(0.20),
+      color: primary.withValues(alpha: 0.20),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -511,13 +510,13 @@ class _ZoomSlider extends StatelessWidget {
       width: 56,
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A0F1C).withOpacity(0.68),
+        color: const Color(0xFF1A0F1C).withValues(alpha: 0.68),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.10)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
       ),
       child: Column(
         children: [
-          Icon(Symbols.zoom_in, color: Colors.white60, size: 28),
+          const Icon(Symbols.zoom_in, color: Colors.white60, size: 28),
           const SizedBox(height: 12),
           SizedBox(
             height: 160,
@@ -527,7 +526,7 @@ class _ZoomSlider extends StatelessWidget {
                 Container(
                   width: 6,
                   decoration: BoxDecoration(
-                      color: primary.withOpacity(0.25),
+                      color: primary.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(999)),
                 ),
                 FractionallySizedBox(
@@ -549,7 +548,7 @@ class _ZoomSlider extends StatelessWidget {
                       color: Colors.white,
                       shape: BoxShape.circle,
                       border: Border.all(color: primary, width: 3),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(color: Colors.black38, blurRadius: 8)
                       ],
                     ),
@@ -559,7 +558,7 @@ class _ZoomSlider extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Icon(Symbols.zoom_out, color: Colors.white60, size: 28),
+          const Icon(Symbols.zoom_out, color: Colors.white60, size: 28),
         ],
       ),
     );
@@ -582,9 +581,9 @@ class _BottomActionButton extends StatelessWidget {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A0F1C).withOpacity(0.68),
+            color: const Color(0xFF1A0F1C).withValues(alpha: 0.68),
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withOpacity(0.14)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
           ),
           child: Icon(icon, color: Colors.white70, size: 28),
         ),

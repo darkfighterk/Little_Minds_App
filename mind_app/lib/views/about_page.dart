@@ -84,7 +84,7 @@ class AboutPage extends StatelessWidget {
                   "Fun Learning Adventures for Curious Little Explorers",
                   style: TextStyle(
                     fontSize: 19,
-                    color: Colors.white.withOpacity(0.92),
+                    color: Colors.white.withValues(alpha: 0.92),
                     fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,
@@ -96,9 +96,9 @@ class AboutPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.13),
+                    color: Colors.white.withValues(alpha: 0.13),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withOpacity(0.18)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
                   ),
                   child: Text(
                     "Welcome to Little Minds! 🌈✨\n\n"
@@ -110,7 +110,7 @@ class AboutPage extends StatelessWidget {
                     "Designed with love to spark curiosity and build confidence.",
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.white.withOpacity(0.94),
+                      color: Colors.white.withValues(alpha: 0.94),
                       height: 1.55,
                     ),
                     textAlign: TextAlign.center,
@@ -123,7 +123,7 @@ class AboutPage extends StatelessWidget {
                   "Made with 💜 by group 7",
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.white.withOpacity(0.80),
+                    color: Colors.white.withValues(alpha: 0.80),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -137,9 +137,9 @@ class AboutPage extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 36, vertical: 18),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.20),
+                      color: Colors.white.withValues(alpha: 0.20),
                       borderRadius: BorderRadius.circular(32),
-                      border: Border.all(color: Colors.white.withOpacity(0.35)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
@@ -168,14 +168,14 @@ class AboutPage extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.25),
+                      color: Colors.black.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       githubRepoUrl,
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.white.withOpacity(0.65),
+                        color: Colors.white.withValues(alpha: 0.65),
                         fontFamily: 'monospace',
                       ),
                       textAlign: TextAlign.center,
@@ -189,7 +189,7 @@ class AboutPage extends StatelessWidget {
                   "Tap to copy link • Open source • Made for little dreamers everywhere",
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.white.withOpacity(0.55),
+                    color: Colors.white.withValues(alpha: 0.55),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -200,7 +200,7 @@ class AboutPage extends StatelessWidget {
                   "© ${DateTime.now().year} Little Minds • Happy Learning!",
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.white.withOpacity(0.50),
+                    color: Colors.white.withValues(alpha: 0.50),
                   ),
                 ),
 

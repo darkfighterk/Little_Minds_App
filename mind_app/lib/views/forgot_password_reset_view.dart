@@ -59,12 +59,36 @@ class _ForgotPasswordResetViewState extends State<ForgotPasswordResetView> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
-          //  Soft Background Decor
-          _buildBackgroundDecor(),
+          // ── Premium Gradient Header ──
+          Container(
+            height: MediaQuery.of(context).size.height * 0.45,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  mainBlue,
+                  mainBlue.withValues(alpha: 0.8),
+                  secondaryPurple.withValues(alpha: isDark ? 0.3 : 0.6),
+                ],
+              ),
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(50)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
+            ),
+          ),
 
           SafeArea(
             child: SingleChildScrollView(
@@ -72,21 +96,21 @@ class _ForgotPasswordResetViewState extends State<ForgotPasswordResetView> {
               child: Column(
                 children: [
                   const SizedBox(height: 15),
-                  _buildBackButton(),
+                  _buildBackButton(context),
                   const SizedBox(height: 30),
 
                   //  Illustration Section
-                  _buildIllustration(),
+                  _buildIllustration(context),
                   const SizedBox(height: 35),
 
-                  //  Header Text in Recoleta
+                  //  Header Text in Fredoka/Premium style
                   const Text(
                     'Create New Password',
                     style: TextStyle(
-                        fontFamily: 'Recoleta',
+                        fontFamily: 'Fredoka',
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87),
+                        color: Colors.white),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 10),
@@ -94,7 +118,7 @@ class _ForgotPasswordResetViewState extends State<ForgotPasswordResetView> {
                     'Your new password must be different from your old one for safety! 🛡️',
                     style: GoogleFonts.nunito(
                         fontSize: 15,
-                        color: Colors.black38,
+                        color: Colors.white.withValues(alpha: 0.85),
                         fontWeight: FontWeight.w600),
                     textAlign: TextAlign.center,
                   ),
@@ -138,19 +162,9 @@ class _ForgotPasswordResetViewState extends State<ForgotPasswordResetView> {
     );
   }
 
-  Widget _buildBackgroundDecor() {
-    return Positioned(
-      top: -100,
-      right: -50,
-      child: Container(
-          width: 300,
-          height: 300,
-          decoration: BoxDecoration(
-              color: mainBlue.withOpacity(0.06), shape: BoxShape.circle)),
-    );
-  }
 
-  Widget _buildBackButton() {
+  Widget _buildBackButton(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Align(
       alignment: Alignment.centerLeft,
       child: GestureDetector(
@@ -158,30 +172,33 @@ class _ForgotPasswordResetViewState extends State<ForgotPasswordResetView> {
         child: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)
               ]),
-          child: const Icon(Icons.arrow_back_ios_new_rounded,
-              size: 20, color: Colors.black87),
+          child: Icon(Icons.arrow_back_ios_new_rounded,
+              size: 20, color: isDark ? Colors.white : Colors.black87),
         ),
       ),
     );
   }
 
-  Widget _buildIllustration() {
+  Widget _buildIllustration(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-          color: sunnyYellow.withOpacity(0.1), shape: BoxShape.circle),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : sunnyYellow.withValues(alpha: 0.1),
+          shape: BoxShape.circle),
       child: Image.asset(
         'assets/illustrations/reset_password.png',
         height: 180,
-        errorBuilder: (_, __, ___) => const Icon(
-            Icons.enhanced_encryption_rounded,
-            size: 100,
-            color: secondaryPurple),
+        errorBuilder: (_, __, ___) => Icon(Icons.enhanced_encryption_rounded,
+            size: 100, color: isDark ? Colors.white : secondaryPurple),
       ),
     );
   }
@@ -198,7 +215,7 @@ class _ForgotPasswordResetViewState extends State<ForgotPasswordResetView> {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           elevation: 8,
-          shadowColor: secondaryPurple.withOpacity(0.4),
+          shadowColor: secondaryPurple.withValues(alpha: 0.4),
         ),
         child: isLoading
             ? const SizedBox(
@@ -241,6 +258,8 @@ class _InputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -248,16 +267,16 @@ class _InputField extends StatelessWidget {
             style: GoogleFonts.nunito(
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
-                color: mainBlue.withOpacity(0.6),
+                color: isDark ? mainBlue : mainBlue.withValues(alpha: 0.6),
                 letterSpacing: 1.1)),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
                   blurRadius: 15,
                   offset: const Offset(0, 5))
             ],
@@ -265,22 +284,31 @@ class _InputField extends StatelessWidget {
           child: TextField(
             controller: controller,
             obscureText: obscureText,
-            style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+            style: GoogleFonts.nunito(
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : Colors.black87),
             decoration: InputDecoration(
-              prefixIcon: Icon(icon, color: mainBlue.withOpacity(0.5)),
+              prefixIcon: Icon(icon, color: mainBlue.withValues(alpha: 0.5)),
               suffixIcon: suffix != null
                   ? IconButton(
-                      icon: Icon(suffix, color: Colors.black26),
+                      icon: Icon(suffix,
+                          color: isDark ? Colors.white38 : Colors.black26),
                       onPressed: onSuffixTap)
                   : null,
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
-                  borderSide:
-                      BorderSide(color: mainBlue.withOpacity(0.1), width: 2)),
+                  borderSide: BorderSide(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : mainBlue.withValues(alpha: 0.1),
+                      width: 2)),
               enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
-                  borderSide:
-                      BorderSide(color: mainBlue.withOpacity(0.08), width: 2)),
+                  borderSide: BorderSide(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : mainBlue.withValues(alpha: 0.08),
+                      width: 2)),
               focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: const BorderSide(color: mainBlue, width: 2)),

@@ -1,19 +1,22 @@
+import 'package:flutter/foundation.dart';
 // lib/models/user_model.dart
 class User {
   final String id;
   final String name;
   final String email;
+  final String? photoUrl;
   final String? token;
 
   User({
     required this.id,
     required this.name,
     required this.email,
+    this.photoUrl,
     this.token,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    print("📦 Parsing user from JSON: $json");
+    debugPrint("📦 Parsing user from JSON: $json");
 
     final dynamic rawId = json['id'];
     String userId = '';
@@ -29,10 +32,19 @@ class User {
       id: userId,
       name: json['name']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
+      photoUrl: json['photoUrl']?.toString(),
       token: json['token']?.toString(),
     );
   }
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'email': email,
+    'photoUrl': photoUrl,
+    'token': token,
+  };
+
   @override
-  String toString() => 'User(id: $id, name: $name, email: $email)';
+  String toString() => 'User(id: $id, name: $name, email: $email, photoUrl: $photoUrl)';
 }

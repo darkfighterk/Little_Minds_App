@@ -53,17 +53,23 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                 () async {
               final XFile? image =
                   await picker.pickImage(source: ImageSource.gallery);
-              if (image != null)
+              if (image != null) {
                 setState(() => _profileImage = File(image.path));
-              if (mounted) Navigator.pop(context);
+              }
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
             }),
             _buildPickerTile(Icons.camera_alt_rounded, 'Take Photo with Camera',
                 () async {
               final XFile? image =
                   await picker.pickImage(source: ImageSource.camera);
-              if (image != null)
+              if (image != null) {
                 setState(() => _profileImage = File(image.path));
-              if (mounted) Navigator.pop(context);
+              }
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
             }),
           ],
         ),
@@ -93,21 +99,22 @@ class _ProfileEditViewState extends State<ProfileEditView> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: Colors.black87),
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              color: isDark ? Colors.white : Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Edit Profile',
+        title: Text('Edit Profile',
             style: TextStyle(
                 fontFamily: 'Recoleta',
-                color: Colors.black87,
+                color: isDark ? Colors.white : Colors.black87,
                 fontWeight: FontWeight.bold,
                 fontSize: 24)),
         actions: [
@@ -122,7 +129,7 @@ class _ProfileEditViewState extends State<ProfileEditView> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withOpacity(0.05), Colors.white],
+            colors: [isDark ? const Color(0xFF1E1E1E) : mainBlue.withValues(alpha: 0.05), Theme.of(context).scaffoldBackgroundColor],
           ),
         ),
         child: SingleChildScrollView(
@@ -167,7 +174,7 @@ class _ProfileEditViewState extends State<ProfileEditView> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20)),
                       elevation: 8,
-                      shadowColor: mainBlue.withOpacity(0.3),
+                      shadowColor: mainBlue.withValues(alpha: 0.3),
                     ),
                     child: const Text('Save Changes',
                         style: TextStyle(
@@ -183,6 +190,7 @@ class _ProfileEditViewState extends State<ProfileEditView> {
   }
 
   Widget _buildPhotoSelector() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Stack(
       alignment: Alignment.bottomRight,
       children: [
@@ -192,12 +200,12 @@ class _ProfileEditViewState extends State<ProfileEditView> {
               const BoxDecoration(color: mainBlue, shape: BoxShape.circle),
           child: CircleAvatar(
             radius: 75,
-            backgroundColor: canvasBg,
+            backgroundColor: isDark ? const Color(0xFF2A2A2A) : canvasBg,
             backgroundImage:
                 _profileImage != null ? FileImage(_profileImage!) : null,
             child: _profileImage == null
-                ? const Icon(Icons.person_rounded,
-                    size: 80, color: Colors.black12)
+                ? Icon(Icons.person_rounded,
+                    size: 80, color: isDark ? Colors.white24 : Colors.black12)
                 : null,
           ),
         ),
@@ -223,6 +231,7 @@ class _ProfileEditViewState extends State<ProfileEditView> {
       required IconData icon,
       int maxLines = 1,
       TextInputType keyboard = TextInputType.text}) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -230,7 +239,7 @@ class _ProfileEditViewState extends State<ProfileEditView> {
             style: GoogleFonts.nunito(
                 fontWeight: FontWeight.w900,
                 fontSize: 12,
-                color: mainBlue.withOpacity(0.6),
+                color: isDark ? mainBlue : mainBlue.withValues(alpha: 0.6),
                 letterSpacing: 1.2)),
         const SizedBox(height: 8),
         TextFormField(
@@ -238,15 +247,15 @@ class _ProfileEditViewState extends State<ProfileEditView> {
           maxLines: maxLines,
           keyboardType: keyboard,
           style: GoogleFonts.nunito(
-              fontWeight: FontWeight.w700, color: Colors.black87),
+              fontWeight: FontWeight.w700, color: isDark ? Colors.white : Colors.black87),
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: mainBlue.withOpacity(0.5)),
+            prefixIcon: Icon(icon, color: mainBlue.withValues(alpha: 0.5)),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F7FA),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide:
-                    BorderSide(color: mainBlue.withOpacity(0.1), width: 2)),
+                    BorderSide(color: isDark ? Colors.white.withValues(alpha: 0.05) : mainBlue.withValues(alpha: 0.1), width: 2)),
             focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: const BorderSide(color: mainBlue, width: 2)),

@@ -12,6 +12,12 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # ── Firebase ───────────────────────────────────────────────────────────────
+  firebase_core: ^3.4.0
+  firebase_auth: ^5.2.0
+  cloud_firestore: ^5.4.0
+  firebase_storage: ^12.2.0
+
   # ── UI & Theming ────────────────────────────────────────────────────────────
   google_fonts: ^6.2.1
   flutter_svg: ^2.0.10+1
@@ -47,12 +53,15 @@ dependencies:
   # Images & Media
   cached_network_image: ^3.4.0
   image_picker: ^1.1.2
+  gal: ^2.3.2
 
   # ── PDF & Text ──────────────────────────────────────────────────────────────
 
   # ── Internationalization & Utilities ────────────────────────────────────────
   intl: ^0.19.0
   json_annotation: ^4.9.0
+  flutter_dotenv: ^5.1.0
+  font_awesome_flutter: ^11.0.0
 
 dev_dependencies:
   flutter_test:
@@ -80,6 +89,7 @@ flutter:
     - assets/learn_pic.png
     - assets/images/category_engineering_gears.png
     - assets/story1/
+    - .env
     # Add more as needed
     # - assets/models/   # for future AR/3D models
 

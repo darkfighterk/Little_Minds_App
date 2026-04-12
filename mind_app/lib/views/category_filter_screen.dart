@@ -19,24 +19,25 @@ class CategoryFilterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: Colors.black87),
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              color: isDark ? Colors.white : Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           "$categoryName Adventures",
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Recoleta',
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: isDark ? Colors.white : Colors.black87,
           ),
         ),
       ),
@@ -45,11 +46,11 @@ class CategoryFilterScreen extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [mainBlue.withOpacity(0.05), Colors.white],
+            colors: [isDark ? const Color(0xFF1E1E1E) : mainBlue.withValues(alpha: 0.05), Theme.of(context).scaffoldBackgroundColor],
           ),
         ),
         child: courses.isEmpty
-            ? _buildEmptyState()
+            ? _buildEmptyState(context)
             : GridView.builder(
                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -60,14 +61,15 @@ class CategoryFilterScreen extends StatelessWidget {
                 ),
                 itemCount: courses.length,
                 itemBuilder: (context, index) {
-                  return _buildModernAdventureCard(courses[index]);
+                  return _buildModernAdventureCard(courses[index], context);
                 },
               ),
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -79,7 +81,7 @@ class CategoryFilterScreen extends StatelessWidget {
             style: GoogleFonts.nunito(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.black38,
+              color: isDark ? Colors.white54 : Colors.black38,
             ),
           ),
         ],
@@ -87,22 +89,23 @@ class CategoryFilterScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildModernAdventureCard(Course course) {
+  Widget _buildModernAdventureCard(Course course, BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     // Determine card accent based on category
     final cardColor = categoryName == "Science" ? mainBlue : accentOrange;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-            color: cardColor.withOpacity(0.06),
+            color: isDark ? Colors.black38 : cardColor.withValues(alpha: 0.06),
             blurRadius: 20,
             offset: const Offset(0, 8),
           )
         ],
-        border: Border.all(color: Colors.black.withOpacity(0.03)),
+        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -111,7 +114,7 @@ class CategoryFilterScreen extends StatelessWidget {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: cardColor.withOpacity(0.08),
+                color: cardColor.withValues(alpha: 0.08),
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(25)),
               ),
@@ -133,11 +136,11 @@ class CategoryFilterScreen extends StatelessWidget {
                   course.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Recoleta',
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: isDark ? Colors.white : Colors.black87,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -145,7 +148,7 @@ class CategoryFilterScreen extends StatelessWidget {
                   course.instructor,
                   style: GoogleFonts.nunito(
                     fontSize: 12,
-                    color: Colors.black38,
+                    color: isDark ? Colors.white54 : Colors.black38,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -155,7 +158,7 @@ class CategoryFilterScreen extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: cardColor.withOpacity(0.1),
+                    color: cardColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -84,7 +83,7 @@ class _DrawingPadViewState extends State<DrawingPadView>
   final List<_Stroke> _redoStack = [];
   _Stroke? _currentStroke;
   Color _selectedColor = mainBlue;
-  double _strokeWidth = 6.0;
+  final double _strokeWidth = 6.0;
   bool _isEraser = false;
   String? _guideLetter;
   ui.Image? _backgroundImage;
@@ -127,11 +126,12 @@ class _DrawingPadViewState extends State<DrawingPadView>
           .toList()
         ..sort(
             (a, b) => b.statSync().modified.compareTo(a.statSync().modified));
-      if (mounted)
+      if (mounted) {
         setState(() => _savedDrawings = files
             .map((f) =>
                 SavedDrawing(path: f.path, createdAt: f.statSync().modified))
             .toList());
+      }
     } catch (_) {}
   }
 
@@ -139,10 +139,14 @@ class _DrawingPadViewState extends State<DrawingPadView>
     try {
       final boundary = _canvasKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
-      if (boundary == null) return;
+      if (boundary == null) {
+        return;
+      }
       final image = await boundary.toImage(pixelRatio: 2.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) return;
+      if (byteData == null) {
+        return;
+      }
 
       final dir = await _getDrawingsDir();
       final file = File(_backgroundImagePath ??
@@ -156,29 +160,33 @@ class _DrawingPadViewState extends State<DrawingPadView>
         _loadSavedDrawings();
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Save error: $e')));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color canvasBg = isDark ? const Color(0xFF1E1E1E) : mainBlue.withValues(alpha: 0.05);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         centerTitle: true,
         title: Text(_showGallery ? 'My Art Gallery' : 'Drawing Pad',
-            style: const TextStyle(
-                fontFamily: 'Recoleta',
-                color: Colors.black87,
+            style: TextStyle(
+                fontFamily: 'Fredoka',
+                color: isDark ? Colors.white : Colors.black87,
                 fontSize: 24,
                 fontWeight: FontWeight.bold)),
         leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.black87),
+            icon: Icon(Icons.arrow_back_ios_new_rounded,
+                color: isDark ? Colors.white : Colors.black87),
             onPressed: () => Navigator.pop(context)),
         actions: [
           IconButton(
@@ -194,7 +202,7 @@ class _DrawingPadViewState extends State<DrawingPadView>
           ? _buildGallery()
           : Column(children: [
               _buildLetterPicker(),
-              Expanded(child: _buildCanvas()),
+              Expanded(child: _buildCanvas(isDark, canvasBg)),
               _buildToolbar()
             ]),
     );
@@ -218,12 +226,12 @@ class _DrawingPadViewState extends State<DrawingPadView>
               margin: const EdgeInsets.only(right: 10),
               width: 45,
               decoration: BoxDecoration(
-                  color: sel ? mainBlue : Colors.blue.withOpacity(0.05),
+                  color: sel ? mainBlue : Colors.blue.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(15)),
               child: Center(
                   child: Text(l,
                       style: TextStyle(
-                          fontFamily: 'Recoleta',
+                          fontFamily: 'Fredoka',
                           color: sel ? Colors.white : mainBlue,
                           fontWeight: FontWeight.bold,
                           fontSize: 18))),
@@ -234,7 +242,7 @@ class _DrawingPadViewState extends State<DrawingPadView>
     );
   }
 
-  Widget _buildCanvas() {
+  Widget _buildCanvas(bool isDark, Color canvasBg) {
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -242,64 +250,70 @@ class _DrawingPadViewState extends State<DrawingPadView>
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-                color: mainBlue.withOpacity(0.1),
+                color: isDark ? Colors.black38 : mainBlue.withValues(alpha: 0.1),
                 blurRadius: 20,
                 spreadRadius: 5)
           ]),
-      child: RepaintBoundary(
-        key: _canvasKey,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
-          child: Stack(children: [
-            if (_guideLetter != null && _backgroundImage == null)
-              Center(
-                  child: Opacity(
-                      opacity: 0.05,
-                      child: Text(_guideLetter!,
-                          style: const TextStyle(
-                              fontSize: 250, fontWeight: FontWeight.w900)))),
-            GestureDetector(
-              onPanStart: (d) => setState(() {
-                _redoStack.clear();
-                _currentStroke = _Stroke(
-                    points: [d.localPosition],
-                    color: _isEraser ? canvasBg : _selectedColor,
-                    width: _isEraser ? 35 : _strokeWidth);
-              }),
-              onPanUpdate: (d) => setState(() {
-                if (_currentStroke != null)
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: RepaintBoundary(
+          key: _canvasKey,
+          child: Stack(
+            children: [
+              if (_guideLetter != null && _backgroundImage == null)
+                Center(
+                  child: Text(_guideLetter!,
+                      style: TextStyle(
+                          fontSize: 250,
+                          fontWeight: FontWeight.w900,
+                          color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.03))),
+                ),
+              GestureDetector(
+                onPanStart: (d) => setState(() {
+                  _redoStack.clear();
                   _currentStroke = _Stroke(
-                      points: [..._currentStroke!.points, d.localPosition],
-                      color: _currentStroke!.color,
-                      width: _currentStroke!.width);
-              }),
-              onPanEnd: (_) => setState(() {
-                if (_currentStroke != null) {
-                  _strokes.add(_currentStroke!);
-                  _currentStroke = null;
-                }
-              }),
-              child: CustomPaint(
+                      points: [d.localPosition],
+                      color: _isEraser ? canvasBg : _selectedColor,
+                      width: _isEraser ? 35 : _strokeWidth);
+                }),
+                onPanUpdate: (d) => setState(() {
+                  if (_currentStroke != null) {
+                    _currentStroke = _Stroke(
+                        points: [..._currentStroke!.points, d.localPosition],
+                        color: _currentStroke!.color,
+                        width: _currentStroke!.width);
+                  }
+                }),
+                onPanEnd: (_) => setState(() {
+                  if (_currentStroke != null) {
+                    _strokes.add(_currentStroke!);
+                    _currentStroke = null;
+                  }
+                }),
+                child: CustomPaint(
                   painter: _DrawingPainter(
                       strokes: _strokes,
                       currentStroke: _currentStroke,
                       backgroundImage: _backgroundImage),
-                  child: const SizedBox.expand()),
-            ),
-          ]),
+                  child: const SizedBox.expand(),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildToolbar() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 15, 20, 35),
       decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF161616) : Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15)
+            BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05), blurRadius: 15)
           ]),
       child: Column(children: [
         SingleChildScrollView(
@@ -365,10 +379,12 @@ class _DrawingPadViewState extends State<DrawingPadView>
   }
 
   Widget _buildGallery() {
-    if (_savedDrawings.isEmpty)
+    if (_savedDrawings.isEmpty) {
+      final bool isDark = Theme.of(context).brightness == Brightness.dark;
       return Center(
           child: Text("Your gallery is empty! 🎨",
-              style: GoogleFonts.nunito(color: Colors.grey, fontSize: 18)));
+              style: GoogleFonts.nunito(color: isDark ? Colors.white38 : Colors.grey, fontSize: 18)));
+    }
     return GridView.builder(
       padding: const EdgeInsets.all(20),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -388,7 +404,7 @@ class _DrawingPadViewState extends State<DrawingPadView>
         child: Container(
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: mainBlue.withOpacity(0.1))),
+              border: Border.all(color: mainBlue.withValues(alpha: 0.1))),
           child: ClipRRect(
               borderRadius: BorderRadius.circular(23),
               child:

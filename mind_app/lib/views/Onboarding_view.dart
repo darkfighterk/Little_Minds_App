@@ -11,12 +11,36 @@ class OnboardingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
-          //  Decorative Wave Background
-          _buildBackgroundDecor(),
+          // ── Premium Gradient Header ──
+          Container(
+            height: MediaQuery.of(context).size.height * 0.45,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  mainBlue,
+                  mainBlue.withValues(alpha: 0.8),
+                  secondaryPurple.withValues(alpha: isDark ? 0.3 : 0.6),
+                ],
+              ),
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(50)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
+            ),
+          ),
 
           SafeArea(
             child: Column(
@@ -24,17 +48,17 @@ class OnboardingView extends StatelessWidget {
                 const Spacer(flex: 2),
 
                 //  Main Illustration with Glow
-                _buildIllustration(),
+                _buildIllustration(context),
 
                 const Spacer(flex: 1),
 
-                //  Catchy Title in Recoleta
-                _buildTitleSection(),
+                //  Theme-aware Title Section
+                _buildTitleSection(context),
 
                 const SizedBox(height: 15),
 
-                //  Subtitle in Nunito
-                _buildSubtitle(),
+                //  Theme-aware Subtitle
+                _buildSubtitle(context),
 
                 const Spacer(flex: 2),
 
@@ -50,29 +74,15 @@ class OnboardingView extends StatelessWidget {
     );
   }
 
-  Widget _buildBackgroundDecor() {
-    return Positioned(
-      top: -100,
-      right: -50,
-      child: Container(
-        width: 300,
-        height: 300,
-        decoration: BoxDecoration(
-          color: mainBlue.withOpacity(0.05),
-          shape: BoxShape.circle,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildIllustration() {
+  Widget _buildIllustration(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: secondaryPurple.withOpacity(0.1),
+            color: isDark ? Colors.black26 : secondaryPurple.withValues(alpha: 0.1),
             blurRadius: 50,
             spreadRadius: 2,
           ),
@@ -85,38 +95,40 @@ class OnboardingView extends StatelessWidget {
         errorBuilder: (context, error, stackTrace) => const Icon(
           Icons.auto_awesome_motion_rounded,
           size: 150,
-          color: secondaryPurple,
+          color: Colors.white,
         ),
       ),
     );
   }
 
-  Widget _buildTitleSection() {
+  Widget _buildTitleSection(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
-        const Text(
+        Text(
           "Let’s Start Your",
           style: TextStyle(
-            fontFamily: 'Recoleta',
+            fontFamily: 'Fredoka',
             fontSize: 34,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: isDark ? Colors.white : Colors.black87,
           ),
         ),
         Text(
           "Learning Adventure",
           style: TextStyle(
-            fontFamily: 'Recoleta',
+            fontFamily: 'Fredoka',
             fontSize: 34,
             fontWeight: FontWeight.bold,
-            color: mainBlue,
+            color: isDark ? Colors.blueAccent : mainBlue,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSubtitle() {
+  Widget _buildSubtitle(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40),
       child: Text(
@@ -125,7 +137,7 @@ class OnboardingView extends StatelessWidget {
         style: GoogleFonts.nunito(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: Colors.black45,
+          color: isDark ? Colors.white54 : Colors.black45,
           height: 1.5,
         ),
       ),
@@ -133,6 +145,7 @@ class OnboardingView extends StatelessWidget {
   }
 
   Widget _buildButtonSection(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 30),
       child: Row(
@@ -149,7 +162,7 @@ class OnboardingView extends StatelessWidget {
                 style: GoogleFonts.nunito(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black38,
+                  color: isDark ? Colors.white24 : Colors.black38,
                 ),
               ),
             ),
@@ -167,7 +180,7 @@ class OnboardingView extends StatelessWidget {
                 backgroundColor: secondaryPurple,
                 foregroundColor: Colors.white,
                 elevation: 8,
-                shadowColor: secondaryPurple.withOpacity(0.4),
+                shadowColor: secondaryPurple.withValues(alpha: 0.4),
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
