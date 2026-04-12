@@ -300,14 +300,14 @@ class _AboutViewState extends State<AboutView> with TickerProviderStateMixin {
           id: 'IT0005',
           asset: 'assets/Godamune.png'),
       _TeamMember(
-          name: 'R.A.V.M. Perera', id: 'IT0006', asset: 'assets/Perera.png'),
+          name: 'R.A.V.M. Perera', id: '32953', asset: 'assets/Perera.png'),
       _TeamMember(
           name: 'P.H.D.K. Rathnayaka',
           id: 'IT0007',
           asset: 'assets/Rathnayaka.png'),
       _TeamMember(
           name: 'I.A.C.S. Thilakarathna',
-          id: 'IT0008',
+          id: '32231',
           asset: 'assets/Thilakarathna.png'),
     ];
 
@@ -412,14 +412,37 @@ class _AboutViewState extends State<AboutView> with TickerProviderStateMixin {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              // Avatar
+              // Avatar Placeholder
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: _mainBlue.withValues(alpha: 0.15),
-                    backgroundImage: AssetImage(m.asset),
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : _mainBlue.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: _mainBlue.withValues(alpha: isDark ? 0.1 : 0.2),
+                        width: 1,
+                      ),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Image.asset(
+                      m.asset,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Icon(
+                            Icons.person_rounded,
+                            color: _mainBlue.withValues(alpha: 0.4),
+                            size: 26,
+                          ),
+                        );
+                      },
+                    ),
                   ),
                   if (m.isLeader)
                     Positioned(
