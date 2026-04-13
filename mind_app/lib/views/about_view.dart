@@ -296,14 +296,12 @@ class _AboutViewState extends State<AboutView> with TickerProviderStateMixin {
       _TeamMember(
           name: 'R.A.V. Kavinda', id: '32327', asset: 'assets/Kavinda.png'),
       _TeamMember(
-          name: 'G.A.P.O. Godamune',
-          id: 'IT0005',
-          asset: 'assets/Godamune.png'),
+          name: 'G.A.P.O. Godamune', id: '32383', asset: 'assets/Godamune.png'),
       _TeamMember(
           name: 'R.A.V.M. Perera', id: '32953', asset: 'assets/Perera.png'),
       _TeamMember(
           name: 'P.H.D.K. Rathnayaka',
-          id: 'IT0007',
+          id: '34232',
           asset: 'assets/Rathnayaka.png'),
       _TeamMember(
           name: 'I.A.C.S. Thilakarathna',

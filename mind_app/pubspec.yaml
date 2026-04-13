@@ -90,6 +90,7 @@ flutter:
     - assets/learn_pic.png
     - assets/images/category_engineering_gears.png
     - assets/story1/
+    - assets/books/
     - .env
     # Add more as needed
     - "assets/3d_objects/" # for 3D models
