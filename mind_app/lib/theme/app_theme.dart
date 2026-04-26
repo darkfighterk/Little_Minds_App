@@ -35,15 +35,16 @@ class AppTheme {
 
   // Core Brand Colors
   static const Color mainBlue = Color(0xFF3AAFFF);
-  static const Color darkBg = Color(0xFF121212);
-  static const Color darkCard = Color(0xFF1E1E1E);
+  static const Color darkBg = Color(0xFF12111A);
+  static const Color warmBg = Color(0xFFFFF8EE);
+  static const Color darkCard = Color(0xFF1E1C2A);
 
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
       primaryColor: mainBlue,
-      scaffoldBackgroundColor: Colors.white,
+      scaffoldBackgroundColor: warmBg,
       colorScheme: ColorScheme.fromSeed(
         seedColor: mainBlue,
         brightness: Brightness.light,
@@ -53,7 +54,7 @@ class AppTheme {
       cardColor: Colors.white,
       iconTheme: const IconThemeData(color: Colors.black87),
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
+        backgroundColor: warmBg,
         iconTheme: IconThemeData(color: Colors.black87),
         titleTextStyle: TextStyle(color: Colors.black87, fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Recoleta'),
       ),

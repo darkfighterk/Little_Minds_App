@@ -54,6 +54,7 @@ dependencies:
   cached_network_image: ^3.4.0
   image_picker: ^1.1.2
   gal: ^2.3.2
+  model_viewer_plus: ^1.7.0
 
   # ── PDF & Text ──────────────────────────────────────────────────────────────
 
@@ -89,9 +90,14 @@ flutter:
     - assets/learn_pic.png
     - assets/images/category_engineering_gears.png
     - assets/story1/
+    - assets/books/
     - .env
     # Add more as needed
-    # - assets/models/   # for future AR/3D models
+    - "assets/3d_objects/" # for 3D models
+    - "assets/3d_objects/animal/"
+    - "assets/3d_objects/cars/"
+    - "assets/3d_objects/organ/"
+    - "assets/3d_objects/places/"
 
 flutter_launcher_icons:
   android: "ic_launcher"

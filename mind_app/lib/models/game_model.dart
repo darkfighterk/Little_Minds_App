@@ -8,12 +8,14 @@ class QuizQuestion {
   final List<String> options;
   final int correctIndex;
   final String? funFact; // shown after answering
+  final bool isImage;
 
   const QuizQuestion({
     required this.question,
     required this.options,
     required this.correctIndex,
     this.funFact,
+    this.isImage = false,
   });
 }
 

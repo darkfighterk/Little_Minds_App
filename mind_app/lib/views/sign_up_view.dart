@@ -61,7 +61,18 @@ class _SignUpViewState extends State<SignUpView> with TickerProviderStateMixin {
     final password = passwordController.text.trim();
 
     if (name.isEmpty || email.isEmpty || password.isEmpty) {
-      _showToast('Please fill in all fields', Colors.orange);
+      _showToast('Please fill in all fields 🎈', Colors.orange);
+      return;
+    }
+
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+    if (!emailRegex.hasMatch(email)) {
+      _showToast('Please enter a valid email address 📧', Colors.orangeAccent);
+      return;
+    }
+
+    if (password.length < 6) {
+      _showToast('Password must be at least 6 characters long 🔐', Colors.orangeAccent);
       return;
     }
 

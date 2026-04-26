@@ -36,6 +36,7 @@ class _LevelMapViewState extends State<LevelMapView>
   @override
   void initState() {
     super.initState();
+    _dynamicLevels = List.from(widget.subject.levels);
     _floatController =
         AnimationController(vsync: this, duration: const Duration(seconds: 3))
           ..repeat(reverse: true);
@@ -46,29 +47,28 @@ class _LevelMapViewState extends State<LevelMapView>
   @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color scaffoldBg =
+        isDark ? const Color(0xFF12111A) : const Color(0xFFFFF8EE);
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [isDark ? const Color(0xFF1E1E1E) : mainBlue.withValues(alpha: 0.08), Theme.of(context).scaffoldBackgroundColor],
+      backgroundColor: scaffoldBg,
+      body: Stack(
+        children: [
+          _AmbientBlobs(isDark: isDark),
+          SafeArea(
+            child: Column(
+              children: [
+                _buildModernHeader(),
+                if (_loading)
+                  const Expanded(
+                      child: Center(
+                          child: CircularProgressIndicator(color: mainBlue)))
+                else
+                  Expanded(child: _buildLevelMap()),
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildModernHeader(),
-              if (_loading)
-                const Expanded(
-                    child: Center(
-                        child: CircularProgressIndicator(color: mainBlue)))
-              else
-                Expanded(child: _buildLevelMap()),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
@@ -76,22 +76,39 @@ class _LevelMapViewState extends State<LevelMapView>
   Widget _buildModernHeader() {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
+      padding: const EdgeInsets.fromLTRB(16, 15, 20, 10),
       child: Row(
         children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: Icon(Icons.arrow_back_ios_new_rounded,
-                color: isDark ? Colors.white : Colors.black87, size: 20),
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E1C2A) : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 18,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("${widget.subject.emoji} ${widget.subject.name}",
-                    style: TextStyle(
-                        fontFamily: 'Recoleta',
+                Text(widget.subject.name,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.fredoka(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: isDark ? Colors.white : Colors.black87)),
@@ -103,36 +120,43 @@ class _LevelMapViewState extends State<LevelMapView>
               ],
             ),
           ),
-          // Stars Badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: sunnyYellow.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: sunnyYellow.withValues(alpha: 0.5)),
+          _buildStarBadge(_totalStars),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStarBadge(int stars) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      decoration: BoxDecoration(
+        color: sunnyYellow.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: sunnyYellow.withValues(alpha: 0.5), width: 1.5),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.stars_rounded, color: accentOrange, size: 18),
+          const SizedBox(width: 5),
+          Text(
+            '$stars',
+            style: GoogleFonts.fredoka(
+              color: accentOrange,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
             ),
-            child: Row(children: [
-              const Text('⭐', style: TextStyle(fontSize: 16)),
-              const SizedBox(width: 6),
-              Text('$_totalStars',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, color: accentOrange)),
-            ]),
-          )
+          ),
         ],
       ),
     );
   }
 
   Widget _buildLevelMap() {
-    final levels = widget.subject.levels.isNotEmpty
-        ? widget.subject.levels
-        : _dynamicLevels;
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 30),
-      itemCount: levels.length,
+      itemCount: _dynamicLevels.length,
       itemBuilder: (ctx, i) {
-        final level = levels[i];
+        final level = _dynamicLevels[i];
         final unlocked = _totalStars >= level.starsRequired;
         final completed = _completedLevels.contains(level.levelNumber);
         return _buildLevelNode(
@@ -140,7 +164,7 @@ class _LevelMapViewState extends State<LevelMapView>
             unlocked: unlocked,
             completed: completed,
             isLeft: i.isEven,
-            isLast: i == levels.length - 1);
+            isLast: i == _dynamicLevels.length - 1);
       },
     );
   }
@@ -174,46 +198,63 @@ class _LevelMapViewState extends State<LevelMapView>
               ),
               child: Container(
                 width: 220,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(22),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                  borderRadius: BorderRadius.circular(25),
-                  border: Border.all(color: nodeColor, width: 2.5),
+                  color: isDark ? const Color(0xFF1E1C2A) : Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                      color: nodeColor.withValues(alpha: isDark ? 0.3 : 0.5),
+                      width: 2),
                   boxShadow: [
                     BoxShadow(
-                        color: nodeColor.withValues(alpha: 0.1),
+                        color: nodeColor.withValues(alpha: isDark ? 0.15 : 0.1),
                         blurRadius: 20,
-                        offset: const Offset(0, 8))
+                        offset: const Offset(0, 10))
                   ],
                 ),
                 child: Column(children: [
-                  Text(
-                      completed
-                          ? '✅'
-                          : unlocked
-                              ? level.icon
-                              : '🔒',
-                      style: const TextStyle(fontSize: 38)),
-                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: nodeColor.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                        completed
+                            ? '✅'
+                            : unlocked
+                                ? level.icon
+                                : '🔒',
+                        style: const TextStyle(fontSize: 34)),
+                  ),
+                  const SizedBox(height: 12),
                   Text('LEVEL ${level.levelNumber}',
                       style: GoogleFonts.nunito(
                           fontWeight: FontWeight.w900,
                           color: nodeColor,
                           letterSpacing: 1.5,
-                          fontSize: 11)),
+                          fontSize: 10)),
                   Text(level.title,
-                      style: TextStyle(
-                          fontFamily: 'Recoleta',
-                          fontSize: 16,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.fredoka(
+                          fontSize: 17,
                           fontWeight: FontWeight.bold,
                           color: isDark ? Colors.white : Colors.black87)),
                   if (!unlocked) ...[
                     const SizedBox(height: 8),
-                    Text('Need ${level.starsRequired} ⭐',
-                        style: GoogleFonts.nunito(
-                            color: Colors.redAccent,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text('Need ${level.starsRequired} ⭐',
+                          style: GoogleFonts.nunito(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 11)),
+                    ),
                   ]
                 ]),
               ),
@@ -245,11 +286,10 @@ class _LevelMapViewState extends State<LevelMapView>
   // _loadLevels, _loadProgress, and _openLevel logic remains identical to your file
 
   Future<void> _loadLevels() async {
-    if (widget.subject.levels.isNotEmpty) return;
     final quiz = await _adminService.getFullQuiz(widget.subject.id);
     if (quiz == null || !mounted) return;
     final rawLevels = (quiz['levels'] as List<dynamic>?) ?? [];
-    final levels = rawLevels.map((l) {
+    final fetchedLevels = rawLevels.map((l) {
       final rawQs = (l['questions'] as List<dynamic>?) ?? [];
       final questions = rawQs
           .map((q) => QuizQuestion(
@@ -262,6 +302,7 @@ class _LevelMapViewState extends State<LevelMapView>
                 ],
                 correctIndex: (q['correct_index'] as num?)?.toInt() ?? 0,
                 funFact: q['fun_fact'] as String?,
+                isImage: q['is_image'] as bool? ?? false,
               ))
           .toList();
       return GameLevel(
@@ -272,7 +313,15 @@ class _LevelMapViewState extends State<LevelMapView>
           questions: questions);
     }).toList();
     if (mounted) {
-      setState(() => _dynamicLevels = levels);
+      setState(() {
+        // Merge the built-in levels with fetched levels
+        final builtInLevelNumbers = widget.subject.levels.map((l) => l.levelNumber).toSet();
+        final newLevels = fetchedLevels.where((l) => !builtInLevelNumbers.contains(l.levelNumber)).toList();
+        
+        final combined = [...widget.subject.levels, ...newLevels];
+        combined.sort((a, b) => a.levelNumber.compareTo(b.levelNumber));
+        _dynamicLevels = combined;
+      });
     }
   }
 
@@ -310,5 +359,60 @@ class _LevelMapViewState extends State<LevelMapView>
   void dispose() {
     _floatController.dispose();
     super.dispose();
+  }
+}
+class _AmbientBlobs extends StatelessWidget {
+  final bool isDark;
+  const _AmbientBlobs({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final h = MediaQuery.of(context).size.height;
+    return Stack(
+      children: [
+        Positioned(
+          top: -40,
+          right: -60,
+          child: Container(
+            width: 220,
+            height: 220,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isDark
+                  ? mainBlue.withValues(alpha: 0.05)
+                  : mainBlue.withValues(alpha: 0.07),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: h * 0.1,
+          left: -50,
+          child: Container(
+            width: 180,
+            height: 180,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isDark
+                  ? secondaryPurple.withValues(alpha: 0.05)
+                  : secondaryPurple.withValues(alpha: 0.07),
+            ),
+          ),
+        ),
+        Positioned(
+          top: h * 0.35,
+          right: -30,
+          child: Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isDark
+                  ? accentOrange.withValues(alpha: 0.04)
+                  : accentOrange.withValues(alpha: 0.06),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

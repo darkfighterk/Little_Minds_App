@@ -1373,16 +1373,38 @@ class _QuizWizardState extends State<_QuizWizard> {
           return _buildQuestionCard(i);
         }),
         const SizedBox(height: 8),
-        OutlinedButton.icon(
-          onPressed: () => setState(() => _questions.add(_QuestionDraft())),
-          icon: const Icon(Icons.add_circle_rounded, color: _accent),
-          label: Text('Add Another Question',
-              style: GoogleFonts.fredoka(fontSize: 16, color: _accent)),
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: _accent),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        GestureDetector(
+          onTap: () => setState(() => _questions.add(_QuestionDraft())),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: _accent.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: _accent.withValues(alpha: 0.3), width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: _accent.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.add_circle_rounded, color: _accent, size: 22),
+                const SizedBox(width: 10),
+                Text(
+                  'Add Another Question',
+                  style: GoogleFonts.fredoka(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: _accent,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ]),
@@ -2470,8 +2492,8 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40),
-            ElevatedButton.icon(
-              onPressed: () {
+            GestureDetector(
+              onTap: () {
                 setState(() {
                   _published = false;
                   _step = 0;
@@ -2482,16 +2504,38 @@ class _PuzzleWizardState extends State<_PuzzleWizard> {
                   _difficulty = 'Easy';
                 });
               },
-              icon: const Icon(Icons.add_rounded),
-              label:
-                  Text('Add Another', style: GoogleFonts.fredoka(fontSize: 18)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _accent,
-                foregroundColor: context.adminText,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF3AAFFF), Color(0xFFA55FEF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFA55FEF).withValues(alpha: 0.4),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.add_rounded, color: Colors.white, size: 24),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Add Another',
+                      style: GoogleFonts.fredoka(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -3820,19 +3864,38 @@ class _StoryWizardState extends State<_StoryWizard> {
       const SizedBox(height: 16),
       ...List.generate(_pages.length, (i) => _buildPageCard(i)),
       const SizedBox(height: 12),
-      SizedBox(
-        width: double.infinity,
-        child: OutlinedButton.icon(
-          onPressed: () => setState(() => _pages.add(_StoryPageDraft())),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: _gold,
-            side: const BorderSide(color: _gold, width: 1.5),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      GestureDetector(
+        onTap: () => setState(() => _pages.add(_StoryPageDraft())),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: _gold.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: _gold.withValues(alpha: 0.4), width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: _gold.withValues(alpha: 0.1),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          icon: const Icon(Icons.add_rounded),
-          label: Text('Add Page', style: GoogleFonts.fredoka(fontSize: 16)),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.add_rounded, color: _gold, size: 22),
+              const SizedBox(width: 10),
+              Text(
+                'Add Page',
+                style: GoogleFonts.fredoka(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: _gold,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     ]);

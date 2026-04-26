@@ -4,12 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mind_app/views/text_to_image.dart';
 import '../models/user_model.dart';
-import 'home_view.dart';
+import 'quiz_arena_view.dart';
 import 'puzzles_list_view.dart';
 import 'story_time_page.dart';
 import 'drawing_pad_view.dart';
 import 'admin_view.dart';
 import 'profile_view.dart';
+import 'magic_3d_home_view.dart';
 
 // ── Shared brand palette ──
 const Color mainBlue = Color(0xFF3AAFFF);
@@ -71,7 +72,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           'icon': Icons.quiz_rounded,
           'color': secondaryPurple,
           'onTap': () =>
-              Navigator.push(context, _fadeRoute(HomeView(user: widget.user))),
+              Navigator.push(context, _fadeRoute(QuizArenaView(user: widget.user))),
         },
         {
           'title': 'Note Scanner',
@@ -96,6 +97,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           'color': mainBlue,
           'onTap': () =>
               Navigator.push(context, _fadeRoute(const DrawingPadView())),
+        },
+        {
+          'title': '3D Explorer',
+          'subtitle': 'Magic objects',
+          'icon': Icons.view_in_ar_rounded,
+          'color': const Color(0xFFFF5F5F), // Reddish UI color
+          'onTap': () =>
+              Navigator.push(context, _fadeRoute(const Magic3DHomeView())),
         },
         {
           'title': 'Puzzles',

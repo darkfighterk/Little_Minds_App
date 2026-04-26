@@ -1,15 +1,27 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-import 'story_player.dart';
 import '../models/user_model.dart';
 
-// ── Same brand palette as login / home ──
+// ── Shared brand palette (matches puzzle/home/login) ──
 const Color mainBlue = Color(0xFF3AAFFF);
 const Color secondaryPurple = Color(0xFFA55FEF);
 const Color accentOrange = Color(0xFFFF8811);
 const Color sunnyYellow = Color(0xFFFDDF50);
+const Color teal = Color(0xFF26A69A);
+
+// Card colors cycle (matches puzzle/story_time_page pattern)
+const List<Color> _cardCycle = [
+  mainBlue,
+  secondaryPurple,
+  accentOrange,
+  sunnyYellow,
+  teal,
+  Color(0xFFEF5350),
+];
 
 class LibraryView extends StatefulWidget {
   final User user;
@@ -23,100 +35,10 @@ class LibraryView extends StatefulWidget {
 
 class _LibraryViewState extends State<LibraryView>
     with TickerProviderStateMixin {
-  // ── Entry + float animations (mirrors login / home) ──
   late AnimationController _floatController;
   late AnimationController _entryController;
   late Animation<double> _entryFade;
   late Animation<Offset> _entrySlide;
-
-  int _selectedCategoryIndex = 0; // 0 = All
-
-  // ── Story List ──
-  final List<Map<String, dynamic>> staticStories = const [
-    {
-      "title": "The Giving Tree",
-      "author": "Shel Silverstein",
-      "cover": "assets/story1/page1.png",
-      "category": "Nature",
-      "pages": [
-        {
-          "text": "Once there was a tree... and she loved a little boy.",
-          "image": "assets/story1/page1.png"
-        },
-        {
-          "text":
-              "And every day the boy would come to eat her apples and play.",
-          "image": "assets/story1/page2.png"
-        },
-        {
-          "text": "The tree was very happy to give everything to the boy.",
-          "image": "assets/story1/page3.png"
-        }
-      ]
-    },
-    {
-      "title": "Peter Rabbit",
-      "author": "Beatrix Potter",
-      "cover": "assets/story2/page1.png",
-      "category": "Animals",
-      "pages": [
-        {
-          "text": "Once upon a time there were four little Rabbits...",
-          "image": "assets/story2/page1.png"
-        },
-        {
-          "text": "Flopsy, Mopsy, Cottontail, and Peter.",
-          "image": "assets/story2/page2.png"
-        },
-        {
-          "text": "Peter was very naughty and ran to Mr. McGregor's garden!",
-          "image": "assets/story2/page3.png"
-        }
-      ]
-    },
-    {
-      "title": "Hungry Caterpillar",
-      "author": "Eric Carle",
-      "cover": "assets/story3/page1.png",
-      "category": "Science",
-      "pages": [
-        {
-          "text": "In the light of the moon, a little egg lay on a leaf.",
-          "image": "assets/story3/page1.png"
-        },
-        {
-          "text": "On Monday, he ate through one apple.",
-          "image": "assets/story3/page2.png"
-        },
-        {
-          "text": "Suddenly, he became a butterfly!",
-          "image": "assets/story3/page3.png"
-        }
-      ]
-    },
-  ];
-
-  // ── Per-story fallback emojis & gradient colors shown when asset is missing ──
-  static const List<String> _fallbackEmojis = ['🌳', '🐰', '🦋'];
-  static const List<List<Color>> _fallbackGradients = [
-    [Color(0xFF81C784), Color(0xFF4CAF50)], // green  – Giving Tree
-    [Color(0xFFFFB74D), Color(0xFFFF8811)], // orange – Peter Rabbit
-    [Color(0xFF4FC3F7), Color(0xFF3AAFFF)], // blue   – Hungry Caterpillar
-  ];
-
-  // ── Category filter tabs ──
-  final List<Map<String, dynamic>> _categories = const [
-    {'label': 'All', 'emoji': '✨'},
-    {'label': 'Animals', 'emoji': '🐰'},
-    {'label': 'Science', 'emoji': '🧪'},
-    {'label': 'Nature', 'emoji': '🌿'},
-  ];
-
-  List<Map<String, dynamic>> get _filteredStories {
-    if (_selectedCategoryIndex == 0) return staticStories;
-    final cat = _categories[_selectedCategoryIndex]['label'] as String;
-    return staticStories.where((s) => s['category'] == cat).toList();
-  }
 
   @override
   void initState() {
@@ -124,18 +46,18 @@ class _LibraryViewState extends State<LibraryView>
 
     _floatController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 4),
     )..repeat(reverse: true);
 
     _entryController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 700),
+      duration: const Duration(milliseconds: 750),
     )..forward();
 
     _entryFade =
         CurvedAnimation(parent: _entryController, curve: Curves.easeOut);
     _entrySlide = Tween<Offset>(
-      begin: const Offset(0, 0.08),
+      begin: const Offset(0, 0.06),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _entryController, curve: Curves.easeOut));
   }
@@ -147,84 +69,102 @@ class _LibraryViewState extends State<LibraryView>
     super.dispose();
   }
 
+  // ── Core Logic (unchanged) ──
+  void openUrl(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw 'Could not launch $url';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final Color scaffoldBg =
         isDark ? const Color(0xFF12111A) : const Color(0xFFFFF8EE);
 
+    final List<Map<String, String>> books = [
+      {
+        "title": "Ginger The Giraffe",
+        "image": "assets/books/ginger_giraffe.png",
+        "url":
+            "https://monkeypen.com/blogs/news/ginger-the-giraffe-free-children-book"
+      },
+      {
+        "title": "Sunny Meadows Woodland School",
+        "image": "assets/books/sunny_meadows.png",
+        "url": "https://monkeypen.com/blogs/news/sunny-meadows-woodland-school"
+      },
+      {
+        "title": "Bully Bill",
+        "image": "assets/books/bully_bill.png",
+        "url": "https://monkeypen.com/blogs/news/bully-bill-free-children-book"
+      },
+      {
+        "title": "Dylan The Dragon",
+        "image": "assets/books/dylan_dragon.png",
+        "url":
+            "https://monkeypen.com/blogs/news/dylan-the-dragon-free-children-book"
+      },
+      {
+        "title": "Jessie The Rabbit",
+        "image": "assets/books/jessie_rabbit.png",
+        "url":
+            "https://monkeypen.com/blogs/news/jessie-the-rabbit-free-children-book"
+      },
+      {
+        "title": "I Found a Frog",
+        "image": "assets/books/found_frog.png",
+        "url":
+            "https://monkeypen.com/blogs/news/i-found-a-frog-free-children-book"
+      },
+    ];
+
     return Scaffold(
       backgroundColor: scaffoldBg,
       body: Stack(
         children: [
-          // ── Ambient blobs (mirrors login / home) ──
-          _AmbientBlobs(isDark: isDark),
+          // ── Ambient background blobs (matches puzzle page) ──
+          _AmbientBlobs(isDark: isDark, floatController: _floatController),
+
+          // ── Gradient header block (matches puzzle page) ──
+          _buildGradientHeader(context),
 
           SafeArea(
+            bottom: false,
             child: FadeTransition(
               opacity: _entryFade,
               child: SlideTransition(
                 position: _entrySlide,
                 child: Column(
                   children: [
-                    _buildTopBar(context, isDark),
+                    _buildTopBar(context, isDark, books.length),
                     Expanded(
-                      child: SingleChildScrollView(
+                      child: GridView.builder(
                         physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 10),
-
-                            // ── Reading Streak Banner ──
-                            _buildStreakBanner(context, isDark),
-                            const SizedBox(height: 22),
-
-                            // ── Category Chips ──
-                            _buildCategoryChips(context, isDark),
-                            const SizedBox(height: 22),
-
-                            // ── Category Circle Icons ──
-                            _buildCategoryCircles(context, isDark),
-                            const SizedBox(height: 28),
-
-                            // ── Featured Story Card ──
-                            _buildFeaturedCard(context, isDark),
-                            const SizedBox(height: 28),
-
-                            // ── Section Header ──
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "New Adventures",
-                                  style: GoogleFonts.fredoka(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        isDark ? Colors.white : Colors.black87,
-                                  ),
-                                ),
-                                Text(
-                                  "${_filteredStories.length} stories",
-                                  style: GoogleFonts.nunito(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: isDark
-                                        ? Colors.white38
-                                        : Colors.black38,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-
-                            // ── Book Grid ──
-                            _buildBookGrid(context, isDark),
-                            const SizedBox(height: 100),
-                          ],
+                        padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 28,
+                          mainAxisSpacing: 32,
+                          // Taller aspect ratio to show the book nicely
+                          childAspectRatio: 0.60,
                         ),
+                        itemCount: books.length,
+                        itemBuilder: (context, index) {
+                          return _BookCard(
+                            book: books[index],
+                            cardColor: _cardCycle[index % _cardCycle.length],
+                            isDark: isDark,
+                            floatController: _floatController,
+                            phaseOffset: index * 0.2,
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              openUrl(books[index]['url']!);
+                            },
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -237,13 +177,37 @@ class _LibraryViewState extends State<LibraryView>
     );
   }
 
-  // ── Top Bar (mirrors HomeView header style) ──
-  Widget _buildTopBar(BuildContext context, bool isDark) {
+  Widget _buildGradientHeader(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      height: MediaQuery.of(context).size.height * 0.28,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            mainBlue,
+            Color(0xFF2E9FEF),
+            Color(0xFF7B5FEF),
+          ],
+        ),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(50)),
+        boxShadow: [
+          BoxShadow(
+            color: mainBlue.withValues(alpha: 0.28),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopBar(BuildContext context, bool isDark, int bookCount) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
       child: Row(
         children: [
-          // Back button
+          // Back button — glass pill (matches puzzle pattern)
           GestureDetector(
             onTap: () {
               if (widget.onBack != null) {
@@ -253,26 +217,19 @@ class _LibraryViewState extends State<LibraryView>
               }
             },
             child: Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1C2A) : Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(15),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.arrow_back_ios_new_rounded,
-                size: 18,
-                color: isDark ? Colors.white : Colors.black87,
+                size: 20,
+                color: Colors.white,
               ),
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,24 +237,24 @@ class _LibraryViewState extends State<LibraryView>
                 Text(
                   'Magic Library 📚',
                   style: GoogleFonts.fredoka(
-                    fontSize: 26,
+                    fontSize: 30,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
-                    letterSpacing: -0.3,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
                   ),
                 ),
                 Text(
                   'Pick a story to explore!',
                   style: GoogleFonts.nunito(
-                    color: isDark ? Colors.white54 : Colors.black45,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    fontSize: 13,
+                    color: Colors.white.withValues(alpha: 0.88),
                   ),
                 ),
               ],
             ),
           ),
-          // Book count badge (mirrors star badge from HomeView)
+          // Book count badge — glass style (matches puzzle refresh button area)
           AnimatedBuilder(
             animation: _floatController,
             builder: (_, child) => Transform.translate(
@@ -305,36 +262,24 @@ class _LibraryViewState extends State<LibraryView>
               child: child,
             ),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    mainBlue.withValues(alpha: 0.25),
-                    secondaryPurple.withValues(alpha: 0.15),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(20),
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                    color: mainBlue.withValues(alpha: 0.6), width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: mainBlue.withValues(alpha: 0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                    color: Colors.white.withValues(alpha: 0.4), width: 1.5),
               ),
               child: Row(
                 children: [
                   const Icon(Icons.auto_stories_rounded,
-                      color: mainBlue, size: 20),
+                      color: Colors.white, size: 20),
                   const SizedBox(width: 5),
                   Text(
-                    '${staticStories.length}',
+                    '$bookCount',
                     style: GoogleFonts.fredoka(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
-                      color: mainBlue,
+                      color: Colors.white,
                     ),
                   ),
                 ],
@@ -345,589 +290,485 @@ class _LibraryViewState extends State<LibraryView>
       ),
     );
   }
+}
 
-  // ── Reading Streak Banner (replaces generic orange banner) ──
-  Widget _buildStreakBanner(BuildContext context, bool isDark) {
-    return AnimatedBuilder(
-      animation: _floatController,
-      builder: (_, child) => Transform.translate(
-        offset: Offset(0, sin((_floatController.value + 0.3) * pi) * 2),
-        child: child,
-      ),
-      child: GestureDetector(
-        onTap: () => _navigateToStory(context, 0),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(22),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFF9E2D), Color(0xFFFF5F5F)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFFF712D).withValues(alpha: 0.35),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              // Background decorative icon
-              Positioned(
-                right: -10,
-                top: -15,
-                child: Icon(
-                  Icons.local_fire_department_rounded,
-                  size: 120,
-                  color: Colors.white.withValues(alpha: 0.12),
-                ),
-              ),
-              Row(
-                children: [
-                  // Flame icon bubble
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.22),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: const Text('🔥', style: TextStyle(fontSize: 30)),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Reading Streak!",
-                          style: GoogleFonts.fredoka(
-                            fontSize: 22,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "3 days in a row 🎉 Keep it up!",
-                          style: GoogleFonts.nunito(
-                            color: Colors.white.withValues(alpha: 0.85),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        // Progress dots
-                        Row(
-                          children: List.generate(7, (i) {
-                            final active = i < 3;
-                            return Container(
-                              margin: const EdgeInsets.only(right: 6),
-                              width: active ? 28 : 10,
-                              height: 10,
-                              decoration: BoxDecoration(
-                                color: active
-                                    ? Colors.white
-                                    : Colors.white.withValues(alpha: 0.3),
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                            );
-                          }),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(9),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.22),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: Colors.white,
-                      size: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+// ─────────────────────────────────────────────────────────────────
+// BOOK CARD  — real 3D physical book appearance
+// ─────────────────────────────────────────────────────────────────
+
+class _BookCard extends StatefulWidget {
+  final Map<String, String> book;
+  final Color cardColor;
+  final bool isDark;
+  final AnimationController floatController;
+  final double phaseOffset;
+  final VoidCallback onTap;
+
+  const _BookCard({
+    required this.book,
+    required this.cardColor,
+    required this.isDark,
+    required this.floatController,
+    required this.phaseOffset,
+    required this.onTap,
+  });
+
+  @override
+  State<_BookCard> createState() => _BookCardState();
+}
+
+class _BookCardState extends State<_BookCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pressCtrl;
+  late Animation<double> _pressAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _pressCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 130),
+    );
+    _pressAnim = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _pressCtrl, curve: Curves.easeOut),
     );
   }
 
-  // ── Horizontal Category Chips ──
-  Widget _buildCategoryChips(BuildContext context, bool isDark) {
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) {
-          final selected = _selectedCategoryIndex == index;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedCategoryIndex = index),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeOut,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                gradient: selected
-                    ? const LinearGradient(colors: [mainBlue, secondaryPurple])
-                    : null,
-                color: selected
-                    ? null
-                    : isDark
-                        ? const Color(0xFF1E1C2A)
-                        : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: selected
-                      ? Colors.transparent
-                      : isDark
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : mainBlue.withValues(alpha: 0.18),
-                  width: 1.5,
-                ),
-                boxShadow: selected
-                    ? [
-                        BoxShadow(
-                          color: mainBlue.withValues(alpha: 0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        )
-                      ]
-                    : [
-                        BoxShadow(
-                          color: Colors.black
-                              .withValues(alpha: isDark ? 0.2 : 0.05),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        )
-                      ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _categories[index]['emoji'] as String,
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    _categories[index]['label'] as String,
-                    style: GoogleFonts.nunito(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                      color: selected
-                          ? Colors.white
-                          : isDark
-                              ? Colors.white60
-                              : Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
+  @override
+  void dispose() {
+    _pressCtrl.dispose();
+    super.dispose();
+  }
+
+  /// Darken a colour for the spine
+  Color get _spineColor {
+    final hsl = HSLColor.fromColor(widget.cardColor);
+    return hsl.withLightness((hsl.lightness - 0.20).clamp(0.0, 1.0)).toColor();
+  }
+
+  /// Lighten slightly for a gloss highlight on the cover
+  Color get _glossColor {
+    final hsl = HSLColor.fromColor(widget.cardColor);
+    return hsl.withLightness((hsl.lightness + 0.10).clamp(0.0, 1.0)).toColor();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      onTapDown: (_) => _pressCtrl.forward(),
+      onTapUp: (_) => _pressCtrl.reverse(),
+      onTapCancel: () => _pressCtrl.reverse(),
+      child: AnimatedBuilder(
+        animation: Listenable.merge([widget.floatController, _pressAnim]),
+        builder: (_, child) {
+          final floatY =
+              sin((widget.floatController.value + widget.phaseOffset) * pi) *
+                  3.0;
+          // On press: book shifts slightly down-right (like pushing it down)
+          final pressShift = _pressAnim.value * 3.0;
+          final pressScale = 1.0 - _pressAnim.value * 0.025;
+
+          return Transform.translate(
+            offset: Offset(pressShift, floatY + pressShift),
+            child: Transform.scale(
+              scale: pressScale,
+              child: child,
             ),
           );
         },
+        child: _buildBook(),
       ),
     );
   }
 
-  // ── Category Circles (original logic, redesigned) ──
-  Widget _buildCategoryCircles(BuildContext context, bool isDark) {
-    final List<Map<String, dynamic>> cats = [
-      {'n': 'Biology', 'i': '🧬', 'c': const Color(0xFFE1F5FE)},
-      {'n': 'Animals', 'i': '🐰', 'c': const Color(0xFFFFF3E0)},
-      {'n': 'Geography', 'i': '🌍', 'c': const Color(0xFFE8F5E9)},
-      {'n': 'Science', 'i': '🧪', 'c': const Color(0xFFF3E5F5)},
-    ];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: cats.map((cat) {
-        return Column(
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? (cat['c'] as Color).withValues(alpha: 0.15)
-                    : cat['c'] as Color,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: (cat['c'] as Color)
-                        .withValues(alpha: isDark ? 0.1 : 0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.06)
-                      : Colors.white,
-                  width: 2.5,
-                ),
-              ),
-              child: Center(
-                child: Text(cat['i'] as String,
-                    style: const TextStyle(fontSize: 32)),
-              ),
+  Widget _buildBook() {
+    return AnimatedBuilder(
+      animation: _pressAnim,
+      builder: (context, child) {
+        final shadowBlur = 18.0 - _pressAnim.value * 10.0;
+        final shadowX = 7.0 - _pressAnim.value * 5.0;
+        final shadowY = 12.0 - _pressAnim.value * 8.0;
+
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(3),
+              bottomLeft: Radius.circular(3),
+              topRight: Radius.circular(5),
+              bottomRight: Radius.circular(5),
             ),
-            const SizedBox(height: 8),
-            Text(
-              cat['n'] as String,
-              style: GoogleFonts.nunito(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: isDark ? Colors.white54 : Colors.black54,
+            boxShadow: [
+              // Coloured glow shadow (like the book casts its colour)
+              BoxShadow(
+                color: widget.cardColor
+                    .withValues(alpha: 0.45 - _pressAnim.value * 0.18),
+                blurRadius: shadowBlur,
+                offset: Offset(shadowX, shadowY),
               ),
-            ),
-          ],
+              // Crisp dark shadow for depth
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.22),
+                blurRadius: shadowBlur * 0.6,
+                offset: Offset(shadowX * 0.4, shadowY * 0.5),
+              ),
+            ],
+          ),
+          child: child,
         );
-      }).toList(),
+      },
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(3),
+          bottomLeft: Radius.circular(3),
+          topRight: Radius.circular(5),
+          bottomRight: Radius.circular(5),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ── SPINE (left edge) ──
+            _buildSpine(),
+            // ── COVER (main face) ──
+            Expanded(child: _buildCover()),
+            // ── PAGE EDGES (right side) ──
+            _buildPageEdges(),
+          ],
+        ),
+      ),
     );
   }
 
-  // ── Featured Story Card (NEW — mirrors Puzzles card from HomeView) ──
-  Widget _buildFeaturedCard(BuildContext context, bool isDark) {
-    final featured = staticStories[1]; // Peter Rabbit as featured
-    return GestureDetector(
-      onTap: () => _navigateToStory(context, 1),
-      child: AnimatedBuilder(
-        animation: _floatController,
-        builder: (_, child) => Transform.translate(
-          offset: Offset(0, sin((_floatController.value + 0.5) * pi) * 2.5),
-          child: child,
+  // ── Spine: darker, narrower, with binding details + rotated title ──
+  Widget _buildSpine() {
+    return Container(
+      width: 20,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            _spineColor.withValues(alpha: 0.85),
+            _spineColor,
+            widget.cardColor.withValues(alpha: 0.88),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
-        child: Container(
-          padding: const EdgeInsets.all(20),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Top binding block
+          _SpineBinding(color: Colors.white.withValues(alpha: 0.20)),
+          // Rotated title along the spine
+          Expanded(
+            child: Center(
+              child: RotatedBox(
+                quarterTurns: 1,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    widget.book['title']!.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.nunito(
+                      fontSize: 6.5,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white.withValues(alpha: 0.80),
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Bottom binding block
+          _SpineBinding(color: Colors.white.withValues(alpha: 0.20)),
+        ],
+      ),
+    );
+  }
+
+  // ── Cover: full-bleed image + gloss + gradient overlay with title/button ──
+  Widget _buildCover() {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Base gradient (visible if image fails)
+        Container(
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [secondaryPurple, mainBlue],
+            gradient: LinearGradient(
+              colors: [_glossColor, widget.cardColor, _spineColor],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(26),
-            boxShadow: [
-              BoxShadow(
-                color: secondaryPurple.withValues(alpha: isDark ? 0.25 : 0.35),
-                blurRadius: 22,
-                offset: const Offset(0, 10),
-              ),
-            ],
           ),
-          child: Row(
-            children: [
-              // Book cover with fallback
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(14),
-                  bottomRight: Radius.circular(14),
-                  topLeft: Radius.circular(5),
-                  bottomLeft: Radius.circular(5),
+        ),
+
+        // Full-bleed book cover image
+        Image.asset(
+          widget.book['image']!,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          errorBuilder: (_, __, ___) => Center(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 66,
+                  height: 66,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.15),
+                  ),
                 ),
-                child: SizedBox(
-                  width: 64,
-                  height: 80,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.asset(
-                        featured['cover'] as String,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Color(0xFFFFB74D), Color(0xFFFF8811)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                          child: const Center(
-                            child: Text('🐰', style: TextStyle(fontSize: 28)),
-                          ),
-                        ),
-                      ),
-                      // Spine shadow
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          width: 8,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                              colors: [
-                                Colors.black.withValues(alpha: 0.35),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
-                        ),
+                const Text('📖', style: TextStyle(fontSize: 40)),
+              ],
+            ),
+          ),
+        ),
+
+        // Top gloss highlight (like light hitting a hardcover)
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 55,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.white.withValues(alpha: 0.18),
+                  Colors.transparent,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+        ),
+
+        // Subtle left-edge crease line (where cover meets spine)
+        Positioned(
+          top: 0,
+          bottom: 0,
+          left: 0,
+          child: Container(
+            width: 2,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.black.withValues(alpha: 0.20),
+                  Colors.black.withValues(alpha: 0.08),
+                  Colors.black.withValues(alpha: 0.20),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+        ),
+
+        // Bottom gradient overlay for title + button readability
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.55),
+                  Colors.black.withValues(alpha: 0.82),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+            padding: const EdgeInsets.fromLTRB(10, 28, 10, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Book title
+                Text(
+                  widget.book['title']!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.fredoka(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: -0.2,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        blurRadius: 6,
                       ),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(height: 7),
+                // FREE badge + READ button row
+                Row(
                   children: [
+                    // FREE badge
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                          horizontal: 7, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        boxShadow: [
+                          BoxShadow(
+                            color: widget.cardColor.withValues(alpha: 0.4),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Text(
-                        '⭐ FEATURED',
+                        'FREE',
                         style: GoogleFonts.nunito(
-                          fontSize: 10,
+                          color: widget.cardColor,
+                          fontSize: 8,
                           fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: 1,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      featured['title'] as String,
-                      style: GoogleFonts.fredoka(
-                        fontSize: 20,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      featured['author'] as String,
-                      style: GoogleFonts.nunito(
-                        color: Colors.white.withValues(alpha: 0.75),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        const Icon(Icons.menu_book_rounded,
-                            color: Colors.white70, size: 14),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${(featured['pages'] as List).length} pages',
-                          style: GoogleFonts.nunito(
-                            color: Colors.white.withValues(alpha: 0.7),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
+                    const SizedBox(width: 6),
+                    // READ button
+                    Expanded(
+                      child: Container(
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.20),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.55),
+                            width: 1,
                           ),
                         ),
-                      ],
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.menu_book_rounded,
+                                color: Colors.white, size: 12),
+                            const SizedBox(width: 4),
+                            Text(
+                              'READ NOW',
+                              style: GoogleFonts.nunito(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 9,
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: Colors.white,
-                  size: 14,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 
-  // ── Book Grid (original logic, redesigned cards) ──
-  Widget _buildBookGrid(BuildContext context, bool isDark) {
-    final stories = _filteredStories;
-    if (stories.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 40),
-          child: Column(
-            children: [
-              const Text('📭', style: TextStyle(fontSize: 48)),
-              const SizedBox(height: 12),
-              Text(
-                'No stories in this category yet!',
-                style: GoogleFonts.nunito(
-                  color: isDark ? Colors.white38 : Colors.black38,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 15,
-        mainAxisSpacing: 20,
-        childAspectRatio: 0.55,
-      ),
-      itemCount: stories.length,
-      itemBuilder: (context, index) {
-        final storyIndex = staticStories.indexOf(stories[index]);
-        return GestureDetector(
-          onTap: () => _navigateToStory(context, storyIndex),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(15),
-                      bottomRight: Radius.circular(15),
-                      topLeft: Radius.circular(5),
-                      bottomLeft: Radius.circular(5),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black
-                            .withValues(alpha: isDark ? 0.35 : 0.15),
-                        blurRadius: 10,
-                        offset: const Offset(4, 4),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(15),
-                      bottomRight: Radius.circular(15),
-                      topLeft: Radius.circular(5),
-                      bottomLeft: Radius.circular(5),
-                    ),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        // ── Cover image with emoji fallback ──
-                        Image.asset(
-                          stories[index]['cover'] as String,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) {
-                            final gi = storyIndex.clamp(
-                                0, _fallbackGradients.length - 1);
-                            return Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: _fallbackGradients[gi],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  _fallbackEmojis[gi],
-                                  style: const TextStyle(fontSize: 36),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        // Book Spine Effect
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Container(
-                            width: 10,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                                colors: [
-                                  Colors.black.withValues(alpha: 0.35),
-                                  Colors.transparent,
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const Positioned(
-                          bottom: 8,
-                          right: 8,
-                          child: Icon(Icons.menu_book_rounded,
-                              color: Colors.white70, size: 14),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                stories[index]['title'],
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.fredoka(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-              Text(
-                stories[index]['author'],
-                maxLines: 1,
-                style: GoogleFonts.nunito(
-                  fontSize: 11,
-                  color: isDark ? Colors.white38 : Colors.black38,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // ── Original navigation logic — untouched ──
-  void _navigateToStory(BuildContext context, int index) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MagicStoryPlayer(
-          title: staticStories[index]['title'],
-          storyPages: (staticStories[index]['pages'] as List)
-              .map((p) => {
-                    "text": p['text'].toString(),
-                    "image": p['image'].toString(),
-                  })
-              .toList(),
-        ),
+  // ── Page edges: cream coloured with fine lines, like a real book's side ──
+  Widget _buildPageEdges() {
+    return SizedBox(
+      width: 9,
+      child: CustomPaint(
+        painter: _PageEdgePainter(),
       ),
     );
   }
 }
 
-// ─────────────── Ambient Blobs (matches login / home exactly) ───────────────
+// ─────────────────────────────────────────────────────────────────
+// SPINE BINDING BLOCK — small decorative bar at top/bottom of spine
+// ─────────────────────────────────────────────────────────────────
+
+class _SpineBinding extends StatelessWidget {
+  final Color color;
+  const _SpineBinding({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+      height: 24,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(2),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// PAGE EDGE PAINTER — cream background + subtle horizontal lines
+// ─────────────────────────────────────────────────────────────────
+
+class _PageEdgePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Cream/ivory base gradient (lighter at centre, slightly darker at edges)
+    final bgPaint = Paint()
+      ..shader = const LinearGradient(
+        colors: [
+          Color(0xFFEDE8D6),
+          Color(0xFFF8F4E8),
+          Color(0xFFE8E2CE),
+        ],
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
+
+    // Fine horizontal lines simulating page stacking
+    final linePaint = Paint()
+      ..color = const Color(0xFFC8BFA8).withValues(alpha: 0.55)
+      ..strokeWidth = 0.5;
+
+    const spacing = 2.8;
+    for (double y = 0; y < size.height; y += spacing) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
+    }
+
+    // Slight shadow on left edge (where pages meet cover)
+    final leftShadowPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          Colors.black.withValues(alpha: 0.12),
+          Colors.transparent,
+        ],
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    canvas.drawRect(
+        Rect.fromLTWH(0, 0, size.width, size.height), leftShadowPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// AMBIENT BLOBS (matches puzzle page — floatController + animated dot)
+// ─────────────────────────────────────────────────────────────────
 
 class _AmbientBlobs extends StatelessWidget {
   final bool isDark;
-  const _AmbientBlobs({required this.isDark});
+  final AnimationController floatController;
+  const _AmbientBlobs({required this.isDark, required this.floatController});
 
   @override
   Widget build(BuildContext context) {
@@ -935,28 +776,12 @@ class _AmbientBlobs extends StatelessWidget {
     final w = MediaQuery.of(context).size.width;
     return Stack(
       children: [
-        // Top-right blob
         Positioned(
-          top: -40,
+          bottom: h * 0.08,
           right: -60,
           child: Container(
-            width: 220,
-            height: 220,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isDark
-                  ? mainBlue.withValues(alpha: 0.05)
-                  : mainBlue.withValues(alpha: 0.07),
-            ),
-          ),
-        ),
-        // Bottom-right blob
-        Positioned(
-          bottom: h * 0.1,
-          right: -50,
-          child: Container(
-            width: 180,
-            height: 180,
+            width: 200,
+            height: 200,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isDark
@@ -965,33 +790,39 @@ class _AmbientBlobs extends StatelessWidget {
             ),
           ),
         ),
-        // Mid-left blob
         Positioned(
-          top: h * 0.45,
+          top: h * 0.55,
           left: -50,
           child: Container(
-            width: 150,
-            height: 150,
+            width: 160,
+            height: 160,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isDark
-                  ? accentOrange.withValues(alpha: 0.04)
-                  : accentOrange.withValues(alpha: 0.06),
+                  ? mainBlue.withValues(alpha: 0.04)
+                  : mainBlue.withValues(alpha: 0.06),
             ),
           ),
         ),
-        // Small yellow dot
+        // Animated floating dot (matches puzzle page)
         Positioned(
-          top: h * 0.25,
-          right: w * 0.12,
-          child: Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isDark
-                  ? sunnyYellow.withValues(alpha: 0.15)
-                  : sunnyYellow.withValues(alpha: 0.55),
+          top: h * 0.72,
+          right: w * 0.15,
+          child: AnimatedBuilder(
+            animation: floatController,
+            builder: (_, child) => Transform.translate(
+              offset: Offset(sin(floatController.value * pi) * 4, 0),
+              child: child,
+            ),
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isDark
+                    ? sunnyYellow.withValues(alpha: 0.15)
+                    : sunnyYellow.withValues(alpha: 0.5),
+              ),
             ),
           ),
         ),

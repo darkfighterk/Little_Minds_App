@@ -8,7 +8,6 @@ const Color mainBlue = Color(0xFF3AAFFF);
 const Color secondaryPurple = Color(0xFFA55FEF);
 const Color accentOrange = Color(0xFFFF8811);
 const Color sunnyYellow = Color(0xFFFDDF50);
-const Color canvasBg = Color(0xFFF8FAFC);
 
 class QuizView extends StatefulWidget {
   final Subject subject;
@@ -117,25 +116,23 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color scaffoldBg = isDark ? const Color(0xFF12111A) : const Color(0xFFFFF8EE);
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [isDark ? const Color(0xFF1E1E1E) : mainBlue.withValues(alpha: 0.1), Theme.of(context).scaffoldBackgroundColor],
+      backgroundColor: scaffoldBg,
+      body: Stack(
+        children: [
+          _AmbientBlobs(isDark: isDark),
+          SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(),
+                _buildProgressBar(),
+                Expanded(child: _buildQuizBody()),
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              _buildProgressBar(),
-              Expanded(child: _buildQuizBody()),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
@@ -143,7 +140,7 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
   Widget _buildHeader() {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
+      padding: const EdgeInsets.fromLTRB(16, 15, 20, 10),
       child: Row(
         children: [
           IconButton(
@@ -151,25 +148,28 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
             icon: Icon(Icons.arrow_back_ios_new_rounded,
                 color: isDark ? Colors.white : Colors.black87, size: 20),
           ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(widget.subject.name.toUpperCase(),
-                  style: GoogleFonts.nunito(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      color: mainBlue,
-                      letterSpacing: 1.2)),
-              Text(widget.level.title,
-                  style: TextStyle(
-                      fontFamily: 'Recoleta',
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87)),
-            ],
+          const SizedBox(width: 4),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.subject.name.toUpperCase(),
+                    style: GoogleFonts.nunito(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: mainBlue,
+                        letterSpacing: 1.2)),
+                Text(widget.level.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.fredoka(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87)),
+              ],
+            ),
           ),
-          const Spacer(),
+          const SizedBox(width: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
@@ -188,18 +188,21 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
       padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
       child: AnimatedBuilder(
         animation: _progressController,
-        builder: (context, child) => LinearProgressIndicator(
-          value: _progressController.value,
-          backgroundColor: mainBlue.withValues(alpha: 0.1),
-          valueColor: const AlwaysStoppedAnimation<Color>(mainBlue),
-          minHeight: 8,
+        builder: (context, child) => ClipRRect(
           borderRadius: BorderRadius.circular(10),
+          child: LinearProgressIndicator(
+            value: _progressController.value,
+            backgroundColor: mainBlue.withValues(alpha: 0.1),
+            valueColor: const AlwaysStoppedAnimation<Color>(mainBlue),
+            minHeight: 8,
+          ),
         ),
       ),
     );
   }
 
   Widget _buildQuizBody() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(25),
       child: AnimatedBuilder(
@@ -210,13 +213,29 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
         },
         child: Column(
           children: [
-            Text(_currentQuestion.question,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.nunito(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                    height: 1.4)),
+            _currentQuestion.isImage
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.network(
+                      _currentQuestion.question,
+                      height: 180,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (ctx, err, stack) => Container(
+                        height: 180,
+                        color: Colors.grey.withValues(alpha: 0.1),
+                        child: const Icon(Icons.broken_image_rounded,
+                            size: 40, color: Colors.grey),
+                      ),
+                    ),
+                  )
+                : Text(_currentQuestion.question,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.fredoka(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                        height: 1.3)),
             const SizedBox(height: 30),
             ..._currentQuestion.options
                 .asMap()
@@ -258,14 +277,14 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
     bool isSelected = index == _selectedOption;
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-    Color borderCol = isDark ? Colors.white24 : Colors.grey.shade200;
-    Color bgCol = isDark ? const Color(0xFF2A2A2A) : Colors.white;
+    Color borderCol = isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.shade200;
+    Color bgCol = isDark ? const Color(0xFF1E1C2A) : Colors.white;
     if (_answered) {
       if (isCorrect) {
-        borderCol = Colors.green;
+        borderCol = Colors.green.withValues(alpha: 0.5);
         bgCol = Colors.green.withValues(alpha: 0.1);
       } else if (isSelected) {
-        borderCol = Colors.red;
+        borderCol = Colors.red.withValues(alpha: 0.5);
         bgCol = Colors.red.withValues(alpha: 0.1);
       }
     }
@@ -278,14 +297,21 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: bgCol,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(color: borderCol, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
             CircleAvatar(
-              radius: 15,
-              backgroundColor: isSelected ? mainBlue : (isDark ? Colors.white12 : Colors.grey.shade100),
+              radius: 17,
+              backgroundColor: isSelected ? mainBlue : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey.shade100),
               child: Text(String.fromCharCode(65 + index),
                   style: TextStyle(
                       color: isSelected ? Colors.white : (isDark ? Colors.white54 : Colors.black54),
@@ -386,6 +412,61 @@ class _ResultDialog extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+class _AmbientBlobs extends StatelessWidget {
+  final bool isDark;
+  const _AmbientBlobs({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final h = MediaQuery.of(context).size.height;
+    return Stack(
+      children: [
+        Positioned(
+          top: -40,
+          right: -60,
+          child: Container(
+            width: 220,
+            height: 220,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isDark
+                  ? mainBlue.withValues(alpha: 0.05)
+                  : mainBlue.withValues(alpha: 0.07),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: h * 0.1,
+          right: -50,
+          child: Container(
+            width: 180,
+            height: 180,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isDark
+                  ? secondaryPurple.withValues(alpha: 0.05)
+                  : secondaryPurple.withValues(alpha: 0.07),
+            ),
+          ),
+        ),
+        Positioned(
+          top: h * 0.45,
+          left: -50,
+          child: Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isDark
+                  ? accentOrange.withValues(alpha: 0.04)
+                  : accentOrange.withValues(alpha: 0.06),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
